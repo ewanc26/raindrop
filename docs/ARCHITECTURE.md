@@ -88,10 +88,14 @@ deliver `at://`-as-infrastructure.** raindrop wants the second one.
 - **Local-only caching.** Resolution caches live on the user's machine, honour
   private browsing, and expire.
 
+## Resolved design questions
+
+- Minimal patch surface vs. deeper Gecko changes: [ADR 0001](decisions/0001-at-uri-scheme-registration.md).
+- When handles resolve, caching and change detection:
+  [ADR 0003](decisions/0003-handle-authority-semantics.md).
+- `did:web` trust rules and onion PDS endpoints:
+  [ADR 0004](decisions/0004-did-web-and-onion-endpoints.md).
+
 ## Open questions
 
-- How much of this can live behind a small patch surface vs. needing deeper
-  gecko changes to `nsIURI` / scheme registration?
-- Should handle resolution go through DNS/handle conventions at startup, and how
-  is a handle change detected?
-- What is the right story for `did:web` and Tor/ onion PDS endpoints?
+- What minimum set of record lexicons gets a dedicated view in Phase 3?
