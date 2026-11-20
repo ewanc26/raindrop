@@ -4,6 +4,7 @@
 
 DIRS += [
     "about",
+    "atproto",
     "data",
     "file",
     "http",
