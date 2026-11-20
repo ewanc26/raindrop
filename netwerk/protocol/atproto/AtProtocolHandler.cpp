@@ -4,7 +4,9 @@
 
 #include "AtProtocolHandler.h"
 
+#include "AtRecordResolver.h"
 #include "AtURI.h"
+#include "SimpleChannel.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "nsIChannel.h"
@@ -50,12 +52,33 @@ AtProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
   NS_ENSURE_SUCCESS(rv, rv);
 
   AtURI parsed;
-  AtURIError error = ParseAtURI(std::string_view(spec.BeginReading(), spec.Length()), parsed);
+  AtURIError error = ParseAtURI(
+      std::string_view(spec.BeginReading(), spec.Length()), parsed);
   if (error != AtURIError::None) {
     return NS_ERROR_MALFORMED_URI;
   }
 
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // A record load needs a collection and record key. Authority-only URIs are
+  // valid AT-URIs but there is no single record to fetch, so fail honestly.
+  if (!parsed.mHasCollection || !parsed.mHasRecordKey) {
+    return NS_ERROR_MALFORMED_URI;
+  }
+
+  RefPtr<AtRecordResolver> resolver = new AtRecordResolver(parsed, aLoadInfo);
+  nsCOMPtr<nsIChannel> channel = NS_NewSimpleChannel(
+      aURI, aLoadInfo, resolver.get(),
+      [](nsIStreamListener* aListener, nsIChannel*,
+         AtRecordResolver* aResolver) -> RequestOrReason {
+        return aResolver->Start(aListener);
+      });
+  NS_ENSURE_TRUE(channel, NS_ERROR_OUT_OF_MEMORY);
+
+  // The final payload is the getRecord JSON.
+  rv = channel->SetContentType("application/json"_ns);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  channel.forget(aResult);
+  return NS_OK;
 }
 
 }  // namespace mozilla::net::atproto
