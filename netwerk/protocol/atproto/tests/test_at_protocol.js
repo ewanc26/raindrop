@@ -18,15 +18,15 @@ add_task(async function did_authority_round_trips() {
   const uri = Services.io.newURI(DID_URI);
   Assert.equal(uri.spec, DID_URI);
   Assert.equal(uri.scheme, "at");
-  Assert.equal(uri.host, "");
-  Assert.equal(uri.port, -1);
+  Assert.throws(() => uri.host);
+  Assert.throws(() => uri.port);
 });
 
 add_task(async function handle_authority_round_trips() {
   const uri = Services.io.newURI(HANDLE_URI);
   Assert.equal(uri.spec, HANDLE_URI);
   Assert.equal(uri.scheme, "at");
-  Assert.equal(uri.host, "");
+  Assert.throws(() => uri.host);
 });
 
 add_task(async function opaque_authority_is_not_reparsed() {
