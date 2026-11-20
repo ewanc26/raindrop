@@ -9,6 +9,7 @@ pref("startup.homepage_welcome_url", "");
 pref("startup.homepage_welcome_url.additional", "");
 
 pref("app.update.enabled", false);
+pref("app.update.url", "");
 pref("app.update.auto", false);
 pref("app.update.service.enabled", false);
 pref("app.update.checkInstallTime", false);
