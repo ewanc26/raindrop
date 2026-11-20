@@ -50,6 +50,15 @@ add_task(async function record_uri_creates_a_json_channel() {
   Assert.equal(chan.contentType, "application/json");
 });
 
+add_task(async function handle_uri_creates_a_json_channel() {
+  const chan = NetUtil.newChannel({
+    uri: HANDLE_URI,
+    loadUsingSystemPrincipal: true,
+  });
+  Assert.equal(chan.URI.spec, HANDLE_URI);
+  Assert.equal(chan.contentType, "application/json");
+});
+
 add_task(async function authority_only_uri_is_rejected() {
   Assert.throws(
     () =>

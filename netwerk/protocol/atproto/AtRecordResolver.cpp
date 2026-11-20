@@ -7,6 +7,7 @@
 #include <algorithm>
 
 #include "DidResolver.h"
+#include "HandleResolver.h"
 #include "PdsClient.h"
 #include "mozilla/Logging.h"
 #include "nsIChannel.h"
@@ -35,7 +36,7 @@ RequestOrReason AtRecordResolver::Start(nsIStreamListener* aTarget) {
     return Err(NS_ERROR_UNEXPECTED);
   }
 
-  nsresult rv = StartDidDocumentFetch();
+  nsresult rv = StartResolution();
   if (NS_FAILED(rv)) {
     return Err(rv);
   }
@@ -44,15 +45,29 @@ RequestOrReason AtRecordResolver::Start(nsIStreamListener* aTarget) {
   return RequestOrCancelable(WrapNotNull(cancelable));
 }
 
-nsresult AtRecordResolver::StartDidDocumentFetch() {
-  Did did;
-  DidError derr = ParseDid(mUri.mAuthority, did);
-  if (derr != DidError::None) {
-    AT_LOG(("atproto: invalid DID authority (%s)\n", DidErrorName(derr)));
+nsresult AtRecordResolver::StartResolution() {
+  if (mUri.mAuthority.compare(0, 4, "did:") == 0) {
+    Did did;
+    DidError derr = ParseDid(mUri.mAuthority, did);
+    if (derr != DidError::None) {
+      AT_LOG(("atproto: invalid DID authority (%s)\n", DidErrorName(derr)));
+      return NS_ERROR_MALFORMED_URI;
+    }
+    mDid = did.mFull;
+    return StartDidDocumentFetch();
+  }
+
+  mHandle = mUri.mAuthority;
+  std::string url;
+  HandleError herr = BuildHandleDidUrl(mHandle, url);
+  if (herr != HandleError::None) {
+    AT_LOG(("atproto: invalid handle authority (%s)\n", HandleErrorName(herr)));
     return NS_ERROR_MALFORMED_URI;
   }
-  mDid = did.mFull;
+  return StartFetch(url, Phase::Handle);
+}
 
+nsresult AtRecordResolver::StartDidDocumentFetch() {
   std::string url;
   DidUrlError uerr = BuildDidDocumentUrl(mDid, url);
   if (uerr != DidUrlError::None) {
@@ -70,8 +85,9 @@ nsresult AtRecordResolver::StartFetch(const std::string& aUrl, Phase aPhase) {
   nsresult rv = NS_NewURI(getter_AddRefs(uri), nsCString(aUrl.c_str()));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Remember the expected host so a cross-origin redirect of the DID document
-  // can be rejected: the DID's domain is the identity anchor (ADR 0004).
+  // Remember the expected host so a cross-origin redirect can be rejected:
+  // for DID documents the domain is the identity anchor (ADR 0004), and for
+  // handle resolution the handle's own host must answer (ADR 0003).
   mExpectedHost.Truncate(0);
   rv = uri->GetHost(mExpectedHost);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -123,7 +139,7 @@ AtRecordResolver::OnDataAvailable(nsIRequest* aRequest,
     return NS_OK;
   }
 
-  if (mPhase != Phase::DidDocument) {
+  if (mPhase != Phase::Handle && mPhase != Phase::DidDocument) {
     return NS_OK;
   }
 
@@ -131,11 +147,10 @@ AtRecordResolver::OnDataAvailable(nsIRequest* aRequest,
   nsresult rv = NS_ConsumeStream(aInputStream, aCount, chunk);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Stop accumulating past the cap. ExtractPdsEndpoint rejects the oversized
-  // document in OnStopRequest, so truncation cannot smuggle in a valid doc.
-  if (mBody.Length() < kMaxDidDocumentLength) {
-    uint32_t remaining =
-        static_cast<uint32_t>(kMaxDidDocumentLength - mBody.Length());
+  size_t cap = mPhase == Phase::Handle ? kMaxHandleResponseLength
+                                       : kMaxDidDocumentLength;
+  if (mBody.Length() < cap) {
+    uint32_t remaining = static_cast<uint32_t>(cap - mBody.Length());
     mBody.Append(
         Substring(chunk, 0, std::min<uint32_t>(chunk.Length(), remaining)));
   }
@@ -150,22 +165,25 @@ AtRecordResolver::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
     return NS_OK;
   }
 
-  if (mPhase != Phase::DidDocument) {
+  if (mPhase != Phase::Handle && mPhase != Phase::DidDocument) {
     return NS_OK;
   }
 
-  // Clear the finished DID-document request before OnDidDocumentStop may
-  // install the record fetch as the new mCurrentRequest.
+  Phase finished = mPhase;
+  // Clear the finished request before the handler may install the next fetch
+  // as mCurrentRequest, so cancellation always reaches the in-flight request.
   mCurrentRequest = nullptr;
-  nsresult rv = OnDidDocumentStop(aRequest, aStatus);
+  nsresult rv = finished == Phase::Handle
+                    ? OnHandleStop(aRequest, aStatus)
+                    : OnDidDocumentStop(aRequest, aStatus);
   if (NS_FAILED(rv)) {
     DeliverFailure(rv);
   }
   return NS_OK;
 }
 
-nsresult AtRecordResolver::OnDidDocumentStop(nsIRequest* aRequest,
-                                             nsresult aStatus) {
+nsresult AtRecordResolver::CheckResponse(nsIRequest* aRequest,
+                                         nsresult aStatus) {
   NS_ENSURE_SUCCESS(aStatus, aStatus);
 
   nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(aRequest);
@@ -173,24 +191,53 @@ nsresult AtRecordResolver::OnDidDocumentStop(nsIRequest* aRequest,
     uint32_t responseStatus = 0;
     nsresult rv = http->GetResponseStatus(&responseStatus);
     if (NS_SUCCEEDED(rv) && (responseStatus < 200 || responseStatus >= 300)) {
-      AT_LOG(("atproto: DID document HTTP status %u\n", responseStatus));
+      AT_LOG(("atproto: HTTP status %u\n", responseStatus));
       return NS_ERROR_NOT_AVAILABLE;
     }
   }
 
-  // A cross-origin redirect moves the DID document off the domain named in
-  // the DID, breaking the identity anchor. Reject it (ADR 0004).
-  nsCOMPtr<nsIChannel> docChannel = do_QueryInterface(aRequest);
-  if (docChannel) {
+  nsCOMPtr<nsIChannel> responseChannel = do_QueryInterface(aRequest);
+  if (responseChannel) {
     nsCOMPtr<nsIURI> finalUri;
-    nsresult rv = docChannel->GetURI(getter_AddRefs(finalUri));
+    nsresult rv = responseChannel->GetURI(getter_AddRefs(finalUri));
     if (NS_SUCCEEDED(rv) && finalUri) {
       nsAutoCString finalHost;
       rv = finalUri->GetHost(finalHost);
       if (NS_SUCCEEDED(rv) && !finalHost.Equals(mExpectedHost)) {
-        AT_LOG(("atproto: DID document redirected to another host\n"));
+        AT_LOG(("atproto: response redirected to another host\n"));
         return NS_ERROR_NOT_AVAILABLE;
       }
+    }
+  }
+  return NS_OK;
+}
+
+nsresult AtRecordResolver::OnHandleStop(nsIRequest* aRequest,
+                                        nsresult aStatus) {
+  nsresult rv = CheckResponse(aRequest, aStatus);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  HandleError herr = ParseHandleDidResponse(
+      std::string_view(mBody.BeginReading(), mBody.Length()), mDid);
+  if (herr != HandleError::None) {
+    AT_LOG(("atproto: handle resolution failed (%s)\n", HandleErrorName(herr)));
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  return StartDidDocumentFetch();
+}
+
+nsresult AtRecordResolver::OnDidDocumentStop(nsIRequest* aRequest,
+                                             nsresult aStatus) {
+  nsresult rv = CheckResponse(aRequest, aStatus);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!mHandle.empty()) {
+    HandleBindingError berr = VerifyHandleBinding(
+        std::string_view(mBody.BeginReading(), mBody.Length()), mHandle);
+    if (berr != HandleBindingError::None) {
+      AT_LOG(("atproto: handle reverse binding failed (%s)\n",
+              HandleBindingErrorName(berr)));
+      return NS_ERROR_NOT_AVAILABLE;
     }
   }
 

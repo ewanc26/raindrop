@@ -12,6 +12,7 @@ UNIFIED_SOURCES += [
 SOURCES += [
     "AtURI.cpp",
     "DidResolver.cpp",
+    "HandleResolver.cpp",
     "PdsClient.cpp",
 ]
 
