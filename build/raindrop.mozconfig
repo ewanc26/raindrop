@@ -1,0 +1,20 @@
+# raindrop-branded build.
+#
+# Usage: export MOZCONFIG=$PWD/build/raindrop.mozconfig
+# Use build/raindrop-unofficial.mozconfig for unbranded local developer builds.
+
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-raindrop
+
+# This is a release-tarball checkout, so Firefox does not enable toolchain
+# autobootstrap by default. Fetch the pinned clang/WASI sysroot on first build.
+ac_add_options --enable-bootstrap
+
+# All raindrop product names, icons and prefs live in this branding directory.
+ac_add_options --with-branding=browser/branding/raindrop
+
+# Firefox prefixes the bundle identifier with the distribution id. Use a
+# raindrop-owned id so no "org.mozilla" identifier survives in the app bundle.
+ac_add_options --with-distribution-id=uk.ewancroft.raindrop
+
+# Uncomment for faster local iteration once a full build has been proven:
+# ac_add_options --enable-artifact-builds

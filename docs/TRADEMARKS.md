@@ -56,7 +56,9 @@ The fork's approach:
   (`-brand-short-name = raindrop`, and so on) so no Mozilla mark survives in
   the UI. Community tooling can generate a full drop-in branding directory from
   SVG sources when the project reaches that stage (see the
-  FirefoxUX/firefox-brand generator).
+  FirefoxUX/firefox-brand generator). raindrop did not use that generator: its
+  `browser/branding/raindrop/` directory is drawn from scratch and documented
+  in [BRANDING.md](BRANDING.md).
 
 ### Practical checklist when the fork builds
 
