@@ -13,8 +13,9 @@ at://did:plc:abc.../app.bsky.feed.post/3lz...
 ```
 
 1. **Scheme dispatch.** The address bar hands `at://` URLs to the `atproto/`
-   module instead of the HTTP stack. Handles (`at://ewancroft.uk`) are resolved
-   to DIDs first, since the authority in an `at://` URI must be a DID.
+   module instead of the HTTP stack. The authority is kept opaque during
+   parsing; it may be a DID or a handle. Handle authorities are resolved to a
+   DID before the repository fetch, but the URI itself is never rewritten.
 2. **DID resolution.** Method dispatch on the authority:
    - `did:plc` - look up the DID document at the PLC directory.
    - `did:web` - fetch `https://<domain>/.well-known/did.json`.
