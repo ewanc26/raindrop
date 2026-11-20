@@ -1,0 +1,7 @@
+<!-- PDF document icon with a raindrop accent. Original artwork. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <path d="M40 14h112l64 64v164H40Z" fill="#f8fafc" stroke="#94a3b8" stroke-width="5" stroke-linejoin="round"/>
+  <path d="M152 14v64h64Z" fill="#cbd5e1"/>
+  <rect x="28" y="148" width="200" height="64" rx="10" fill="#e11d48"/>
+  <text x="128" y="194" fill="#ffffff" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="42" font-weight="700" text-anchor="middle">PDF</text>
+</svg>

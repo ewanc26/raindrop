@@ -1,0 +1,23 @@
+<!-- Private-browsing variant of the raindrop icon. Original artwork. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="night" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#241b4a"/>
+      <stop offset="1" stop-color="#100a24"/>
+    </linearGradient>
+    <linearGradient id="water" x1="0.15" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#ddd6fe"/>
+      <stop offset="0.45" stop-color="#a78bfa"/>
+      <stop offset="1" stop-color="#6d28d9"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.66" r="0.55">
+      <stop offset="0" stop-color="#a78bfa" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#a78bfa" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#night)"/>
+  <circle cx="256" cy="330" r="176" fill="url(#halo)"/>
+  <path d="M256 84c0 0-124 140-124 232 0 70 56 128 124 128s124-58 124-128C380 224 256 84 256 84Z" fill="url(#water)"/>
+  <path d="M256 84c0 0-124 140-124 232 0 70 56 128 124 128s124-58 124-128C380 224 256 84 256 84Z" fill="none" stroke="#ede9fe" stroke-opacity="0.3" stroke-width="7" stroke-linejoin="round"/>
+  <ellipse cx="206" cy="338" rx="24" ry="47" transform="rotate(-27 206 338)" fill="#ffffff" fill-opacity="0.4"/>
+</svg>
