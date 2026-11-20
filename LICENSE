@@ -1,9 +1,7 @@
-Please see the file toolkit/content/license.html for the copyright licensing
-conditions attached to this codebase, including copies of the licenses
-concerned.
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
-You are not granted rights or licenses to the trademarks of the
-Mozilla Foundation or any party, including without limitation the
-Firefox name or logo.
-
-For more information, see: http://www.mozilla.org/foundation/licensing.html
+Note: raindrop is intended to be built from Firefox (MPL-2.0) sources.
+The complete licence text will be vendored here in full when the first
+Firefox-derived code lands in this repository.
