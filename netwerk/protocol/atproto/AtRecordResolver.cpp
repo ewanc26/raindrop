@@ -149,8 +149,12 @@ AtRecordResolver::OnDataAvailable(nsIRequest* aRequest,
 
   size_t cap = mPhase == Phase::Handle ? kMaxHandleResponseLength
                                        : kMaxDidDocumentLength;
-  if (mBody.Length() < cap) {
-    uint32_t remaining = static_cast<uint32_t>(cap - mBody.Length());
+  // Keep one byte past the cap: the parsers reject bodies larger than the cap,
+  // so truncating exactly at the cap would turn an oversized response into a
+  // valid-looking one.
+  size_t limit = cap + 1;
+  if (mBody.Length() < limit) {
+    uint32_t remaining = static_cast<uint32_t>(limit - mBody.Length());
     mBody.Append(
         Substring(chunk, 0, std::min<uint32_t>(chunk.Length(), remaining)));
   }
