@@ -5,6 +5,7 @@
 UNIFIED_SOURCES += [
     "TestAtURI.cpp",
     "TestDidResolver.cpp",
+    "TestPdsClient.cpp",
 ]
 
 LOCAL_INCLUDES += [
