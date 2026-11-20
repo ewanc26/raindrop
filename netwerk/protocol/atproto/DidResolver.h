@@ -75,6 +75,21 @@ struct PdsService {
   std::string mEndpoint;
 };
 
+enum class HandleBindingError {
+  None,
+  InvalidJson,
+  MissingAlsoKnownAs,
+  HandleNotClaimed,
+};
+
+const char* HandleBindingErrorName(HandleBindingError aError);
+
+// Verify the reverse binding required for handle authorities (ADR 0003): the
+// DID document's alsoKnownAs array must contain at://<handle>. A handle that
+// resolves to a DID whose document does not claim it is a failed resolution.
+HandleBindingError VerifyHandleBinding(std::string_view aJson,
+                                       std::string_view aHandle);
+
 // Extract the #atproto_pds service endpoint from a DID document. The document's
 // "id" must match aExpectedDid: this is the check that stops a resolver from
 // substituting another identity's PDS.
