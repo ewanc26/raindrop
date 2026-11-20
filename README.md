@@ -14,6 +14,33 @@ raindrop's premise is that the browser should speak the protocol itself. Instead
 teaching users about gateways, `at://` becomes a first-class citizen of the address
 bar, the same way `http://`, `mailto:`, and `file://` already are.
 
+## Why a whole browser, not an extension?
+
+Extensions for `at://` exist today, and they demonstrate the problem: with no scheme
+support underneath, the best they can do is catch the URI elsewhere and redirect it to
+a web viewer. That keeps the gateway in the middle — the exact middleman raindrop
+exists to remove. No WebExtension can fix this, because extensions fundamentally
+cannot:
+
+- **register a new URI scheme** — there is no API to make `at://` navigable, so an
+  extension never even sees an `at://` address typed into the bar (the browser
+  treats it as a search query), and existing extensions work by picking the URI up
+  after the fact;
+- **reach the URL parser** — the DID authority (`did:plc:...`, with its un-encoded
+  colons) breaks WHATWG URL parsing, so correct handling has to live in the
+  engine's URI machinery where raindrop can fix it, not in web-platform code;
+- **fetch a PDS like the network stack can** — a page-context fetch needs CORS
+  cooperation from every PDS operator, while the browser's fetcher, cache, and
+  private-browsing integration are protocol-agnostic; or
+- **put trust UI in chrome** — provenance ("which DID, which PDS, CID verified?")
+  and honest failure states must be rendered by the browser itself, not by
+  injectable content pretending to be it.
+
+So an extension version of raindrop would have to compromise on the very goals
+(native scheme, no gateway, verifiable provenance) that define the project. The
+fuller design reasoning is in
+[ARCHITECTURE.md](docs/ARCHITECTURE.md#why-in-the-browser-not-an-extension).
+
 ## Goals
 
 - Native `at://` scheme handling in the address bar, bookmarks, and history.
