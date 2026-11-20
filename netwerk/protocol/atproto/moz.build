@@ -6,6 +6,7 @@ UNIFIED_SOURCES += [
     "AtProtocolHandler.cpp",
     "AtURI.cpp",
     "DidResolver.cpp",
+    "PdsClient.cpp",
 ]
 
 LOCAL_INCLUDES += ["/toolkit/components/jsoncpp/include"]
