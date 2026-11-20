@@ -61,6 +61,7 @@ class AtRecordResolver final : public nsIStreamListener, public nsICancelable {
   nsresult CheckResponse(nsIRequest* aRequest, nsresult aStatus);
   nsresult OnHandleStop(nsIRequest* aRequest, nsresult aStatus);
   nsresult OnDidDocumentStop(nsIRequest* aRequest, nsresult aStatus);
+  nsresult OnRecordStop(nsIRequest* aRequest, nsresult aStatus);
 
   void DeliverFailure(nsresult aStatus);
   void ForwardStart();
@@ -72,6 +73,7 @@ class AtRecordResolver final : public nsIStreamListener, public nsICancelable {
   std::string mDid;
   // Non-empty only when the authority is a handle; drives reverse binding.
   std::string mHandle;
+  std::string mPds;
 
   AtURI mUri;
   nsCOMPtr<nsILoadInfo> mLoadInfo;
