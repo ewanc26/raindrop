@@ -5,6 +5,11 @@
 UNIFIED_SOURCES += [
     "AtProtocolHandler.cpp",
     "AtRecordResolver.cpp",
+]
+
+# These parsers define same-named anonymous-namespace helpers (IsDigit, Split,
+# ...) that collide if unified into one translation unit.
+SOURCES += [
     "AtURI.cpp",
     "DidResolver.cpp",
     "PdsClient.cpp",

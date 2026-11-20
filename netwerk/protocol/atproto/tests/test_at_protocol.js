@@ -4,6 +4,10 @@
 
 "use strict";
 
+const { NetUtil } = ChromeUtils.importESModule(
+  "resource://gre/modules/NetUtil.sys.mjs"
+);
+
 const DID_URI =
   "at://did:plc:vwzwgnygau7ed7b7wt5ux7y2/app.bsky.feed.post/3k5nobkf2w72g";
 const HANDLE_URI = "at://jay.bsky.social/app.bsky.feed.post/3k5nobkf2w72g";
@@ -18,15 +22,15 @@ add_task(async function did_authority_round_trips() {
   const uri = Services.io.newURI(DID_URI);
   Assert.equal(uri.spec, DID_URI);
   Assert.equal(uri.scheme, "at");
-  Assert.throws(() => uri.host);
-  Assert.throws(() => uri.port);
+  Assert.throws(() => uri.host, /NS_ERROR_FAILURE/);
+  Assert.throws(() => uri.port, /NS_ERROR_FAILURE/);
 });
 
 add_task(async function handle_authority_round_trips() {
   const uri = Services.io.newURI(HANDLE_URI);
   Assert.equal(uri.spec, HANDLE_URI);
   Assert.equal(uri.scheme, "at");
-  Assert.throws(() => uri.host);
+  Assert.throws(() => uri.host, /NS_ERROR_FAILURE/);
 });
 
 add_task(async function opaque_authority_is_not_reparsed() {
