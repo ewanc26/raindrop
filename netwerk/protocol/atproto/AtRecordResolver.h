@@ -20,9 +20,12 @@ namespace mozilla {
 namespace net {
 namespace atproto {
 
-// Drives the two sequential HTTPS fetches behind an at:// navigation:
-//   1. GET the DID document for the URI's authority (did:plc / did:web).
-//   2. GET com.atproto.repo.getRecord from the PDS named in that document.
+// Drives the HTTPS fetches behind an at:// navigation. DID authorities take
+// two steps; handle authorities take three (ADR 0003):
+//   1. GET https://<handle>/.well-known/atproto-did  (handle authorities only)
+//   2. GET the DID document (did:plc / did:web), verifying alsoKnownAs for
+//      handle authorities.
+//   3. GET com.atproto.repo.getRecord from the PDS named in that document.
 //
 // It is the context object of NS_NewSimpleChannel. The at:// channel itself
 // (a SimpleChannel/nsBaseChannel) owns the public nsIChannel behaviour; this
@@ -31,7 +34,7 @@ namespace atproto {
 //
 // The consumer sees exactly one OnStartRequest/OnDataAvailable/OnStopRequest
 // sequence carrying the final record JSON, with the at:// channel as the
-// request. The DID-document response is consumed internally and never exposed.
+// request. Intermediate responses are consumed internally and never exposed.
 class AtRecordResolver final : public nsIStreamListener, public nsICancelable {
  public:
   NS_DECL_ISUPPORTS
@@ -41,19 +44,22 @@ class AtRecordResolver final : public nsIStreamListener, public nsICancelable {
 
   AtRecordResolver(const AtURI& aUri, nsILoadInfo* aLoadInfo);
 
-  // Begin the DID-document fetch. aTarget is the at:// channel's listener
-  // (the nsBaseChannel passed to StartAsyncRead). Synchronous setup errors
-  // are returned so nsBaseChannel can fail the AsyncOpen. On success this
-  // object is returned as the operation's nsICancelable.
+  // Begin resolution. aTarget is the at:// channel's listener (the
+  // nsBaseChannel passed to StartAsyncRead). Synchronous setup errors are
+  // returned so nsBaseChannel can fail the AsyncOpen. On success this object
+  // is returned as the operation's nsICancelable.
   RequestOrReason Start(nsIStreamListener* aTarget);
 
  private:
   ~AtRecordResolver() = default;
 
-  enum class Phase { None, DidDocument, Record };
+  enum class Phase { None, Handle, DidDocument, Record };
 
+  nsresult StartResolution();
   nsresult StartDidDocumentFetch();
   nsresult StartFetch(const std::string& aUrl, Phase aPhase);
+  nsresult CheckResponse(nsIRequest* aRequest, nsresult aStatus);
+  nsresult OnHandleStop(nsIRequest* aRequest, nsresult aStatus);
   nsresult OnDidDocumentStop(nsIRequest* aRequest, nsresult aStatus);
 
   void DeliverFailure(nsresult aStatus);
@@ -64,6 +70,8 @@ class AtRecordResolver final : public nsIStreamListener, public nsICancelable {
   nsCString mExpectedHost;
   nsCString mBody;
   std::string mDid;
+  // Non-empty only when the authority is a handle; drives reverse binding.
+  std::string mHandle;
 
   AtURI mUri;
   nsCOMPtr<nsILoadInfo> mLoadInfo;

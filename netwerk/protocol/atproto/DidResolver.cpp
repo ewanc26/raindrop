@@ -270,6 +270,50 @@ const char* PdsErrorName(PdsError aError) {
   return "Unknown";
 }
 
+const char* HandleBindingErrorName(HandleBindingError aError) {
+  switch (aError) {
+    case HandleBindingError::None:
+      return "None";
+    case HandleBindingError::InvalidJson:
+      return "InvalidJson";
+    case HandleBindingError::MissingAlsoKnownAs:
+      return "MissingAlsoKnownAs";
+    case HandleBindingError::HandleNotClaimed:
+      return "HandleNotClaimed";
+  }
+  return "Unknown";
+}
+
+HandleBindingError VerifyHandleBinding(std::string_view aJson,
+                                       std::string_view aHandle) {
+  if (aJson.size() > kMaxDidDocumentLength) {
+    return HandleBindingError::InvalidJson;
+  }
+
+  Json::CharReaderBuilder builder;
+  std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+  Json::Value root;
+  std::string errors;
+  if (!reader->parse(aJson.data(), aJson.data() + aJson.size(), &root,
+                     &errors) ||
+      !root.isObject()) {
+    return HandleBindingError::InvalidJson;
+  }
+
+  const Json::Value& alsoKnownAs = root["alsoKnownAs"];
+  if (!alsoKnownAs.isArray()) {
+    return HandleBindingError::MissingAlsoKnownAs;
+  }
+
+  const std::string expected = "at://" + std::string(aHandle);
+  for (const auto& entry : alsoKnownAs) {
+    if (entry.isString() && entry.asString() == expected) {
+      return HandleBindingError::None;
+    }
+  }
+  return HandleBindingError::HandleNotClaimed;
+}
+
 DidError ParseDid(std::string_view aDid, Did& aResult) {
   aResult = Did{};
   if (aDid.size() > kMaxDidLength || !IsValidDid(aDid)) {
