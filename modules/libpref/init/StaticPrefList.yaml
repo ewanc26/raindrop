@@ -16780,9 +16780,11 @@
 
 # A list of schemes to allow for bypassing defaultURI as default
 # This is only used when network.url.simple_uri_unknown_schemes_enabled is true
+# "at" is included because DID authorities contain colons that the WHATWG URL
+# parser rejects as an invalid port; nsSimpleURI keeps them opaque instead.
 - name: network.url.simple_uri_unknown_schemes
   type: String
-  value: ""
+  value: "at"
   mirror: never
 
 # The maximum allowed length for a URL - 512MB default.
