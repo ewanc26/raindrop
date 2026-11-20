@@ -2,7 +2,14 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-UNIFIED_SOURCES += ["AtURI.cpp"]
+UNIFIED_SOURCES += [
+    "AtProtocolHandler.cpp",
+    "AtURI.cpp",
+]
+
+XPCOM_MANIFESTS += ["components.conf"]
+
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell.toml"]
 
 TEST_DIRS += ["tests"]
 
