@@ -62,6 +62,7 @@ enum class PdsError {
   MissingService,
   InvalidService,
   InvalidEndpoint,
+  OnionEndpoint,
 };
 
 const char* PdsErrorName(PdsError aError);

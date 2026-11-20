@@ -155,6 +155,23 @@ bool IsValidPlcId(std::string_view aId) {
   return true;
 }
 
+// Return the authority component of an http(s) URL, or an empty view if the
+// URL does not start with a supported scheme.
+std::string_view EndpointAuthority(std::string_view aEndpoint) {
+  constexpr std::string_view https = "https://";
+  constexpr std::string_view http = "http://";
+  std::string_view rest;
+  if (aEndpoint.substr(0, https.size()) == https) {
+    rest = aEndpoint.substr(https.size());
+  } else if (aEndpoint.substr(0, http.size()) == http) {
+    rest = aEndpoint.substr(http.size());
+  } else {
+    return {};
+  }
+  auto slash = rest.find('/');
+  return slash == std::string_view::npos ? rest : rest.substr(0, slash);
+}
+
 // Require an absolute https URL with a host and no credentials. The trust
 // model does not permit gateway fallbacks, so plain http is rejected here.
 bool IsValidEndpoint(std::string_view aEndpoint) {
@@ -165,15 +182,24 @@ bool IsValidEndpoint(std::string_view aEndpoint) {
   if (aEndpoint.substr(0, scheme.size()) != scheme) {
     return false;
   }
-  std::string_view authority = aEndpoint.substr(scheme.size());
-  auto slash = authority.find('/');
-  if (slash != std::string_view::npos) {
-    authority = authority.substr(0, slash);
-  }
+  std::string_view authority = EndpointAuthority(aEndpoint);
   if (authority.empty() || authority.find('@') != std::string_view::npos) {
     return false;
   }
   return true;
+}
+
+// Onion-only PDS endpoints are a distinct failure state (ADR 0004): the load
+// must report that native Tor support is unavailable rather than treating the
+// endpoint as a generic malformed URL or proxying it through a gateway.
+bool IsOnionEndpoint(std::string_view aEndpoint) {
+  std::string_view authority = EndpointAuthority(aEndpoint);
+  auto colon = authority.find(':');
+  std::string_view host =
+      colon == std::string_view::npos ? authority : authority.substr(0, colon);
+  constexpr std::string_view suffix = ".onion";
+  return host.size() > suffix.size() &&
+         host.substr(host.size() - suffix.size()) == suffix;
 }
 
 }  // namespace
@@ -238,6 +264,8 @@ const char* PdsErrorName(PdsError aError) {
       return "InvalidService";
     case PdsError::InvalidEndpoint:
       return "InvalidEndpoint";
+    case PdsError::OnionEndpoint:
+      return "OnionEndpoint";
   }
   return "Unknown";
 }
@@ -364,7 +392,13 @@ PdsError ExtractPdsEndpoint(std::string_view aJson,
       continue;
     }
     const Json::Value& endpoint = service["serviceEndpoint"];
-    if (!endpoint.isString() || !IsValidEndpoint(endpoint.asString())) {
+    if (!endpoint.isString()) {
+      return PdsError::InvalidEndpoint;
+    }
+    if (IsOnionEndpoint(endpoint.asString())) {
+      return PdsError::OnionEndpoint;
+    }
+    if (!IsValidEndpoint(endpoint.asString())) {
       return PdsError::InvalidEndpoint;
     }
     aResult.mEndpoint = endpoint.asString();

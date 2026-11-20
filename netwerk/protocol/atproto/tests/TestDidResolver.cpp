@@ -117,3 +117,13 @@ TEST(DidResolver, RejectsBadDocuments) {
   std::string tooLarge(kMaxDidDocumentLength + 1, ' ');
   EXPECT_EQ(ExtractPdsEndpoint(tooLarge, did, service), PdsError::TooLarge);
 }
+
+TEST(DidResolver, OnionEndpointIsDistinctFailure) {
+  const std::string did = "did:plc:abc";
+  PdsService service;
+  const std::string json =
+      R"({"id":"did:plc:abc","service":[{"id":"#atproto_pds",
+           "serviceEndpoint":"https://abcdef123456.onion"}]})";
+  EXPECT_EQ(ExtractPdsEndpoint(json, did, service), PdsError::OnionEndpoint);
+  EXPECT_TRUE(service.mEndpoint.empty());
+}
