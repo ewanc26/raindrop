@@ -7,6 +7,7 @@ used, even if it is small.
 
 - [ ] Feasibility & decisions record: which Firefox source to track
       (`mozilla-central` vs release channel), branch/tag strategy, release cadence.
+      Proposed in [ADR 0002](decisions/0002-upstream-tracking.md).
 - [ ] Build bootstrap: reproduce a stock Firefox build before any patches, and a CI
       job that builds it on every change to the fork layer.
 - [ ] Design review of [ARCHITECTURE.md](ARCHITECTURE.md), especially the trust and
