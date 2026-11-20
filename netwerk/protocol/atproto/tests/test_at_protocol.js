@@ -59,6 +59,22 @@ add_task(async function handle_uri_creates_an_html_channel() {
   Assert.equal(chan.contentType, "text/html");
 });
 
+add_task(async function at_uri_is_classified_as_a_url_not_a_search() {
+  // ADR 0001: typing an at:// URI in the address bar must be classified as a
+  // URL, not a search query, because the scheme has a registered handler.
+  // Allowing keyword lookup is what makes this a meaningful classification
+  // test: an unhandled scheme would be turned into keywordAsSent instead.
+  for (const spec of [DID_URI, HANDLE_URI]) {
+    const info = Services.uriFixup.getFixupURIInfo(
+      spec,
+      Services.uriFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP
+    );
+    Assert.equal(info.preferredURI.spec, spec);
+    Assert.equal(info.fixedURI.spec, spec);
+    Assert.equal(info.keywordAsSent, "");
+  }
+});
+
 add_task(async function authority_only_uri_is_rejected() {
   Assert.throws(
     () =>
