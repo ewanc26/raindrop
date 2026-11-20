@@ -9,6 +9,7 @@
 #include "DidResolver.h"
 #include "HandleResolver.h"
 #include "PdsClient.h"
+#include "RecordView.h"
 #include "mozilla/Logging.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
@@ -17,6 +18,7 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsStreamUtils.h"
+#include "nsStringStream.h"
 
 namespace mozilla {
 namespace net {
@@ -117,9 +119,6 @@ nsresult AtRecordResolver::StartFetch(const std::string& aUrl, Phase aPhase) {
 NS_IMETHODIMP
 AtRecordResolver::OnStartRequest(nsIRequest* aRequest) {
   mCurrentRequest = aRequest;
-  if (mPhase == Phase::Record) {
-    ForwardStart();
-  }
   return NS_OK;
 }
 
@@ -131,15 +130,8 @@ AtRecordResolver::OnDataAvailable(nsIRequest* aRequest,
     return NS_BINDING_ABORTED;
   }
 
-  if (mPhase == Phase::Record) {
-    if (mTarget && !mDeliveredStop) {
-      return mTarget->OnDataAvailable(mOuterRequest, aInputStream,
-                                      aSourceOffset, aCount);
-    }
-    return NS_OK;
-  }
-
-  if (mPhase != Phase::Handle && mPhase != Phase::DidDocument) {
+  if (mPhase != Phase::Handle && mPhase != Phase::DidDocument &&
+      mPhase != Phase::Record) {
     return NS_OK;
   }
 
@@ -147,8 +139,9 @@ AtRecordResolver::OnDataAvailable(nsIRequest* aRequest,
   nsresult rv = NS_ConsumeStream(aInputStream, aCount, chunk);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  size_t cap = mPhase == Phase::Handle ? kMaxHandleResponseLength
-                                       : kMaxDidDocumentLength;
+  size_t cap = mPhase == Phase::Handle    ? kMaxHandleResponseLength
+               : mPhase == Phase::Record ? kMaxRecordResponseLength
+                                         : kMaxDidDocumentLength;
   // Keep one byte past the cap: the parsers reject bodies larger than the cap,
   // so truncating exactly at the cap would turn an oversized response into a
   // valid-looking one.
@@ -163,13 +156,8 @@ AtRecordResolver::OnDataAvailable(nsIRequest* aRequest,
 
 NS_IMETHODIMP
 AtRecordResolver::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
-  if (mPhase == Phase::Record) {
-    ForwardStop(aStatus);
-    mCurrentRequest = nullptr;
-    return NS_OK;
-  }
-
-  if (mPhase != Phase::Handle && mPhase != Phase::DidDocument) {
+  if (mPhase != Phase::Handle && mPhase != Phase::DidDocument &&
+      mPhase != Phase::Record) {
     return NS_OK;
   }
 
@@ -177,9 +165,20 @@ AtRecordResolver::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   // Clear the finished request before the handler may install the next fetch
   // as mCurrentRequest, so cancellation always reaches the in-flight request.
   mCurrentRequest = nullptr;
-  nsresult rv = finished == Phase::Handle
-                    ? OnHandleStop(aRequest, aStatus)
-                    : OnDidDocumentStop(aRequest, aStatus);
+  nsresult rv;
+  switch (finished) {
+    case Phase::Handle:
+      rv = OnHandleStop(aRequest, aStatus);
+      break;
+    case Phase::DidDocument:
+      rv = OnDidDocumentStop(aRequest, aStatus);
+      break;
+    case Phase::Record:
+      rv = OnRecordStop(aRequest, aStatus);
+      break;
+    default:
+      return NS_OK;
+  }
   if (NS_FAILED(rv)) {
     DeliverFailure(rv);
   }
@@ -254,6 +253,8 @@ nsresult AtRecordResolver::OnDidDocumentStop(nsIRequest* aRequest,
                                            : NS_ERROR_FAILURE;
   }
 
+  mPds = service.mEndpoint;
+
   std::string url;
   PdsUrlError uerr = BuildGetRecordUrl(service.mEndpoint, mDid, mUri.mCollection,
                                        mUri.mRecordKey, url);
@@ -263,6 +264,36 @@ nsresult AtRecordResolver::OnDidDocumentStop(nsIRequest* aRequest,
   }
 
   return StartFetch(url, Phase::Record);
+}
+
+nsresult AtRecordResolver::OnRecordStop(nsIRequest* aRequest,
+                                        nsresult aStatus) {
+  nsresult rv = CheckResponse(aRequest, aStatus);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  RecordViewData data;
+  RecordViewError verr = ParseRecordResponse(
+      std::string_view(mBody.BeginReading(), mBody.Length()), data);
+  if (verr != RecordViewError::None) {
+    AT_LOG(("atproto: record view failed (%s)\n", RecordViewErrorName(verr)));
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  RecordViewProvenance provenance{mDid, mHandle, mPds, mUri.mCollection,
+                                  mUri.mRecordKey};
+  std::string html = RenderRecordHtml(data, provenance);
+
+  nsCOMPtr<nsIInputStream> stream;
+  rv = NS_NewCStringInputStream(getter_AddRefs(stream),
+                               nsCString(html.data(), html.size()));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  ForwardStart();
+  if (mTarget && !mDeliveredStop) {
+    rv = mTarget->OnDataAvailable(mOuterRequest, stream, 0, html.size());
+  }
+  ForwardStop(NS_OK);
+  return rv;
 }
 
 void AtRecordResolver::ForwardStart() {

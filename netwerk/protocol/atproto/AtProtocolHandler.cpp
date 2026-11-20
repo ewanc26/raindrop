@@ -73,8 +73,8 @@ AtProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
       });
   NS_ENSURE_TRUE(channel, NS_ERROR_OUT_OF_MEMORY);
 
-  // The final payload is the getRecord JSON.
-  rv = channel->SetContentType("application/json"_ns);
+  // The resolver renders the getRecord response into a generic HTML view.
+  rv = channel->SetContentType("text/html"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
 
   channel.forget(aResult);
