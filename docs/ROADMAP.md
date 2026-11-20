@@ -10,8 +10,10 @@ used, even if it is small.
       ([ADR 0002](decisions/0002-upstream-tracking.md)).
 - [ ] Build bootstrap: reproduce a stock Firefox build before any patches, and a CI
       job that builds it on every change to the fork layer.
-- [ ] Design review of [ARCHITECTURE.md](ARCHITECTURE.md), especially the trust and
-      failure models.
+- [x] Design review of [ARCHITECTURE.md](ARCHITECTURE.md), especially the trust and
+      failure models. Handle authorities ([ADR 0003](decisions/0003-handle-authority-semantics.md))
+      and `did:web`/onion endpoints ([ADR 0004](decisions/0004-did-web-and-onion-endpoints.md))
+      are recorded; remaining open questions are tracked in the document.
 - [x] Decide the minimal patch surface: keep changes in an isolated `atproto/`
       module so rebases onto upstream are as small as possible
       ([ADR 0001](decisions/0001-at-uri-scheme-registration.md)).
