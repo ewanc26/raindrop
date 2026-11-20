@@ -14,6 +14,15 @@ raindrop's premise is that the browser should speak the protocol itself. Instead
 teaching users about gateways, `at://` becomes a first-class citizen of the address
 bar, the same way `http://`, `mailto:`, and `file://` already are.
 
+## Why the name?
+
+The ecosystem built on the AT Protocol is known as the Atmosphere, and rain is
+what an atmosphere is for. It is also the architecture in one image: a raindrop
+leaves the cloud (the author's repository) and lands exactly where it is pointed,
+with nothing in between. No gateway intermediates a raindrop. Each `at://` URI
+is a drop, small, precisely addressed, and fetched directly from its own PDS
+rather than routed through anyone else's sky.
+
 ## Why a whole browser, not an extension?
 
 Extensions for `at://` exist today, and they demonstrate the problem: with no scheme
