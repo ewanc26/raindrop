@@ -49,7 +49,16 @@ raindrop DMG.
 
 ## Product names and endpoints
 
-- `configure.sh` sets `MOZ_APP_DISPLAYNAME=raindrop`.
+- `configure.sh` sets `MOZ_APP_DISPLAYNAME`, `MOZ_APP_BASENAME` and
+  `MOZ_APP_REMOTINGNAME` to `raindrop`, plus the mac bundle id suffix `browser`.
+  The basename controls the executable name, profile directory and system
+  integration hooks, so nothing falls back to `firefox`.
+- `browser/moz.configure` replaces the implied `MOZ_APP_VENDOR` and `MOZ_APP_ID`
+  with raindrop values. These are the only identity settings that cannot live in
+  a branding directory's `configure.sh`: the options accept implied values only.
+  `MOZ_APP_VENDOR=raindrop` and the application UUID
+  `{d9d2bf3e-372c-49a3-b630-2b67ba5b196e}` now appear in `application.ini` and
+  `about:` pages instead of Mozilla/Firefox values.
 - `locales/en-US/brand.ftl` and `brand.properties` set every brand string to
   raindrop; `trademarkInfo` carries the non-affiliation disclaimer.
 - `pref/firefox-branding.js` disables update checks and clears Mozilla update
