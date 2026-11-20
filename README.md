@@ -80,6 +80,20 @@ first milestone is to get the design and build pipeline right before touching
 Issues and design feedback are very welcome while the project is at this stage; see
 [CONTRIBUTING.md](CONTRIBUTING.md) and [SUPPORT.md](SUPPORT.md).
 
+## Support the project
+
+raindrop is free and open source, and so is everything else its maintainer builds.
+If the project is useful to you, your support keeps the servers running, projects
+maintained, and new tools getting built:
+
+- [Ko-fi](https://ko-fi.com/ewancroft) - one-time or monthly
+- [GitHub Sponsors](https://github.com/sponsors/ewanc26) - one-time or monthly
+- [Liberapay](https://liberapay.com/ewanc26) - recurring
+- Everything in one place: [ewancroft.uk/support](https://ewancroft.uk/support)
+
+Payments are handled securely by each platform; this project never sees your
+payment details.
+
 ## Trademarks
 
 Firefox and the Firefox logos, and Mozilla and the Mozilla logos, are trademarks
