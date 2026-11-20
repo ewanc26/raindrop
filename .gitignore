@@ -1,0 +1,15 @@
+# Rust (atproto/ workspace)
+target/
+**/*.rs.bk
+
+# Build outputs
+build/
+dist/
+obj*/
+
+# Editors and OS
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
