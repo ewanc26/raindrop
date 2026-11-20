@@ -5,7 +5,10 @@
 UNIFIED_SOURCES += [
     "AtProtocolHandler.cpp",
     "AtURI.cpp",
+    "DidResolver.cpp",
 ]
+
+LOCAL_INCLUDES += ["/toolkit/components/jsoncpp/include"]
 
 XPCOM_MANIFESTS += ["components.conf"]
 
