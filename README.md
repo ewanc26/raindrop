@@ -68,12 +68,14 @@ fuller design reasoning is in
 
 ## Status
 
-Design / scaffold stage. There is no browser code in this repository yet; the
-first milestone is to get the design and build pipeline right before touching
-`mozilla-central`.
+The pristine Firefox 160.0 release source is imported on the `upstream` branch
+and tagged `firefox-160.0`; raindrop's work is the patch queue on `main`.
+There are no raindrop product patches yet: the first milestone is the build
+bootstrap and the remaining design decisions before touching Gecko code.
 
 - [Roadmap](docs/ROADMAP.md) - phased milestones from scaffold to first release
 - [Architecture](docs/ARCHITECTURE.md) - how an `at://` request flows through the browser
+- [Building](docs/BUILDING.md) - upstream source provenance and local build setup (work in progress)
 
 ## Contributing
 

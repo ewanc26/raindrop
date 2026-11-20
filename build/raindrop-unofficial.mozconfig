@@ -1,0 +1,15 @@
+# Stock Firefox build for the raindrop fork bootstrap.
+# No raindrop patches are applied when this config is used.
+#
+# Usage: export MOZCONFIG=$PWD/build/raindrop-unofficial.mozconfig
+# (A root-level .mozconfig is gitignored by upstream, so keep this tracked one.)
+
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-raindrop-unofficial
+
+# Unbranded build: no Mozilla names, logos or trade dress. This is the
+# correct branding for local developer builds; release builds will select
+# browser/branding/raindrop instead (issue #11).
+ac_add_options --with-branding=browser/branding/unofficial
+
+# Uncomment for faster local iteration once the bootstrap build is proven:
+# ac_add_options --enable-artifact-builds
