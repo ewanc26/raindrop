@@ -154,8 +154,10 @@ AtRecordResolver::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
     return NS_OK;
   }
 
-  nsresult rv = OnDidDocumentStop(aRequest, aStatus);
+  // Clear the finished DID-document request before OnDidDocumentStop may
+  // install the record fetch as the new mCurrentRequest.
   mCurrentRequest = nullptr;
+  nsresult rv = OnDidDocumentStop(aRequest, aStatus);
   if (NS_FAILED(rv)) {
     DeliverFailure(rv);
   }
