@@ -34,3 +34,25 @@ add_task(async function opaque_authority_is_not_reparsed() {
   const path = uri.pathQueryRef;
   Assert.ok(path.startsWith("//did:plc:vwzwgnygau7ed7b7wt5ux7y2/"));
 });
+
+add_task(async function record_uri_creates_a_json_channel() {
+  // Creating the channel must succeed; the network fetches only start on
+  // AsyncOpen. This keeps the test offline while checking NewChannel wiring.
+  const chan = NetUtil.newChannel({
+    uri: DID_URI,
+    loadUsingSystemPrincipal: true,
+  });
+  Assert.equal(chan.URI.spec, DID_URI);
+  Assert.equal(chan.contentType, "application/json");
+});
+
+add_task(async function authority_only_uri_is_rejected() {
+  Assert.throws(
+    () =>
+      NetUtil.newChannel({
+        uri: "at://did:plc:vwzwgnygau7ed7b7wt5ux7y2",
+        loadUsingSystemPrincipal: true,
+      }),
+    /NS_ERROR_MALFORMED_URI|component returned failure code|0x80570009/
+  );
+});

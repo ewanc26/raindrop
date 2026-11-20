@@ -4,12 +4,16 @@
 
 UNIFIED_SOURCES += [
     "AtProtocolHandler.cpp",
+    "AtRecordResolver.cpp",
     "AtURI.cpp",
     "DidResolver.cpp",
     "PdsClient.cpp",
 ]
 
-LOCAL_INCLUDES += ["/toolkit/components/jsoncpp/include"]
+LOCAL_INCLUDES += [
+    "/netwerk/base",
+    "/toolkit/components/jsoncpp/include",
+]
 
 XPCOM_MANIFESTS += ["components.conf"]
 
