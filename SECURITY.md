@@ -1,22 +1,30 @@
-# Firefox Security FAQ
+# Security Policy
 
-General information about security at Mozilla is available at [https://www.mozilla.org/en-US/security/](https://www.mozilla.org/en-US/security/).
+Thank you for keeping raindrop safe, please report responsibly.
 
-## I want to report a security bug\!
+## Supported versions
 
-Please report Firefox bugs in our Bugzilla instance by using [our bug bounty form](https://bugzilla.mozilla.org/form.client.bounty). Be aware that your e-mail address will be made public. See our [Bugzilla etiquette](https://bugzilla.mozilla.org/page.cgi?id=etiquette.html) for more.
+raindrop is pre-release: only the `main` branch is supported. There are no
+tagged releases of the browser yet, so there are no versions to backport fixes
+to. Security-relevant fixes land on `main` directly.
 
-## Do you have a bounty program?
+## Reporting a vulnerability
 
-We have two:
+- **Preferred:** use GitHub's private vulnerability reporting
+  (Security tab -> "Report a vulnerability") so the details stay private.
+- **Fallback:** email contact@ewancroft.uk with "raindrop security" in the
+  subject.
+- Please **do not** open a public issue or PR with exploit details, and give
+  the project a chance to patch before disclosing publicly.
 
-* Firefox browsers fall under the [Firefox bug bounty program](https://www.mozilla.org/en-US/security/client-bug-bounty/) which is handled on Bugzilla.
-* The general [Mozilla Security Bug Bounty Program](https://www.mozilla.org/en-US/security/bug-bounty/) also covers other products and services and is on HackerOne.
+Handling is best-effort by a solo maintainer: there is no bounty program, no
+SLA, and no promise of response times — but every report is read.
 
-## I have a question\! Who can help?
+## Scope
 
-Questions regarding security bugs or our bounty programs can be directed to [security@mozilla.com](mailto:security@mozilla.com). An encryption key for sending [GPG encrypted mails](https://www.mozilla.org/en-US/security/#pgpkey) is also available.
-
-## Where can I find security advisories?
-
-We publish [Firefox security advisories](https://www.mozilla.org/en-US/security/known-vulnerabilities/firefox/) for all released versions of Firefox Desktop. For other products including Firefox for iOS and Android please refer to the [overview](https://www.mozilla.org/en-US/security/advisories/).
+- **In scope:** the `atproto/` tooling, the fork's own patches, CI, and
+  anything in this repository, plus the design's trust model (e.g. a flaw that
+  would make raindrop resolve `at://` URIs through an unintended party).
+- **Out of scope here:** vulnerabilities in Firefox itself. raindrop builds on
+  Mozilla's open-source code; report those to Mozilla at
+  https://www.mozilla.org/security/ so everyone building on Firefox benefits.

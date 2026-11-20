@@ -12,7 +12,7 @@ designed to not need one.
 
 raindrop's premise is that the browser should speak the protocol itself. Instead of
 teaching users about gateways, `at://` becomes a first-class citizen of the address
-bar, the same way `http://`, `mailto:`, and `file://` already are.
+bar, the same way `http://`, `mailto://`, and `file://` already are.
 
 ## Goals
 
@@ -42,7 +42,14 @@ first milestone is to get the design and build pipeline right before touching
 ## Contributing
 
 Issues and design feedback are very welcome while the project is at this stage; see
-[CONTRIBUTING.md](CONTRIBUTING.md).
+[CONTRIBUTING.md](CONTRIBUTING.md) and [SUPPORT.md](SUPPORT.md).
+
+## Trademarks
+
+Firefox and the Firefox logos, and Mozilla and the Mozilla logos, are trademarks
+of the Mozilla Foundation. raindrop is an independent project, not affiliated
+with or endorsed by Mozilla; it uses Mozilla's open-source code under the MPL but
+none of its trademarks. See [NOTICE](NOTICE) and [docs/TRADEMARKS.md](docs/TRADEMARKS.md).
 
 ## Licence
 
