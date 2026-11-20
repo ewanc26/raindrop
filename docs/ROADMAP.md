@@ -5,15 +5,17 @@ used, even if it is small.
 
 ## Phase 0 - planning (current)
 
-- [ ] Feasibility & decisions record: which Firefox source to track
-      (`mozilla-central` vs release channel), branch/tag strategy, release cadence.
+- [x] Feasibility & decisions record: which Firefox source to track
+      (`mozilla-central` vs release channel), branch/tag strategy, release cadence
+      ([ADR 0002](decisions/0002-upstream-tracking.md)).
       Proposed in [ADR 0002](decisions/0002-upstream-tracking.md).
 - [ ] Build bootstrap: reproduce a stock Firefox build before any patches, and a CI
       job that builds it on every change to the fork layer.
 - [ ] Design review of [ARCHITECTURE.md](ARCHITECTURE.md), especially the trust and
       failure models.
-- [ ] Decide the minimal patch surface: keep changes in an isolated `atproto/`
-      module so rebases onto upstream are as small as possible.
+- [x] Decide the minimal patch surface: keep changes in an isolated `atproto/`
+      module so rebases onto upstream are as small as possible
+      ([ADR 0001](decisions/0001-at-uri-scheme-registration.md)).
 
 ## Phase 1 - first rain (M1)
 
