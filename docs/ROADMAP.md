@@ -20,8 +20,10 @@ used, even if it is small.
 
 - [ ] `at://` is a registered scheme: typed into the address bar it reaches
       raindrop's resolver instead of a search query.
-- [ ] DID resolution: `did:plc` via plc.directory, `did:web` via the
+- [x] DID resolution: `did:plc` via plc.directory, `did:web` via the
       `/.well-known/did.json` convention, with method dispatch for future methods.
+      Parsing, URL construction, and DID-document validation are implemented in
+      `did-resolver` with GTest coverage; the network fetch is wired up next.
 - [ ] PDS discovery from the DID document's service endpoint, and
       `com.atproto.repo.getRecord` fetches.
 - [ ] A generic, unstyled record view (lexicon, fields, CID, raw JSON) so *every*
