@@ -6,7 +6,11 @@ contributors, in the form of Mozilla Firefox source code licensed under the
 Mozilla Public License 2.0 (see LICENSE).
 
 Firefox and the Firefox logos, and Mozilla and the Mozilla logos, are
-trademarks of the Mozilla Foundation. raindrop is an independent project that
-is not affiliated with, endorsed by, or sponsored by Mozilla. This project
-uses Mozilla's open-source code under the terms of the MPL but none of
-Mozilla's trademarks.
+trademarks of the Mozilla Foundation. AT Protocol, atproto, Bluesky, and the
+Bluesky butterfly logo are trademarks of Bluesky Social PBC.
+
+raindrop is an independent project that is not affiliated with, endorsed by,
+or sponsored by Mozilla or Bluesky. It uses Mozilla's open-source code under
+the terms of the MPL, and refers to Bluesky's AT Protocol and its at:// URI
+scheme only in truthful, descriptive reference to the open protocol it
+implements. It uses no third-party trademarks as branding.
