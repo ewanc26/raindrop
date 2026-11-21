@@ -4,6 +4,7 @@
 
 #include "RecordView.h"
 
+#include "LexiconView.h"
 #include "json/json.h"
 
 namespace mozilla::net::atproto {
@@ -130,6 +131,8 @@ std::string RenderRecordHtml(const RecordViewData& aData,
   html += "th{background:#f4f4f4;white-space:nowrap}\n";
   html += "pre{white-space:pre-wrap;word-break:break-word}\n";
   html += ".hint{color:#555;font-size:.9em}\n";
+  html += ".lexicon{margin:1em 0;padding:.5em 1em;background:#fafafa;border-left:3px solid #999}\n";
+  html += ".langs{color:#555;font-size:.9em}\n";
   html += "</style></head><body>\n";
 
   html += "<h1>";
@@ -154,6 +157,12 @@ std::string RenderRecordHtml(const RecordViewData& aData,
     html += "<p class=\"hint\">Handle — may change; resolved to ";
     html += EscapeHtml(aProvenance.mDid);
     html += ".</p>\n";
+  }
+
+  std::string summary = RenderLexiconSummary(aData.mLexicon, aData.mValueJson);
+  if (!summary.empty()) {
+    html += "<h2>Record</h2>\n";
+    html += summary;
   }
 
   html += "<h2>Fields</h2>\n";
