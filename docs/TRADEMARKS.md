@@ -66,11 +66,12 @@ The fork's approach:
 
 ### Practical checklist when the fork builds
 
-- [ ] Binary, installer, and packaged app names contain no Mozilla mark.
-      Verified for the macOS package; Windows resources still need inspection
-      on a Windows runner.
-- [ ] Icons and about screens use raindrop-brand assets only.
-- [ ] `brand.ftl` brand strings set to raindrop names in all branding dirs.
+- [x] Binary, installer, and packaged app names contain no Mozilla mark.
+      Verified for the macOS package and for Windows packaged resources in
+      `Windows package check` run 44921258664.
+- [x] Icons and about screens use raindrop-brand assets only, generated from
+      original SVG artwork as recorded in [BRANDING.md](BRANDING.md).
+- [x] `brand.ftl` brand strings set to raindrop names in all branding dirs.
       The release path uses `browser/branding/raindrop`; upstream's `unofficial`
       fallback remains local-development-only.
 - [x] Update checks and any Mozilla-default endpoints disabled or pointed at

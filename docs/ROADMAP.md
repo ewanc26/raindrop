@@ -76,7 +76,7 @@ used, even if it is small.
       a browser-chrome test verifies the pane and each control.
 - [x] Fork maintenance automation: scripted rebases onto upstream Firefox releases
       and an upgrade CI job, so the fork never rots. `tools/raindrop/upstream.py`
-      detects a due upgrade against Mozilla's release channel (44 offline tests),
+      detects a due upgrade against Mozilla's release channel (66 offline tests),
       `.github/workflows/upgrade-check.yml` opens/refreshes a triage issue daily,
       and [docs/UPGRADING.md](UPGRADING.md) records the signed import + rebase
       procedure per ADR 0002. The signed 160.0.1 release was imported and tagged.
