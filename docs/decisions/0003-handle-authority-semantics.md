@@ -58,7 +58,9 @@ durability warning. Never persist the mapping.**
    This mirrors the atproto caveat without blocking navigation.
 6. **Failure model.** If handle resolution or reverse verification fails, the
    load fails honestly. Per the trust model there is no gateway fallback and
-   no attempt to guess a DID from the handle.
+   no attempt to guess a DID from the handle. An ambiguous DNS TXT set — more
+   than one `did=` claim, even if some are malformed — is rejected outright
+   rather than selected from or allowed to fall through to the HTTPS path.
 
 ## Consequences
 
