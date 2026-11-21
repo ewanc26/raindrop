@@ -112,3 +112,11 @@ Attach the verified DMG and its SHA-256 to the GitHub release for the tag.
 Record the release date and any deviation from the gates above here. If a
 future release has to proceed while a gate is open, the annotation and the
 release notes must say which gate was waived and why.
+
+### v0.1.0-fx160.0.1
+
+Released 2026-11-21 from `main` at `16ec25c7e8`. All gates were green; no
+deviations or waivers. The GitHub release
+(`https://github.com/ewanc26/raindrop/releases/tag/v0.1.0-fx160.0.1`) carries
+`raindrop-160.0.1.en-US.mac.dmg` and its `.sha256` sidecar. DMG SHA-256:
+`1dc03fa148ddc0616bbc367340ca286e03f11c51a2fe82cb697dce8bd6c59ad7`.
