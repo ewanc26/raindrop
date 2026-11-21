@@ -55,8 +55,9 @@ fuller design reasoning is in
 - Native `at://` scheme handling in the address bar, bookmarks, and history.
 - Built-in DID resolution (`did:plc`, `did:web`) and PDS record fetching, with no
   gateway in the middle.
-- Verifiable content: records are fetched from their PDS and can be checked against
-  their CID, so what you see is what the author signed.
+- Verifiable content: records are fetched from their PDS and checked against their
+  CID, which proves the record is intact and self-consistent with the CID the PDS
+  returned. This is integrity, not a repository signature or proof of authorship.
 - Stay a *Firefox fork*, not a new browser: track upstream closely so the fork is
   maintainable.
 
@@ -68,11 +69,13 @@ fuller design reasoning is in
 
 ## Status
 
-The pristine Firefox 160.0 release source is imported on the `upstream` branch
-and tagged `firefox-160.0`; raindrop's work is the patch queue on `main`.
-There are no Gecko patches yet. The first product patch is a raindrop branding
-directory with original artwork; the build bootstrap and remaining design
-decisions come before touching Gecko code.
+The pristine, signed Firefox 160.0.1 release source is imported on the `upstream`
+branch and tagged `firefox-160.0.1`; raindrop's work is the patch queue on `main`.
+The `at://` scheme handler, DID and handle resolution, PDS record fetch, record
+views and honest failure pages are implemented in `netwerk/protocol/atproto/`.
+The tree builds locally and the module's GTests and xpcshell tests pass. The
+self-hosted build-bootstrap runner and the trademark sign-off are still open; see
+the [roadmap](docs/ROADMAP.md).
 
 - [Roadmap](docs/ROADMAP.md) - phased milestones from scaffold to first release
 - [Architecture](docs/ARCHITECTURE.md) - how an `at://` request flows through the browser
