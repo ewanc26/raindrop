@@ -33,7 +33,7 @@ used, even if it is small.
 - [x] Handle authorities resolve via DNS TXT at `_atproto.<handle>` with an
       HTTPS `/.well-known/atproto-did` fallback, reverse `alsoKnownAs`
       verification and no persistent cache ([ADR 0003](decisions/0003-handle-authority-semantics.md)).
-      The durability-hint UI is a follow-up.
+      The record view shows a durability hint for handle-based authorities.
 - [x] A generic, unstyled record view (lexicon, fields, CID, raw JSON) so *every*
       `at://` URI is viewable from day one. The resolver renders an escaped HTML
       view of any record, with provenance and raw JSON, with no lexicon-specific
