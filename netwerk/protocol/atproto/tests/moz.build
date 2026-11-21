@@ -9,6 +9,7 @@ UNIFIED_SOURCES += [
     "TestErrorView.cpp",
     "TestHandleResolver.cpp",
     "TestPdsClient.cpp",
+    "TestPrivacyFlags.cpp",
     "TestRecordView.cpp",
 ]
 
