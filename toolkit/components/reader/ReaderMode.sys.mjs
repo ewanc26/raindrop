@@ -38,8 +38,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Readerable: "resource://gre/modules/Readerable.sys.mjs",
 });
 
+const ID_FIREFOX = "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
+const ID_RAINDROP = "{d9d2bf3e-372c-49a3-b630-2b67ba5b196e}";
 const gIsFirefoxDesktop =
-  Services.appinfo.ID == "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
+  Services.appinfo.ID == ID_FIREFOX || Services.appinfo.ID == ID_RAINDROP;
 
 export var ReaderMode = {
   DEBUG: 0,

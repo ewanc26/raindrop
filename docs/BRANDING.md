@@ -61,6 +61,12 @@ raindrop DMG.
   is also listed on the `app-startup` `nsBrowserGlue` category in
   `browser/components/BrowserComponents.manifest`; without it browser actors
   never register and chrome startup hangs.
+
+  The same UUID is accepted wherever upstream restricts desktop behavior to
+  Firefox: `remote/shared/AppInfo.sys.mjs` for automation,
+  `toolkit/components/downloads/DownloadIntegration.sys.mjs` for
+  blocked-download recovery, and `toolkit/components/reader/ReaderMode.sys.mjs`
+  for local language detection. The Marionette client maps it to `fxdesktop`.
 - `browser/moz.configure` replaces the implied `MOZ_APP_VENDOR` and `MOZ_APP_ID`
   with raindrop values. These are the only identity settings that cannot live in
   a branding directory's `configure.sh`: the options accept implied values only.

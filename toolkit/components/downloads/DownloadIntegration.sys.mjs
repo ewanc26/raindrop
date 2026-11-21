@@ -165,7 +165,10 @@ export var DownloadIntegration = {
    */
   shouldKeepBlockedData() {
     const FIREFOX_ID = "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
-    return Services.appinfo.ID == FIREFOX_ID;
+    const RAINDROP_ID = "{d9d2bf3e-372c-49a3-b630-2b67ba5b196e}";
+    return (
+      Services.appinfo.ID == FIREFOX_ID || Services.appinfo.ID == RAINDROP_ID
+    );
   },
 
   /**

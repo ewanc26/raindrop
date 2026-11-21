@@ -787,5 +787,6 @@ apps = {
 app_ids = {
     "{aa3c5121-dab2-40e2-81ca-7ea25febc110}": "fennec",
     "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}": "fxdesktop",
+    "{d9d2bf3e-372c-49a3-b630-2b67ba5b196e}": "fxdesktop",
     "{3550f703-e582-4d05-9a08-453d09bdfdc6}": "thunderbird",
 }
