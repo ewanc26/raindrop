@@ -125,7 +125,7 @@ TEST(DidResolver, OnionEndpointIsDistinctFailure) {
       R"({"id":"did:plc:abc","service":[{"id":"#atproto_pds",
            "serviceEndpoint":"https://abcdef123456.onion"}]})";
   EXPECT_EQ(ExtractPdsEndpoint(json, did, service), PdsError::OnionEndpoint);
-  EXPECT_TRUE(service.mEndpoint.empty());
+  EXPECT_EQ(service.mEndpoint, "https://abcdef123456.onion");
 }
 
 TEST(DidResolver, OnionSuffixIsCaseInsensitive) {

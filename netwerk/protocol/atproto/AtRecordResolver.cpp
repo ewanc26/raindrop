@@ -436,9 +436,13 @@ nsresult AtRecordResolver::OnDidDocumentStop(nsIRequest* aRequest,
       std::string_view(mBody.BeginReading(), mBody.Length()), mDid, service);
   if (perr != PdsError::None) {
     AT_LOG(("atproto: DID document rejected (%s)\n", PdsErrorName(perr)));
+    if (perr == PdsError::OnionEndpoint) {
+      mPds = service.mEndpoint;
+      SetFailure(FailureKind::OnionEndpointUnsupported, PdsErrorName(perr));
+      return NS_ERROR_NOT_AVAILABLE;
+    }
     SetFailure(FailureKind::DidDocumentRejected, PdsErrorName(perr));
-    return perr == PdsError::OnionEndpoint ? NS_ERROR_NOT_AVAILABLE
-                                           : NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
   }
 
   mPds = service.mEndpoint;

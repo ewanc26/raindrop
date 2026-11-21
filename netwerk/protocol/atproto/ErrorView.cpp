@@ -61,6 +61,8 @@ const char* FailureTitle(FailureKind aKind) {
       return "DID could not be resolved";
     case FailureKind::DidDocumentRejected:
       return "DID document was rejected";
+    case FailureKind::OnionEndpointUnsupported:
+      return "PDS is onion-only; native Tor support is not available";
     case FailureKind::PdsUnreachable:
       return "Repository server could not be reached";
     case FailureKind::RecordNotFound:
@@ -90,6 +92,10 @@ const char* FailureExplanation(FailureKind aKind) {
     case FailureKind::DidDocumentRejected:
       return "The DID document is malformed or names a repository endpoint "
              "raindrop will not contact.";
+    case FailureKind::OnionEndpointUnsupported:
+      return "The DID document names an onion repository server. Raindrop has "
+             "no native Tor transport and will not proxy the request through a "
+             "gateway, so this record cannot be reached.";
     case FailureKind::PdsUnreachable:
       return "The repository server named by the DID document did not answer.";
     case FailureKind::RecordNotFound:
