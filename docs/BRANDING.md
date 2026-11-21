@@ -71,6 +71,9 @@ raindrop DMG.
 - `branding.nsi` contains no Mozilla company name, support URL or download
   endpoint. Stub-installer download URLs are blank until raindrop hosts its own
   artifacts.
+- `tools/raindrop/tests/test_branding_marks.py` locks in the macOS bundle
+  signature and first-party default bookmarks so a rebase cannot restore
+  upstream Mozilla marks unnoticed.
 - `build/raindrop.mozconfig` passes `--with-distribution-id=uk.ewancroft.raindrop`
   so the macOS bundle identifier does not inherit `org.mozilla`.
 
@@ -83,7 +86,7 @@ Still to verify (tracked in
 [issue #11](https://github.com/ewanc26/raindrop/issues/11)):
 
 - [x] `./mach build` with `build/raindrop.mozconfig` succeeds (`BUILD_EXIT=0`).
-- [ ] `./mach package` produces binaries/installers with no Mozilla mark. The
+- [x] `./mach package` produces binaries/installers with no Mozilla mark. The
       macOS DMG builds (`PACKAGE_EXIT=0`) and its `.DS_Store` is byte-identical to
       raindrop's clean artwork. `CFBundleIconFile=firefox.icns` is a fixed
       build-system path whose contents are byte-identical to raindrop's own
@@ -91,11 +94,18 @@ Still to verify (tracked in
       no longer carry Mozilla's Apple team ID: the official mozconfig enables
       `--enable-mac-elevated-updates-with-generic-certs` on macOS, so the
       packaged `SMAuthorizedClients`/`SMPrivilegedExecutables` strings use
-      `anchor apple generic` only. The bundle still has upstream-hardcoded
-      `CFBundleSignature=MOZB` (`PkgInfo` `APPLMOZB`). Windows resources need a
-      Windows build runner.
-- [ ] No Firefox-branded chrome or defaults survive outside this directory.
-      First-run default bookmarks still ship a "Mozilla Firefox" folder with
-      mozilla.org links from `browser/base/content/default-bookmarks.html`.
+      `anchor apple generic` only. The macOS bundle signature is now raindrop's
+      own `CFBundleSignature=RDRO` (`PkgInfo` `APPLRDRO`); no `MOZB` remains in
+      the shipped app bundle. Windows resources still need a Windows build
+      runner for packaged inspection.
+- [x] No Firefox-branded chrome or defaults survive outside this directory.
+      First-run default bookmarks now ship a single `raindrop` folder with
+      first-party `about:home`, `about:preferences`, and `about:about` targets.
+      The upstream Mozilla links, icons, and l10n IDs were removed from
+      `browser/base/content/default-bookmarks.html` and its two tests. The now
+      unused `browser/locales/en-US/browser/profile/default-bookmarks.ftl` and
+      its fluent-lint exclusion were removed, so no Firefox default strings
+      ship in `omni.ja`. The shipped archive was inspected to confirm the new
+      content.
 - [ ] `docs/TRADEMARKS.md` and `NOTICE` re-checked against Mozilla's current
       guidelines before a first public release.
