@@ -156,3 +156,18 @@ raindrop branding and prefs, including the new `showImages` pref. Hosted
 `unittest`, `package` and Windows package checks were green on the merged PR.
 The same `stock-build` deviation as v0.2.0 applies and is recorded in the tag
 annotation and release notes.
+
+### v0.4.0-fx160.0.1
+
+Released 2026-11-21 from `main` at `1b0d9a5cfb`. The GitHub release
+(`https://github.com/ewanc26/raindrop/releases/tag/v0.4.0-fx160.0.1`) carries
+`raindrop-160.0.1.en-US.mac.dmg` and its `.sha256` sidecar. DMG SHA-256:
+`f3484ac5834c46eff2022b5631e66e6840201925b0990d5c304421ca209df965`.
+
+Pre-tag verification: build exit 0 with 0 compiler warnings, 122/122 GTests,
+45 atproto and 22 browser-pref xpcshell checks, three mochitests PASS (AT
+Protocol pane 20 checks), 66 offline tests OK, `./mach package` exit 0,
+`./mach format` and `git diff --check` clean. The packaged DMG was inspected for
+raindrop branding and prefs. Hosted `unittest`, `package` and Windows package
+checks were green on the merged PR. The same `stock-build` deviation as v0.2.0
+applies and is recorded in the tag annotation and release notes.
