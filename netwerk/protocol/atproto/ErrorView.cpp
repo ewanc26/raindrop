@@ -80,8 +80,8 @@ const char* FailureTitle(FailureKind aKind) {
 const char* FailureExplanation(FailureKind aKind) {
   switch (aKind) {
     case FailureKind::HandleResolutionFailed:
-      return "The handle's HTTPS well-known endpoint did not return a valid "
-             "DID.";
+      return "The handle could not be resolved to a DID through its DNS TXT "
+             "record or its HTTPS well-known endpoint.";
     case FailureKind::HandleBindingFailed:
       return "The resolved DID document does not claim this handle, so the "
              "binding was rejected.";

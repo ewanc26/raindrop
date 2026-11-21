@@ -67,6 +67,18 @@ TEST(ErrorView, RedirectExplanationCoversOriginNotJustHost) {
   EXPECT_NE(html.find("different origin"), std::string::npos);
 }
 
+TEST(ErrorView, HandleFailureExplanationCoversDnsAndHttps) {
+  std::string explanation = FailureExplanation(FailureKind::HandleResolutionFailed);
+  EXPECT_NE(explanation.find("DNS TXT"), std::string::npos);
+  EXPECT_NE(explanation.find("HTTPS"), std::string::npos);
+
+  FailureInfo info;
+  info.mKind = FailureKind::HandleResolutionFailed;
+  std::string html = RenderFailureHtml(info);
+  EXPECT_NE(html.find("DNS TXT"), std::string::npos);
+  EXPECT_NE(html.find("HTTPS"), std::string::npos);
+}
+
 TEST(ErrorView, DistinctExplanationsPerKind) {
   FailureInfo info;
   info.mKind = FailureKind::HandleBindingFailed;
