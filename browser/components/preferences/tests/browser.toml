@@ -17,6 +17,8 @@ tags = "os_integration"
 
 ["browser_about_settings.js"]
 
+["browser_at_protocol_pane.js"]
+
 ["browser_accessibility_pane.js"]
 
 ["browser_accessibility_zoom.js"]

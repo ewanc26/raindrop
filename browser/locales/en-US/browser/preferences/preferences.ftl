@@ -247,6 +247,30 @@ tabs-browsing-section =
 pane-tabs-browsing-title2 = Tabs and browsing
   .title = Tabs and browsing
 
+pane-at-protocol-title = AT Protocol
+  .title = AT Protocol
+
+preferences-at-protocol-header =
+  .heading = AT Protocol
+
+at-protocol-settings =
+  .label = AT Protocol records
+  .description = Control how { -brand-short-name } loads and displays at:// records. Identity and PDS requests go directly to the network, with no gateway.
+
+at-protocol-enabled =
+  .label = Load at:// records
+  .accesskey = L
+
+at-protocol-show-provenance =
+  .label = Show record provenance
+  .description = Display the DID, PDS, handle, and CID verification status on record pages.
+  .accesskey = P
+
+at-protocol-show-raw-json =
+  .label = Show raw JSON
+  .description = Display the complete record response below the formatted fields.
+  .accesskey = R
+
 tabs-group-header2 =
   .label = Tabs
 

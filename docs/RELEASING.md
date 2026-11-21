@@ -40,14 +40,16 @@ python3.12 ./mach gtest 'AtURI.*:DidResolver.*:PdsClient.*:HandleResolver.*:Reco
 ./mach xpcshell-test browser/components/places/tests/unit/test_browserGlue_prefs.js
 ./mach mochitest browser/components/places/tests/browser/browser_bookmark_current_tabs.js --headless
 ./mach mochitest browser/components/places/tests/browser/browser_bookmarks_checkDefaultBookmarks.js --headless
+./mach mochitest browser/components/preferences/tests/browser_at_protocol_pane.js --headless
 python3.12 -m unittest discover -s tools/raindrop/tests
 python3.12 ./mach package
 ```
 
-The expected counts are 73 GTests across 10 suites, 27 atproto xpcshell checks,
+The expected counts are 74 GTests across 10 suites, 29 atproto xpcshell checks,
 22 browser-pref xpcshell checks and 44 offline tests. The second xpcshell test
 catches `MOZ_APP_NAME` and `appdir` harness mismatches introduced by rebranding;
-the mochitests catch app-ID gates that stop browser actors from starting. The
+the mochitests catch app-ID gates that stop browser actors from starting, and
+the preferences mochitest checks the AT Protocol settings pane and its prefs. The
 offline suite also guards the app-ID gates for automation, downloads and reader
 mode that a rebase can silently restore.
 GTest suites must be passed as one colon-separated argument; separate

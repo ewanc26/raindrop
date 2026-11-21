@@ -7,6 +7,7 @@
 #include "AtRecordResolver.h"
 #include "AtURI.h"
 #include "SimpleChannel.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "nsIChannel.h"
@@ -14,7 +15,8 @@
 
 namespace mozilla::net::atproto {
 
-NS_IMPL_ISUPPORTS(AtProtocolHandler, nsIProtocolHandler, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(AtProtocolHandler, nsIProtocolHandler,
+                  nsISupportsWeakReference)
 
 static StaticRefPtr<AtProtocolHandler> sSingleton;
 static StaticMutex sSingletonLock;
@@ -47,13 +49,17 @@ AtProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = nullptr;
 
+  if (!Preferences::GetBool("network.atprotocol.enabled", true)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   nsAutoCString spec;
   nsresult rv = aURI->GetSpec(spec);
   NS_ENSURE_SUCCESS(rv, rv);
 
   AtURI parsed;
-  AtURIError error = ParseAtURI(
-      std::string_view(spec.BeginReading(), spec.Length()), parsed);
+  AtURIError error =
+      ParseAtURI(std::string_view(spec.BeginReading(), spec.Length()), parsed);
   if (error != AtURIError::None) {
     return NS_ERROR_MALFORMED_URI;
   }
@@ -65,12 +71,12 @@ AtProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
   }
 
   RefPtr<AtRecordResolver> resolver = new AtRecordResolver(parsed, aLoadInfo);
-  nsCOMPtr<nsIChannel> channel = NS_NewSimpleChannel(
-      aURI, aLoadInfo, resolver.get(),
-      [](nsIStreamListener* aListener, nsIChannel*,
-         AtRecordResolver* aResolver) -> RequestOrReason {
-        return aResolver->Start(aListener);
-      });
+  nsCOMPtr<nsIChannel> channel =
+      NS_NewSimpleChannel(aURI, aLoadInfo, resolver.get(),
+                          [](nsIStreamListener* aListener, nsIChannel*,
+                             AtRecordResolver* aResolver) -> RequestOrReason {
+                            return aResolver->Start(aListener);
+                          });
   NS_ENSURE_TRUE(channel, NS_ERROR_OUT_OF_MEMORY);
 
   // The resolver renders the getRecord response into a generic HTML view.
