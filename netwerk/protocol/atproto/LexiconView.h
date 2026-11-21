@@ -10,8 +10,14 @@
 
 namespace mozilla::net::atproto {
 
+struct LexiconViewProvenance {
+  std::string_view mDid;
+  std::string_view mPds;
+};
+
 std::string RenderLexiconSummary(std::string_view aLexicon,
-                                 std::string_view aValueJson);
+                                 std::string_view aValueJson,
+                                 const LexiconViewProvenance& aProvenance = {});
 
 }  // namespace mozilla::net::atproto
 

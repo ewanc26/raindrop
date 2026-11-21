@@ -173,7 +173,9 @@ std::string RenderRecordHtml(const RecordViewData& aData,
     }
   }
 
-  std::string summary = RenderLexiconSummary(aData.mLexicon, aData.mValueJson);
+  std::string summary = RenderLexiconSummary(
+      aData.mLexicon, aData.mValueJson,
+      LexiconViewProvenance{aProvenance.mDid, aProvenance.mPds});
   if (!summary.empty()) {
     html += "<h2>Record</h2>\n";
     html += summary;
