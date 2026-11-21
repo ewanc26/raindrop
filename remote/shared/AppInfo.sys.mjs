@@ -5,6 +5,7 @@
 import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const ID_FIREFOX = "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
+const ID_RAINDROP = "{d9d2bf3e-372c-49a3-b630-2b67ba5b196e}";
 const ID_THUNDERBIRD = "{3550f703-e582-4d05-9a08-453d09bdfdc6}";
 
 /**
@@ -61,7 +62,9 @@ ChromeUtils.defineLazyGetter(AppInfo, "isHeadless", () => {
 // Application type
 
 ChromeUtils.defineLazyGetter(AppInfo, "isFirefox", () => {
-  return Services.appinfo.ID == ID_FIREFOX;
+  return (
+    Services.appinfo.ID == ID_FIREFOX || Services.appinfo.ID == ID_RAINDROP
+  );
 });
 
 ChromeUtils.defineLazyGetter(AppInfo, "isThunderbird", () => {
