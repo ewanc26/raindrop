@@ -1,9 +1,9 @@
 # ADR 0003: handle-authority semantics
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-20
 - **Issue:** [#5](https://github.com/ewanc26/raindrop/issues/5)
-- **Related:** [ARCHITECTURE.md](../ARCHITECTURE.md), [ADR 0001](0001-at-uri-scheme-registration.md), [ROADMAP Phase 1](../ROADMAP.md)
+- **Related:** [ARCHITECTURE.md](../ARCHITECTURE.md), [ADR 0001](0001-at-uri-scheme-registration.md), [ADR 0005](0005-identity-authority-and-freshness-signoff.md), [ROADMAP Phase 1](../ROADMAP.md)
 
 ## Context
 
@@ -46,9 +46,9 @@ durability warning. Never persist the mapping.**
    navigation re-resolves the handle, and HTTP identity fetches set
    `INHIBIT_PERSISTENT_CACHING | LOAD_BYPASS_CACHE` so nothing is written to
    disk. The only in-memory caching is the platform DNS resolver's, which is
-   session-scoped and never persisted. Whether to add an application-level
-   cache, and if so its TTL and private-browsing behaviour, is an open design
-   question tracked in issue #6 — it is not decided here.
+   session-scoped and never persisted. This shipped model was accepted by
+   sign-off in [ADR 0005](0005-identity-authority-and-freshness-signoff.md);
+   no application-level cache is planned.
 4. **Change detection.** Because resolution happens on navigation, a changed
    handle is seen at the next load. If the reverse check fails, the load fails
    with an explicit "handle no longer resolves to this identity" state; the
@@ -72,9 +72,9 @@ durability warning. Never persist the mapping.**
    unusable in raindrop even if another viewer would accept it. This is
    intentional; the cost of a false positive is showing the wrong person's
    data.
-- If an application-level cache is added, it will need a short TTL and to be
-   cleared on identity changes between sessions. That TTL and the private-
-   browsing behaviour are open questions in issue #6, not ADR decisions.
+- No application-level cache exists, so there is no TTL or private-browsing
+   rule to maintain. [ADR 0005](0005-identity-authority-and-freshness-signoff.md)
+   records the accepted freshness model.
 
 ## Alternatives considered
 

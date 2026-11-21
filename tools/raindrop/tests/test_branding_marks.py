@@ -30,6 +30,17 @@ BROWSER_BOOKMARK_TEST = (
 UNIT_BOOKMARK_TEST = (
     REPO_ROOT / "browser/components/places/tests/unit/test_browserGlue_prefs.js"
 )
+BRANDING_DIR = REPO_ROOT / "browser/branding/raindrop"
+WINDOWS_NSI = BRANDING_DIR / "branding.nsi"
+WINDOWS_MANIFESTS = (
+    BRANDING_DIR / "firefox.VisualElementsManifest.xml",
+    BRANDING_DIR / "private_browsing.VisualElementsManifest.xml",
+)
+
+
+def strip_license_comments(text):
+    text = re.sub(r"<!--.*?-->", "", text, flags=re.S)
+    return re.sub(r"^\s*(?:#|//|/\*).*?$", "", text, flags=re.M)
 
 
 class BrandingSelectionTests(unittest.TestCase):
@@ -81,6 +92,35 @@ class DefaultBookmarksTests(unittest.TestCase):
 
     def test_upstream_bookmark_l10n_file_is_removed(self):
         self.assertFalse(DEFAULT_BOOKMARKS_FTL.exists())
+
+
+class WindowsResourceTests(unittest.TestCase):
+    def test_installer_uses_raindrop_identity_and_blank_stub_urls(self):
+        text = WINDOWS_NSI.read_text()
+        self.assertIn('BrandFullName         "raindrop"', text)
+        self.assertIn('CompanyName           "raindrop"', text)
+        for define in (
+            "URLStubDownloadX86",
+            "URLStubDownloadAMD64",
+            "URLStubDownloadAArch64",
+            "URLManualDownload",
+        ):
+            with self.subTest(define=define):
+                self.assertRegex(text, rf'!define {define}\s+""')
+
+    def test_installer_has_no_mozilla_endpoints(self):
+        text = strip_license_comments(WINDOWS_NSI.read_text())
+        for endpoint in ("mozilla.org", "mozilla.com", "firefox.com"):
+            with self.subTest(endpoint=endpoint):
+                self.assertNotIn(endpoint, text.lower())
+
+    def test_tile_manifests_have_no_mozilla_marks(self):
+        for manifest in WINDOWS_MANIFESTS:
+            with self.subTest(manifest=manifest.name):
+                text = strip_license_comments(manifest.read_text())
+                lowered = text.lower()
+                self.assertNotIn("firefox", lowered)
+                self.assertNotIn("mozilla", lowered)
 
 
 class BookmarkTestExpectationsTests(unittest.TestCase):
