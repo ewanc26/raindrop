@@ -40,9 +40,13 @@ used, even if it is small.
 
 ## Phase 2 - trust (M2)
 
-- [ ] Data integrity: content fetched from PDSes can be verified against its CID.
+- [x] Data integrity: content fetched from PDSes can be verified against its CID.
+      The record value is re-encoded as canonical DAG-CBOR and its SHA-256 digest
+      compared with the CID; the result is shown as provenance metadata.
 - [ ] Clear provenance UI: which DID, which PDS, and whether resolution succeeded
       end to end; honest failure states (unknown DID, PDS down, record deleted).
+      The success-path provenance table is done; honest, step-specific failure
+      pages are still outstanding.
 - [ ] Privacy defaults: no fallback gateway, no third-party fetch to "fix" a lookup;
       caching stays local and respects private-browsing mode.
 
