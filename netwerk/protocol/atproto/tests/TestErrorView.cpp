@@ -55,6 +55,18 @@ TEST(ErrorView, EscapesUntrustedValues) {
   EXPECT_NE(html.find("&quot;"), std::string::npos);
 }
 
+TEST(ErrorView, RedirectExplanationCoversOriginNotJustHost) {
+  FailureInfo info;
+  info.mKind = FailureKind::RedirectRejected;
+  std::string explanation = FailureExplanation(info.mKind);
+  EXPECT_NE(explanation.find("origin"), std::string::npos);
+  EXPECT_NE(explanation.find("scheme"), std::string::npos);
+  EXPECT_NE(explanation.find("port"), std::string::npos);
+
+  std::string html = RenderFailureHtml(info);
+  EXPECT_NE(html.find("different origin"), std::string::npos);
+}
+
 TEST(ErrorView, DistinctExplanationsPerKind) {
   FailureInfo info;
   info.mKind = FailureKind::HandleBindingFailed;

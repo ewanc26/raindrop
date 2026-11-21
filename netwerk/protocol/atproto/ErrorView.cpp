@@ -102,8 +102,9 @@ const char* FailureExplanation(FailureKind aKind) {
       return "An upstream server returned a failure status; no gateway was "
              "tried.";
     case FailureKind::RedirectRejected:
-      return "An upstream response redirected to a different host, which is "
-             "not followed for identity-sensitive requests.";
+      return "An upstream response redirected to a different origin — a "
+             "different host, scheme or port — which is not followed for "
+             "identity-sensitive requests.";
     case FailureKind::NetworkError:
       return "The request failed before a response could be read.";
   }
