@@ -52,7 +52,7 @@ CHECKS = (
             'pref("network.atprotocol.enabled", true);',
             'pref("network.atprotocol.record.showProvenance", true);',
             'pref("network.atprotocol.record.showRawJson", true);',
-            'pref("network.atprotocol.record.showImages", true);',
+            'pref("network.atprotocol.record.showImages", false);',
         ),
     ),
     FileCheck(

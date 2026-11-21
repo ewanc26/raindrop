@@ -97,9 +97,11 @@ For these reasons, the scheme, parser and fetch path live in the browser.
 - **Honest provenance.** The view shows which DID and PDS served the content and
   the outcome of CID verification. That check re-encodes the returned record as
   canonical DAG-CBOR and compares its SHA-256 with the CID returned alongside
-  it; it proves *integrity* (the record matches its CID), not *authenticity* (a
-  repository signature or proof of authorship). A hostile PDS controls both, so
-  the view labels this limit explicitly.
+  it; it proves *integrity* (the record matches its CID) and consistency with
+  the PDS response, not *authenticity* (a repository signature or proof of
+  authorship). Raindrop does not check commit signatures or signed commit
+  proofs. A hostile PDS controls both the record and its CID, so the view
+  labels this limit explicitly.
 - **Local-only caching.** HTTP identity fetches set
   `INHIBIT_PERSISTENT_CACHING | LOAD_BYPASS_CACHE`, so they are never written to
   disk and are re-fetched on each navigation. The DNS TXT leg of handle
@@ -112,6 +114,8 @@ For these reasons, the scheme, parser and fetch path live in the browser.
 - Minimal patch surface vs. deeper Gecko changes: [ADR 0001](decisions/0001-at-uri-scheme-registration.md).
 - Strict Lexicon conformance vs. general AT URI syntax:
   [ADR 0006](decisions/0006-strict-lexicon-at-uri-conformance.md).
+- Blob rendering and the limits of CID verification:
+  [ADR 0007](decisions/0007-blob-and-authenticity-policy.md).
 - When handles resolve, caching and change detection:
   [ADR 0003](decisions/0003-handle-authority-semantics.md).
 - Design sign-off on `plc.directory` as identity authority and the shipped
@@ -123,6 +127,8 @@ For these reasons, the scheme, parser and fetch path live in the browser.
   `app.bsky.actor.profile`, `app.bsky.feed.like`, `app.bsky.feed.repost` and
   `app.bsky.graph.follow`, with the generic field table as fallback.
   Blob references show their CID and link to the resolved PDS's `getBlob`
-  endpoint. Image blobs are also embedded lazily from that endpoint when
-  `network.atprotocol.record.showImages` is enabled; the CID link remains
-  available either way.
+  endpoint. Inline image loading is off by default; when enabled with
+  `network.atprotocol.record.showImages`, images are fetched lazily from that
+  same endpoint and the CID is not checked against the downloaded bytes. The
+  CID and link are shown in either mode. See
+  [ADR 0007](decisions/0007-blob-and-authenticity-policy.md).

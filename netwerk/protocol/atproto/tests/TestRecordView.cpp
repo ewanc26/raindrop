@@ -63,7 +63,11 @@ TEST(RecordView, ReportsCidVerificationStatus)
   std::string html = RenderRecordHtml(data, provenance);
   EXPECT_NE(html.find("CID verification"), std::string::npos);
   EXPECT_NE(html.find("Verified"), std::string::npos);
-  EXPECT_NE(html.find("integrity only, not a repository signature"),
+  EXPECT_NE(html.find("integrity and consistency with the PDS response"),
+            std::string::npos);
+  EXPECT_NE(html.find("not authorship or repository-commit authenticity"),
+            std::string::npos);
+  EXPECT_NE(html.find("does not establish who authored this record"),
             std::string::npos);
 
   RecordViewData tampered;
@@ -113,8 +117,9 @@ TEST(RecordView, OptionalFields)
 
   std::string html =
       RenderRecordHtml(data, {"did:plc:a", "", "https://pds", "x.y.z", "k"});
-  EXPECT_EQ(html.find("integrity only, not a repository signature"),
+  EXPECT_EQ(html.find("integrity and consistency with the PDS response"),
             std::string::npos);
+  EXPECT_NE(html.find("Provenance limit"), std::string::npos);
 }
 
 TEST(RecordView, RendersProvenanceAndFields)
@@ -151,6 +156,7 @@ TEST(RecordView, HonorsDisplayOptions)
 
   std::string html = RenderRecordHtml(data, provenance, options);
   EXPECT_EQ(html.find("Provenance"), std::string::npos);
+  EXPECT_EQ(html.find("Provenance limit"), std::string::npos);
   EXPECT_EQ(html.find("alice.example"), std::string::npos);
   EXPECT_EQ(html.find("Raw JSON"), std::string::npos);
   EXPECT_NE(html.find("<h2>Fields</h2>"), std::string::npos);
@@ -186,9 +192,15 @@ TEST(RecordView, HonorsShowImagesOption)
 
   RecordViewOptions options;
   options.mShowImages = false;
-  EXPECT_EQ(RenderRecordHtml(data, provenance, options).find("<img"),
+  std::string linksOnly = RenderRecordHtml(data, provenance, options);
+  EXPECT_EQ(linksOnly.find("<img"), std::string::npos);
+  EXPECT_NE(linksOnly.find("bafyreivalidcid"), std::string::npos);
+  EXPECT_NE(linksOnly.find("com.atproto.sync.getBlob"), std::string::npos);
+
+  options.mShowImages = true;
+  EXPECT_NE(RenderRecordHtml(data, provenance, options).find("<img"),
             std::string::npos);
-  EXPECT_NE(RenderRecordHtml(data, provenance).find("<img"), std::string::npos);
+  EXPECT_EQ(RenderRecordHtml(data, provenance).find("<img"), std::string::npos);
 }
 
 TEST(RecordView, PassesProvenanceToBlobLinks)

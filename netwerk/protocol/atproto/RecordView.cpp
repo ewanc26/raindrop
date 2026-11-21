@@ -168,11 +168,17 @@ std::string RenderRecordHtml(const RecordViewData& aData,
       html += ".</p>\n";
     }
 
+    html +=
+        "<p class=\"hint\">Provenance limit: Raindrop does not verify "
+        "repository commit signatures or signed commit proofs. A matching "
+        "CID does not establish who authored this record.</p>\n";
+
     if (aData.mCidStatus != CidStatus::Absent) {
       html +=
           "<p class=\"hint\">CID verification checks the record against "
-          "the CID returned with it — integrity only, not a repository "
-          "signature or proof of authorship.</p>\n";
+          "the CID returned with it. This confirms integrity and consistency "
+          "with the PDS response, not authorship or repository-commit "
+          "authenticity.</p>\n";
     }
   }
 
