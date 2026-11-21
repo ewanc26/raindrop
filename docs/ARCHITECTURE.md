@@ -104,6 +104,9 @@ deliver `at://`-as-infrastructure.** raindrop wants the second one.
 - Minimal patch surface vs. deeper Gecko changes: [ADR 0001](decisions/0001-at-uri-scheme-registration.md).
 - When handles resolve, caching and change detection:
   [ADR 0003](decisions/0003-handle-authority-semantics.md).
+- Design sign-off on `plc.directory` as identity authority and the shipped
+  handle-freshness model:
+  [ADR 0005](decisions/0005-identity-authority-and-freshness-signoff.md).
 - `did:web` trust rules and onion PDS endpoints:
   [ADR 0004](decisions/0004-did-web-and-onion-endpoints.md).
 - Minimum set of record lexicons with a dedicated view: `app.bsky.feed.post`

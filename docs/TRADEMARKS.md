@@ -77,10 +77,12 @@ The fork's approach:
       raindrop targets, so the build never phones home as "Firefox".
 - [x] This file and NOTICE checked against the current guidelines on
       2026-11-20 and re-checked on 2026-11-21 (see the review log below).
-      Human sign-off is still required before the first public release.
+      Human sign-off recorded on 2026-11-21: proceed with the first public
+      release without contacting Mozilla. The policy is unambiguous and
+      raindrop uses no Mozilla marks.
 
-If in doubt, write to trademark-permissions@mozilla.com; *before* any first
-public release is the cheapest time to check.
+The contact address for any later clarification is
+trademark-permissions@mozilla.com.
 
 ### Guideline review log
 
@@ -98,8 +100,12 @@ public release is the cheapest time to check.
   distribution policy says a modified product may not be redistributed "using
   any Mozilla trademark" without prior written consent. The pages give
   `trademark-permissions@mozilla.com`, so the contact address earlier in this
-  file was corrected from `@mozilla.org`. No branding change is required;
-  human sign-off remains outstanding.
+  file was corrected from `@mozilla.org`. No branding change is required.
+- **2026-11-21 (sign-off):** the project owner decided to proceed with the
+  first public release without contacting Mozilla. The policy is unambiguous,
+  the release branding uses no Mozilla marks, and the no-phone-home prefs are
+  verified in the packaged app. Windows packaged resources still need static
+  inspection before the release is tagged.
 
 ## AT Protocol, atproto, and the Bluesky marks (Bluesky Social PBC)
 
