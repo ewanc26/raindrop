@@ -8,14 +8,13 @@ used, even if it is small.
 - [x] Feasibility & decisions record: which Firefox source to track
       (`mozilla-central` vs release channel), branch/tag strategy, release cadence
       ([ADR 0002](decisions/0002-upstream-tracking.md)).
-- [ ] Build bootstrap: reproduce a stock Firefox build before any patches, and a CI
+- [x] Build bootstrap: reproduce a stock Firefox build before any patches, and a CI
       job that builds it on every change to the fork layer. The stock build is
       reproduced locally with the tracked `build/raindrop-unofficial.mozconfig`
       and its observed cost is recorded in [BUILDING.md](BUILDING.md). The CI job
-      exists in `.github/workflows/build-bootstrap.yml` but is gated on a
-      self-hosted runner (`RAINDROP_BUILD_RUNNER`); it cannot be proven on a
-      hosted runner with 14 GB of disk, so this stays open until one is
-      registered.
+      in `.github/workflows/build-bootstrap.yml` is gated on a self-hosted runner
+      (`RAINDROP_BUILD_RUNNER`); `workflow_dispatch` run 44912582850 proved it
+      green there, closing issue #10.
 - [x] Design review of [ARCHITECTURE.md](ARCHITECTURE.md), especially the trust and
       failure models. Handle authorities ([ADR 0003](decisions/0003-handle-authority-semantics.md)),
       `did:web`/onion endpoints ([ADR 0004](decisions/0004-did-web-and-onion-endpoints.md))
@@ -81,4 +80,6 @@ used, even if it is small.
       `.github/workflows/upgrade-check.yml` opens/refreshes a triage issue daily,
       and [docs/UPGRADING.md](UPGRADING.md) records the signed import + rebase
       procedure per ADR 0002. The signed 160.0.1 release was imported and tagged.
-- [ ] First tagged release.
+- [x] First tagged release: `v0.1.0-fx160.0.1`, built from signed Firefox
+      160.0.1 sources with all release gates green; see
+      [RELEASING.md](RELEASING.md).
