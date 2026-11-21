@@ -6,6 +6,7 @@
 
 #include <memory>
 
+#include "AtURI.h"
 #include "PdsClient.h"
 #include "json/json.h"
 
@@ -111,6 +112,56 @@ void AppendImages(std::string& aHtml, const Json::Value& aImages,
   aHtml += "</ul></div>\n";
 }
 
+void AppendReference(std::string& aHtml, std::string_view aLabel,
+                     const Json::Value& aRecord) {
+  if (!aRecord.isObject()) {
+    return;
+  }
+  const Json::Value& uri = aRecord["uri"];
+  if (!uri.isString()) {
+    return;
+  }
+  AtURI parsed;
+  if (ParseAtURI(uri.asString(), parsed) != AtURIError::None) {
+    return;
+  }
+  AtURIError error;
+  std::string normalized = NormalizeAtURI(uri.asString(), error);
+  if (error != AtURIError::None) {
+    return;
+  }
+  aHtml += "<li><strong>";
+  aHtml += EscapeHtml(aLabel);
+  aHtml += "</strong>: <a href=\"";
+  aHtml += EscapeHtml(normalized);
+  aHtml += "\">";
+  aHtml += EscapeHtml(normalized);
+  aHtml += "</a></li>\n";
+}
+
+void AppendReferences(std::string& aHtml, const Json::Value& aValue) {
+  std::string items;
+  const Json::Value& reply = aValue["reply"];
+  if (reply.isObject()) {
+    AppendReference(items, "Parent", reply["parent"]);
+    AppendReference(items, "Root", reply["root"]);
+  }
+  const Json::Value& embed = aValue["embed"];
+  if (embed.isObject()) {
+    AppendReference(items, "Quotes", embed["record"]);
+    const Json::Value& media = embed["media"];
+    if (media.isObject()) {
+      AppendReference(items, "Quotes", media["record"]);
+    }
+  }
+  if (items.empty()) {
+    return;
+  }
+  aHtml += "<div class=\"refs\">References: <ul>\n";
+  aHtml += items;
+  aHtml += "</ul></div>\n";
+}
+
 std::string RenderPost(const Json::Value& aValue,
                        const LexiconViewProvenance& aProvenance) {
   std::string html;
@@ -134,6 +185,7 @@ std::string RenderPost(const Json::Value& aValue,
     }
     html += "</p>\n";
   }
+  AppendReferences(html, aValue);
   const Json::Value& embed = aValue["embed"];
   if (embed.isObject()) {
     AppendImages(html, embed["images"], aProvenance);
