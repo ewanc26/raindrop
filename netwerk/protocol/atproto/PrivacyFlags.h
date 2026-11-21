@@ -7,9 +7,16 @@
 
 #include <cstdint>
 
+#include "nsError.h"
+
+class nsIChannel;
+class nsILoadInfo;
+
 namespace mozilla::net::atproto {
 
 uint32_t ResolutionLoadFlags(uint32_t aBaseFlags);
+nsresult PrepareResolutionFetch(nsIChannel* aChannel,
+                                nsILoadInfo* aOriginLoadInfo);
 
 }  // namespace mozilla::net::atproto
 

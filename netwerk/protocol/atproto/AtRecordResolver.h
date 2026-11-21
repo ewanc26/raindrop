@@ -71,6 +71,8 @@ class AtRecordResolver final : public nsIStreamListener,
   // is returned as the operation's nsICancelable.
   RequestOrReason Start(nsIStreamListener* aTarget);
 
+  void SetOuterRequest(nsIRequest* aRequest) { mOuterRequest = aRequest; }
+
  private:
   ~AtRecordResolver() = default;
   friend class AtRecordResolverTestAccess;

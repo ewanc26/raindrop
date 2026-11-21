@@ -10,6 +10,8 @@ UNIFIED_SOURCES += [
 # These parsers define same-named anonymous-namespace helpers (IsDigit, Split,
 # ...) that collide if unified into one translation unit.
 SOURCES += [
+    "AtDocumentPolicy.cpp",
+    "AtProtocolChannel.cpp",
     "AtURI.cpp",
     "CidVerifier.cpp",
     "CollectionView.cpp",
@@ -25,12 +27,14 @@ SOURCES += [
 
 LOCAL_INCLUDES += [
     "/netwerk/base",
+    "/netwerk/protocol/http",
     "/toolkit/components/jsoncpp/include",
 ]
 
 XPCOM_MANIFESTS += ["components.conf"]
 
 XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell.toml"]
+BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.toml"]
 
 TEST_DIRS += ["tests"]
 

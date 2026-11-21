@@ -6,6 +6,8 @@
 
 #include <string_view>
 
+#include "AtDocumentPolicy.h"
+
 namespace mozilla::net::atproto {
 
 namespace {
@@ -141,6 +143,7 @@ std::string RenderFailureHtml(const FailureInfo& aInfo) {
   std::string html;
   html.reserve(1024);
   html += "<!doctype html><html><head><meta charset=\"utf-8\">\n";
+  AppendDocumentSecurityMeta(html);
   html += "<title>Raindrop — ";
   html += EscapeHtml(FailureTitle(aInfo.mKind));
   html += "</title>\n<style>\n";
