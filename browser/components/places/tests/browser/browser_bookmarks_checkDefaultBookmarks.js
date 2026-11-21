@@ -53,6 +53,9 @@ add_task(async function checkDefaultBookmarks() {
             uri: "about:preferences",
           },
           {
+            uri: "about:preferences#atProtocol",
+          },
+          {
             uri: "about:about",
           },
         ],

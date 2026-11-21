@@ -1,6 +1,6 @@
 # ADR 0001: minimal patch surface for `at://` scheme registration
 
-- **Status:** Draft
+- **Status:** Accepted
 - **Date:** 2026-11-20
 - **Issue:** [#12](https://github.com/ewanc26/raindrop/issues/12)
 - **Related:** [ARCHITECTURE.md](../ARCHITECTURE.md), [upstream-tracking decision (#8)](https://github.com/ewanc26/raindrop/issues/8), [ROADMAP Phase 0](../ROADMAP.md)
