@@ -126,6 +126,12 @@ class ImportPlanTests(unittest.TestCase):
         self.assertIn("gpgv --keyring ./mozilla-keyring.gpg", plan)
         self.assertNotIn("gpgv --keyring mozilla-keyring.gpg", plan)
 
+    def test_tag_annotation_has_no_literal_escapes(self):
+        tag = [c for c in upstream.import_plan("160.0.1", "abc123")
+               if c.startswith("git tag")][0]
+        self.assertNotIn("\\n", tag)
+        self.assertEqual(tag.count("-m "), 3)
+
 
 class CliTests(unittest.TestCase):
     def test_cli_checks_fixture_and_exits_zero(self):
