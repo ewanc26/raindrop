@@ -13,6 +13,7 @@ namespace mozilla::net::atproto {
 struct LexiconViewProvenance {
   std::string_view mDid;
   std::string_view mPds;
+  bool mShowImages = true;
 };
 
 std::string RenderLexiconSummary(std::string_view aLexicon,

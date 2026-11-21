@@ -138,6 +138,7 @@ std::string RenderRecordHtml(const RecordViewData& aData,
       ".lexicon{margin:1em 0;padding:.5em "
       "1em;background:#fafafa;border-left:3px solid #999}\n";
   html += ".langs{color:#555;font-size:.9em}\n";
+  html += ".blob{max-width:100%;max-height:32em;display:block;margin:.4em 0}\n";
   html += "</style></head><body>\n";
 
   html += "<h1>";
@@ -175,7 +176,8 @@ std::string RenderRecordHtml(const RecordViewData& aData,
 
   std::string summary = RenderLexiconSummary(
       aData.mLexicon, aData.mValueJson,
-      LexiconViewProvenance{aProvenance.mDid, aProvenance.mPds});
+      LexiconViewProvenance{aProvenance.mDid, aProvenance.mPds,
+                            aOptions.mShowImages});
   if (!summary.empty()) {
     html += "<h2>Record</h2>\n";
     html += summary;

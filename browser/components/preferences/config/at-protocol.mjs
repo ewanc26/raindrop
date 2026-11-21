@@ -8,6 +8,7 @@ const prefs = [
   "network.atprotocol.enabled",
   "network.atprotocol.record.showProvenance",
   "network.atprotocol.record.showRawJson",
+  "network.atprotocol.record.showImages",
 ];
 
 Preferences.addAll(prefs.map(id => ({ id, type: "bool" })));
@@ -30,6 +31,10 @@ SettingGroupManager.registerGroup("atProtocol", {
     {
       id: "network.atprotocol.record.showRawJson",
       l10nId: "at-protocol-show-raw-json",
+    },
+    {
+      id: "network.atprotocol.record.showImages",
+      l10nId: "at-protocol-show-images",
     },
   ],
 });

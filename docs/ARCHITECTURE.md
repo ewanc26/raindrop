@@ -123,4 +123,6 @@ deliver `at://`-as-infrastructure.** raindrop wants the second one.
 - Minimum set of record lexicons with a dedicated view: `app.bsky.feed.post`
   and `app.bsky.actor.profile`, with the generic field table as fallback.
   Blob references show their CID and link to the resolved PDS's `getBlob`
-  endpoint; bytes are fetched only when the user follows that link.
+  endpoint. Image blobs are also embedded lazily from that endpoint when
+  `network.atprotocol.record.showImages` is enabled; the CID link remains
+  available either way.
