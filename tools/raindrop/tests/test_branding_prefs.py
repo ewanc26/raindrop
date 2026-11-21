@@ -31,6 +31,10 @@ REQUIRED_PREFS = {
     "app.normandy.enabled": "false",
     "browser.topsites.contile.enabled": "false",
     "security.certerrors.mitm.priming.enabled": "false",
+    # The add-on manager's background check would fetch a system-addon list
+    # from aus5.mozilla.org, which raindrop does not consume.
+    "extensions.systemAddon.update.enabled": "false",
+    "extensions.systemAddon.update.url": '""',
     # New-tab ads service (MARS) reaches ads.mozilla.org on a normal new tab.
     "browser.newtabpage.activity-stream.unifiedAds.spocs.enabled": "false",
     "browser.newtabpage.activity-stream.unifiedAds.tiles.enabled": "false",

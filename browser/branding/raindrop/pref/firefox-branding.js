@@ -28,6 +28,11 @@ pref("app.normandy.enabled", false);
 pref("browser.topsites.contile.enabled", false);
 pref("security.certerrors.mitm.priming.enabled", false);
 
+// The add-on manager's periodic background check fetches a system-addon list
+// from aus5.mozilla.org; raindrop has no Mozilla-hosted system add-ons.
+pref("extensions.systemAddon.update.enabled", false);
+pref("extensions.systemAddon.update.url", "");
+
 // New-tab ads (MARS) would reach ads.mozilla.org on a normal new tab.
 pref("browser.newtabpage.activity-stream.unifiedAds.spocs.enabled", false);
 pref("browser.newtabpage.activity-stream.unifiedAds.tiles.enabled", false);
