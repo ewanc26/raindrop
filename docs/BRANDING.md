@@ -64,8 +64,9 @@ raindrop DMG.
 - `pref/firefox-branding.js` disables update checks and clears Mozilla update
   URLs, disables telemetry upload, and switches off background services that
   would otherwise transmit to Mozilla without user action (Normandy remote
-  config, Contile sponsored tiles, MITM-detection priming, and the MARS new-tab
-  ads endpoint at `ads.mozilla.org`). An offline test in
+  config, Contile sponsored tiles, MITM-detection priming, the add-on manager's
+  system-addon check at `aus5.mozilla.org`, and the MARS new-tab ads endpoint at
+  `ads.mozilla.org`). An offline test in
   `tools/raindrop/tests/test_branding_prefs.py` locks these in.
 - `branding.nsi` contains no Mozilla company name, support URL or download
   endpoint. Stub-installer download URLs are blank until raindrop hosts its own
