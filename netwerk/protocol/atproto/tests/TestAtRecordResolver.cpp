@@ -2,10 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "AtRecordResolver.h"
-
 #include <string>
 
+#include "AtRecordResolver.h"
 #include "gtest/gtest.h"
 #include "mozilla/Maybe.h"
 #include "nsCOMPtr.h"
@@ -28,13 +27,22 @@ class AtRecordResolverTestAccess {
     aUri->GetPort(&aResolver.mExpectedPort);
   }
 
-  static void SetRecord(AtRecordResolver& aResolver,
-                        const std::string& aBody) {
+  static void SetRecord(AtRecordResolver& aResolver, const std::string& aBody) {
     aResolver.mPhase = AtRecordResolver::Phase::Record;
     aResolver.mBody.Assign(aBody.c_str());
   }
 
-  static void SetDidDocument(AtRecordResolver& aResolver, const std::string& aDid,
+  static void SetRepo(AtRecordResolver& aResolver, const std::string& aBody) {
+    aResolver.mPhase = AtRecordResolver::Phase::Repo;
+    aResolver.mBody.Assign(aBody.c_str());
+  }
+
+  static bool IsRepoPhase(AtRecordResolver& aResolver) {
+    return aResolver.mPhase == AtRecordResolver::Phase::Repo;
+  }
+
+  static void SetDidDocument(AtRecordResolver& aResolver,
+                             const std::string& aDid,
                              const std::string& aBody) {
     aResolver.mDid = aDid;
     aResolver.mPhase = AtRecordResolver::Phase::DidDocument;
@@ -50,8 +58,8 @@ class AtRecordResolverTestAccess {
     return aResolver.OnDidDocumentStop(aRequest, aStatus);
   }
 
-  static void SetTarget(AtRecordResolver& aResolver,
-                        nsIStreamListener* aTarget, nsIRequest* aOuter) {
+  static void SetTarget(AtRecordResolver& aResolver, nsIStreamListener* aTarget,
+                        nsIRequest* aOuter) {
     aResolver.mTarget = aTarget;
     aResolver.mOuterRequest = aOuter;
   }
@@ -155,35 +163,44 @@ void ExpectOriginFromSpec(AtRecordResolver& aResolver,
 }
 
 constexpr const char* kRecordBody = R"({"value":{"text":"secret"}})";
+constexpr const char* kRepoBody =
+    R"({"did":"did:plc:abc","handle":"alice.example",)"
+    R"("collections":["app.bsky.feed.post"]})";
 
 }  // namespace
 
-TEST(AtRecordResolver, SameOriginAllowsDefaultPortSpelling) {
-  EXPECT_TRUE(IsSameOrigin("https", "pds.example.com", -1,
-                           "https", "pds.example.com", 443));
+TEST(AtRecordResolver, SameOriginAllowsDefaultPortSpelling)
+{
+  EXPECT_TRUE(IsSameOrigin("https", "pds.example.com", -1, "https",
+                           "pds.example.com", 443));
 }
 
-TEST(AtRecordResolver, SameOriginIgnoresAsciiCase) {
-  EXPECT_TRUE(IsSameOrigin("https", "PDS.Example.COM", -1,
-                           "HTTPS", "pds.example.com", -1));
+TEST(AtRecordResolver, SameOriginIgnoresAsciiCase)
+{
+  EXPECT_TRUE(IsSameOrigin("https", "PDS.Example.COM", -1, "HTTPS",
+                           "pds.example.com", -1));
 }
 
-TEST(AtRecordResolver, RejectsSchemeDowngrade) {
-  EXPECT_FALSE(IsSameOrigin("https", "pds.example.com", -1,
-                            "http", "pds.example.com", -1));
+TEST(AtRecordResolver, RejectsSchemeDowngrade)
+{
+  EXPECT_FALSE(IsSameOrigin("https", "pds.example.com", -1, "http",
+                            "pds.example.com", -1));
 }
 
-TEST(AtRecordResolver, RejectsPortChange) {
-  EXPECT_FALSE(IsSameOrigin("https", "pds.example.com", -1,
-                            "https", "pds.example.com", 8443));
+TEST(AtRecordResolver, RejectsPortChange)
+{
+  EXPECT_FALSE(IsSameOrigin("https", "pds.example.com", -1, "https",
+                            "pds.example.com", 8443));
 }
 
-TEST(AtRecordResolver, RejectsHostChange) {
-  EXPECT_FALSE(IsSameOrigin("https", "pds.example.com", -1,
-                            "https", "evil.example.com", -1));
+TEST(AtRecordResolver, RejectsHostChange)
+{
+  EXPECT_FALSE(IsSameOrigin("https", "pds.example.com", -1, "https",
+                            "evil.example.com", -1));
 }
 
-TEST(AtRecordResolver, ExposesChannelEventSink) {
+TEST(AtRecordResolver, ExposesChannelEventSink)
+{
   RefPtr<AtRecordResolver> resolver = MakeResolver("did:plc:abc");
   void* raw = nullptr;
   nsresult rv = resolver->GetInterface(NS_GET_IID(nsIChannelEventSink), &raw);
@@ -193,7 +210,8 @@ TEST(AtRecordResolver, ExposesChannelEventSink) {
   NS_RELEASE(sink);
 }
 
-TEST(AtRecordResolver, SinkVetoesCrossOriginRedirectHop) {
+TEST(AtRecordResolver, SinkVetoesCrossOriginRedirectHop)
+{
   RefPtr<AtRecordResolver> resolver = MakeResolver("did:plc:abc");
   ExpectOriginFromSpec(*resolver, "https://pds.example.com/x"_ns);
 
@@ -204,15 +222,16 @@ TEST(AtRecordResolver, SinkVetoesCrossOriginRedirectHop) {
   ASSERT_TRUE(newChannel);
 
   RefPtr<StubRedirectCallback> callback = new StubRedirectCallback();
-  nsresult rv = resolver->AsyncOnChannelRedirect(oldChannel, newChannel, 0,
-                                                 callback);
+  nsresult rv =
+      resolver->AsyncOnChannelRedirect(oldChannel, newChannel, 0, callback);
   EXPECT_TRUE(NS_SUCCEEDED(rv));
   EXPECT_EQ(callback->mCalls, 1);
   EXPECT_EQ(callback->mResult, NS_ERROR_NOT_AVAILABLE);
   EXPECT_TRUE(AtRecordResolverTestAccess::RedirectRejected(*resolver));
 }
 
-TEST(AtRecordResolver, SinkAllowsSameOriginRedirectHop) {
+TEST(AtRecordResolver, SinkAllowsSameOriginRedirectHop)
+{
   RefPtr<AtRecordResolver> resolver = MakeResolver("did:plc:abc");
   ExpectOriginFromSpec(*resolver, "https://pds.example.com/x"_ns);
 
@@ -222,15 +241,16 @@ TEST(AtRecordResolver, SinkAllowsSameOriginRedirectHop) {
   ASSERT_TRUE(newChannel);
 
   RefPtr<StubRedirectCallback> callback = new StubRedirectCallback();
-  nsresult rv = resolver->AsyncOnChannelRedirect(oldChannel, newChannel, 0,
-                                                 callback);
+  nsresult rv =
+      resolver->AsyncOnChannelRedirect(oldChannel, newChannel, 0, callback);
   EXPECT_TRUE(NS_SUCCEEDED(rv));
   EXPECT_EQ(callback->mCalls, 1);
   EXPECT_EQ(callback->mResult, NS_OK);
   EXPECT_FALSE(AtRecordResolverTestAccess::RedirectRejected(*resolver));
 }
 
-TEST(AtRecordResolver, CanceledCompletionDoesNotDeliverRecord) {
+TEST(AtRecordResolver, CanceledCompletionDoesNotDeliverRecord)
+{
   RefPtr<AtRecordResolver> resolver = MakeResolver("did:plc:abc");
   RefPtr<RecordingListener> listener = new RecordingListener();
   nsCOMPtr<nsIChannel> outer = MakeChannel("https://pds.example.com/record"_ns);
@@ -248,7 +268,8 @@ TEST(AtRecordResolver, CanceledCompletionDoesNotDeliverRecord) {
   EXPECT_EQ(*listener->mStop, NS_OK);
 }
 
-TEST(AtRecordResolver, OnionEndpointKeepsProvenanceAndSpecificFailure) {
+TEST(AtRecordResolver, OnionEndpointKeepsProvenanceAndSpecificFailure)
+{
   RefPtr<AtRecordResolver> resolver = MakeResolver("did:plc:abc");
   const std::string json =
       R"({"id":"did:plc:abc","service":[{"id":"#atproto_pds",)"
@@ -266,7 +287,8 @@ TEST(AtRecordResolver, OnionEndpointKeepsProvenanceAndSpecificFailure) {
   EXPECT_NE(html.find("Tor"), std::string::npos);
 }
 
-TEST(AtRecordResolver, CompletionDeliversRecordWhenNotCanceled) {
+TEST(AtRecordResolver, CompletionDeliversRecordWhenNotCanceled)
+{
   RefPtr<AtRecordResolver> resolver = MakeResolver("did:plc:abc");
   RefPtr<RecordingListener> listener = new RecordingListener();
   nsCOMPtr<nsIChannel> outer = MakeChannel("https://pds.example.com/record"_ns);
@@ -282,4 +304,54 @@ TEST(AtRecordResolver, CompletionDeliversRecordWhenNotCanceled) {
   EXPECT_NE(listener->mData.Find("secret"_ns), size_t(-1));
   ASSERT_TRUE(listener->mStop);
   EXPECT_EQ(*listener->mStop, NS_OK);
+}
+
+TEST(AtRecordResolver, CompletionDeliversRepositoryWhenNotCanceled)
+{
+  RefPtr<AtRecordResolver> resolver = MakeResolver("did:plc:abc");
+  RefPtr<RecordingListener> listener = new RecordingListener();
+  nsCOMPtr<nsIChannel> outer = MakeChannel("https://pds.example.com/repo"_ns);
+  ASSERT_TRUE(outer);
+  AtRecordResolverTestAccess::SetTarget(*resolver, listener, outer);
+  AtRecordResolverTestAccess::SetRepo(*resolver, kRepoBody);
+  ExpectOriginFromSpec(*resolver, "https://pds.example.com/repo"_ns);
+
+  nsresult rv = resolver->OnStopRequest(outer, NS_OK);
+  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_TRUE(listener->mStarted);
+  EXPECT_NE(listener->mData.Find("Repository summary"_ns), size_t(-1));
+  EXPECT_NE(listener->mData.Find("app.bsky.feed.post"_ns), size_t(-1));
+  ASSERT_TRUE(listener->mStop);
+  EXPECT_EQ(*listener->mStop, NS_OK);
+}
+
+TEST(AtRecordResolver, InvalidRepositoryDescriptionFailsHonestly)
+{
+  RefPtr<AtRecordResolver> resolver = MakeResolver("did:plc:abc");
+  RefPtr<RecordingListener> listener = new RecordingListener();
+  nsCOMPtr<nsIChannel> outer = MakeChannel("https://pds.example.com/repo"_ns);
+  ASSERT_TRUE(outer);
+  AtRecordResolverTestAccess::SetTarget(*resolver, listener, outer);
+  AtRecordResolverTestAccess::SetRepo(*resolver, "not json");
+  ExpectOriginFromSpec(*resolver, "https://pds.example.com/repo"_ns);
+
+  nsresult rv = resolver->OnStopRequest(outer, NS_OK);
+  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  std::string html(listener->mData.BeginReading(), listener->mData.Length());
+  EXPECT_NE(html.find("Repository description could not be read"),
+            std::string::npos);
+}
+
+TEST(AtRecordResolver, AuthorityOnlyUriSelectsRepositoryDescription)
+{
+  RefPtr<AtRecordResolver> resolver =
+      MakeResolver("did:plc:vwzwgnygau7ed7b7wt5ux7y2");
+  const std::string didDocument =
+      R"({"id":"did:plc:vwzwgnygau7ed7b7wt5ux7y2","service":[)"
+      R"({"id":"#atproto_pds","serviceEndpoint":"https://pds.example.com"}]})";
+  AtRecordResolverTestAccess::SetDidDocument(
+      *resolver, "did:plc:vwzwgnygau7ed7b7wt5ux7y2", didDocument);
+
+  AtRecordResolverTestAccess::DidDocumentStop(*resolver, nullptr, NS_OK);
+  EXPECT_TRUE(AtRecordResolverTestAccess::IsRepoPhase(*resolver));
 }

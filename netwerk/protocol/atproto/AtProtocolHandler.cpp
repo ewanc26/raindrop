@@ -64,9 +64,9 @@ AtProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
     return NS_ERROR_MALFORMED_URI;
   }
 
-  // A record load needs a collection and record key. Authority-only URIs are
-  // valid AT-URIs but there is no single record to fetch, so fail honestly.
-  if (!parsed.mHasCollection || !parsed.mHasRecordKey) {
+  // A collection without a record key has no defined view yet. An
+  // authority-only URI renders a repository summary instead.
+  if (parsed.mHasCollection && !parsed.mHasRecordKey) {
     return NS_ERROR_MALFORMED_URI;
   }
 
@@ -79,7 +79,7 @@ AtProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
                           });
   NS_ENSURE_TRUE(channel, NS_ERROR_OUT_OF_MEMORY);
 
-  // The resolver renders the getRecord response into a generic HTML view.
+  // The resolver renders record and repository responses into HTML views.
   rv = channel->SetContentType("text/html"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
 

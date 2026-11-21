@@ -2,21 +2,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "ErrorView.h"
-
 #include <string>
 
+#include "ErrorView.h"
 #include "gtest/gtest.h"
 
 using namespace mozilla::net::atproto;
 
-TEST(ErrorView, NamesEveryFailureKind) {
+TEST(ErrorView, NamesEveryFailureKind)
+{
   const FailureKind kinds[] = {
-      FailureKind::HandleResolutionFailed, FailureKind::HandleBindingFailed,
-      FailureKind::DidResolutionFailed,    FailureKind::DidDocumentRejected,
-      FailureKind::OnionEndpointUnsupported, FailureKind::PdsUnreachable,
-      FailureKind::RecordNotFound,         FailureKind::RecordInvalid,
-      FailureKind::UpstreamRejected,       FailureKind::RedirectRejected,
+      FailureKind::HandleResolutionFailed,
+      FailureKind::HandleBindingFailed,
+      FailureKind::DidResolutionFailed,
+      FailureKind::DidDocumentRejected,
+      FailureKind::OnionEndpointUnsupported,
+      FailureKind::PdsUnreachable,
+      FailureKind::RecordNotFound,
+      FailureKind::RecordInvalid,
+      FailureKind::RepoNotFound,
+      FailureKind::RepoInvalid,
+      FailureKind::UpstreamRejected,
+      FailureKind::RedirectRejected,
       FailureKind::NetworkError,
   };
   for (FailureKind kind : kinds) {
@@ -25,7 +32,8 @@ TEST(ErrorView, NamesEveryFailureKind) {
   }
 }
 
-TEST(ErrorView, RendersExplanationAndProvenance) {
+TEST(ErrorView, RendersExplanationAndProvenance)
+{
   FailureInfo info;
   info.mKind = FailureKind::RecordNotFound;
   info.mAuthority = "alice.example";
@@ -43,7 +51,8 @@ TEST(ErrorView, RendersExplanationAndProvenance) {
   EXPECT_NE(html.find("does not fall back to a gateway"), std::string::npos);
 }
 
-TEST(ErrorView, EscapesUntrustedValues) {
+TEST(ErrorView, EscapesUntrustedValues)
+{
   FailureInfo info;
   info.mKind = FailureKind::UpstreamRejected;
   info.mAuthority = "<script>alert('x')</script>";
@@ -56,7 +65,8 @@ TEST(ErrorView, EscapesUntrustedValues) {
   EXPECT_NE(html.find("&quot;"), std::string::npos);
 }
 
-TEST(ErrorView, RedirectExplanationCoversOriginNotJustHost) {
+TEST(ErrorView, RedirectExplanationCoversOriginNotJustHost)
+{
   FailureInfo info;
   info.mKind = FailureKind::RedirectRejected;
   std::string explanation = FailureExplanation(info.mKind);
@@ -68,8 +78,10 @@ TEST(ErrorView, RedirectExplanationCoversOriginNotJustHost) {
   EXPECT_NE(html.find("different origin"), std::string::npos);
 }
 
-TEST(ErrorView, HandleFailureExplanationCoversDnsAndHttps) {
-  std::string explanation = FailureExplanation(FailureKind::HandleResolutionFailed);
+TEST(ErrorView, HandleFailureExplanationCoversDnsAndHttps)
+{
+  std::string explanation =
+      FailureExplanation(FailureKind::HandleResolutionFailed);
   EXPECT_NE(explanation.find("DNS TXT"), std::string::npos);
   EXPECT_NE(explanation.find("HTTPS"), std::string::npos);
 
@@ -80,7 +92,8 @@ TEST(ErrorView, HandleFailureExplanationCoversDnsAndHttps) {
   EXPECT_NE(html.find("HTTPS"), std::string::npos);
 }
 
-TEST(ErrorView, DistinctExplanationsPerKind) {
+TEST(ErrorView, DistinctExplanationsPerKind)
+{
   FailureInfo info;
   info.mKind = FailureKind::HandleBindingFailed;
   std::string binding = RenderFailureHtml(info);
