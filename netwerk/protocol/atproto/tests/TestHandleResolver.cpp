@@ -28,6 +28,12 @@ void ExpectBinding(std::string_view aJson, std::string_view aHandle,
   EXPECT_EQ(VerifyHandleBinding(aJson, aHandle), aExpected);
 }
 
+void ExpectTxtHost(std::string_view aHandle, std::string_view aExpected) {
+  std::string host;
+  EXPECT_EQ(BuildHandleTxtHost(aHandle, host), HandleError::None) << aHandle;
+  EXPECT_EQ(host, aExpected) << aHandle;
+}
+
 }  // namespace
 
 TEST(HandleResolver, BuildHandleUrl) {
@@ -90,4 +96,46 @@ TEST(HandleResolver, RejectsBadBindingDocuments) {
                 HandleBindingError::HandleNotClaimed);
   ExpectBinding(R"({"alsoKnownAs":[123]})", "alice.example",
                 HandleBindingError::HandleNotClaimed);
+}
+
+TEST(HandleResolver, BuildsDnsTxtHost) {
+  ExpectTxtHost("alice.example", "_atproto.alice.example");
+  ExpectTxtHost("jay.bsky.social", "_atproto.jay.bsky.social");
+}
+
+TEST(HandleResolver, RejectsInvalidHandleForTxtHost) {
+  std::string host;
+  EXPECT_EQ(BuildHandleTxtHost("singlelabel", host),
+            HandleError::InvalidHandle);
+  EXPECT_EQ(BuildHandleTxtHost("bad_label.example", host),
+            HandleError::InvalidHandle);
+  EXPECT_TRUE(host.empty());
+}
+
+TEST(HandleResolver, ParsesDnsTxtDid) {
+  std::string did;
+  const std::string expected = "did:plc:vwzwgnygau7ed7b7wt5ux7y2";
+  EXPECT_EQ(ParseHandleTxtRecords({"did=" + expected}, did), HandleError::None);
+  EXPECT_EQ(did, expected);
+  EXPECT_EQ(ParseHandleTxtRecords({" did=" + expected + " "}, did),
+            HandleError::None);
+  EXPECT_EQ(did, expected);
+  // Unrelated records are ignored, as atproto permits other TXT entries.
+  EXPECT_EQ(ParseHandleTxtRecords({"v=spf1 -all", "did=" + expected}, did),
+            HandleError::None);
+  EXPECT_EQ(did, expected);
+}
+
+TEST(HandleResolver, RejectsBadDnsTxtRecords) {
+  std::string did;
+  EXPECT_EQ(ParseHandleTxtRecords({}, did), HandleError::TxtNoDid);
+  EXPECT_EQ(ParseHandleTxtRecords({"v=spf1 -all"}, did), HandleError::TxtNoDid);
+  EXPECT_EQ(ParseHandleTxtRecords({"did=not a did"}, did),
+            HandleError::InvalidResponse);
+  EXPECT_EQ(ParseHandleTxtRecords(
+                {"did=did:plc:aaa", "did=did:plc:bbb"}, did),
+            HandleError::TxtMultipleDid);
+  EXPECT_TRUE(did.empty());
+  std::string tooLong(kMaxHandleResponseLength + 1, 'a');
+  EXPECT_EQ(ParseHandleTxtRecords({tooLong}, did), HandleError::TooLong);
 }

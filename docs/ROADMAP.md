@@ -30,9 +30,10 @@ used, even if it is small.
 - [x] PDS discovery from the DID document's service endpoint, and
       `com.atproto.repo.getRecord` fetches. HTTPS-only endpoints, no gateway
       fallback, cross-origin redirects rejected ([ADR 0004](decisions/0004-did-web-and-onion-endpoints.md)).
-- [x] Handle authorities resolve via `/.well-known/atproto-did` with reverse
-      `alsoKnownAs` verification and no persistent cache ([ADR 0003](decisions/0003-handle-authority-semantics.md)).
-      The DNS TXT resolution method and the durability-hint UI are follow-ups.
+- [x] Handle authorities resolve via DNS TXT at `_atproto.<handle>` with an
+      HTTPS `/.well-known/atproto-did` fallback, reverse `alsoKnownAs`
+      verification and no persistent cache ([ADR 0003](decisions/0003-handle-authority-semantics.md)).
+      The durability-hint UI is a follow-up.
 - [x] A generic, unstyled record view (lexicon, fields, CID, raw JSON) so *every*
       `at://` URI is viewable from day one. The resolver renders an escaped HTML
       view of any record, with provenance and raw JSON, with no lexicon-specific

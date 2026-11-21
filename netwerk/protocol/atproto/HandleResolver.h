@@ -7,6 +7,7 @@
 
 #include <string>
 #include <string_view>
+#include <vector>
 
 namespace mozilla::net::atproto {
 
@@ -15,6 +16,8 @@ enum class HandleError {
   InvalidHandle,
   InvalidResponse,
   TooLong,
+  TxtNoDid,
+  TxtMultipleDid,
 };
 
 const char* HandleErrorName(HandleError aError);
@@ -26,6 +29,16 @@ HandleError BuildHandleDidUrl(std::string_view aHandle, std::string& aUrl);
 
 // Parse the plain-text body of an atproto-did response into a supported DID.
 HandleError ParseHandleDidResponse(std::string_view aBody, std::string& aDid);
+
+// Build the DNS TXT query host for a handle, per ADR 0003:
+//   _atproto.<handle>
+HandleError BuildHandleTxtHost(std::string_view aHandle, std::string& aHost);
+
+// Select a DID from the strings of a DNS TXT record at _atproto.<handle>.
+// atproto requires exactly one record beginning with "did="; zero is
+// TxtNoDid, more than one is TxtMultipleDid (ambiguous, never guessed).
+HandleError ParseHandleTxtRecords(const std::vector<std::string>& aRecords,
+                                  std::string& aDid);
 
 }  // namespace mozilla::net::atproto
 
