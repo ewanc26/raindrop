@@ -96,8 +96,8 @@ raindrop DMG.
 Done at source level: branding directory, original artwork, generated assets,
 brand strings, update/telemetry prefs, mozconfig wiring, branded bundle id.
 
-Still to verify (tracked in
-[issue #11](https://github.com/ewanc26/raindrop/issues/11)):
+Verified before the first release (tracked in
+[issue #11](https://github.com/ewanc26/raindrop/issues/11), now closed):
 
 - [x] `./mach build` with `build/raindrop.mozconfig` succeeds (`BUILD_EXIT=0`).
 - [x] `./mach package` produces binaries/installers with no Mozilla mark. The
@@ -110,8 +110,8 @@ Still to verify (tracked in
       packaged `SMAuthorizedClients`/`SMPrivilegedExecutables` strings use
       `anchor apple generic` only. The macOS bundle signature is now raindrop's
       own `CFBundleSignature=RDRO` (`PkgInfo` `APPLRDRO`); no `MOZB` remains in
-      the shipped app bundle. Windows resources still need a Windows build
-      runner for packaged inspection.
+      the shipped app bundle. Windows packaged resources were inspected on a
+      hosted Windows runner in `Windows package check` run 44921258664.
 - [x] No Firefox-branded chrome or defaults survive outside this directory.
       First-run default bookmarks now ship a single `raindrop` folder with
       first-party `about:home`, `about:preferences`, and `about:about` targets.
@@ -121,5 +121,5 @@ Still to verify (tracked in
       its fluent-lint exclusion were removed, so no Firefox default strings
       ship in `omni.ja`. The shipped archive was inspected to confirm the new
       content.
-- [ ] `docs/TRADEMARKS.md` and `NOTICE` re-checked against Mozilla's current
-      guidelines before a first public release.
+- [x] `docs/TRADEMARKS.md` and `NOTICE` re-checked against Mozilla's current
+      guidelines before the first public release (2026-11-21).
