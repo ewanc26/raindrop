@@ -159,6 +159,12 @@ std::string RenderRecordHtml(const RecordViewData& aData,
     html += ".</p>\n";
   }
 
+  if (aData.mCidStatus != CidStatus::Absent) {
+    html += "<p class=\"hint\">CID verification checks the record against the "
+            "CID returned with it — integrity only, not a repository "
+            "signature or proof of authorship.</p>\n";
+  }
+
   std::string summary = RenderLexiconSummary(aData.mLexicon, aData.mValueJson);
   if (!summary.empty()) {
     html += "<h2>Record</h2>\n";
