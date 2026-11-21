@@ -6,6 +6,7 @@
 const ENABLED_PREF = "network.atprotocol.enabled";
 const PROVENANCE_PREF = "network.atprotocol.record.showProvenance";
 const RAW_JSON_PREF = "network.atprotocol.record.showRawJson";
+const IMAGES_PREF = "network.atprotocol.record.showImages";
 
 add_task(async function test_at_protocol_pane_loads() {
   let tab = await openPrefsTab("atProtocol");
@@ -26,7 +27,12 @@ add_task(async function test_at_protocol_pane_loads() {
   let group = doc.querySelector('setting-group[groupid="atProtocol"]');
   is_element_visible(group, "AT Protocol setting group is visible");
 
-  for (let pref of [ENABLED_PREF, PROVENANCE_PREF, RAW_JSON_PREF]) {
+  for (let pref of [
+    ENABLED_PREF,
+    PROVENANCE_PREF,
+    RAW_JSON_PREF,
+    IMAGES_PREF,
+  ]) {
     ok(getSettingControl(pref, win), `${pref} setting-control exists`);
   }
 
@@ -59,7 +65,12 @@ add_task(async function test_at_protocol_controls_update_prefs() {
   let tab = await openPrefsTab("atProtocol");
   let win = tab.linkedBrowser.contentWindow;
 
-  for (let pref of [ENABLED_PREF, PROVENANCE_PREF, RAW_JSON_PREF]) {
+  for (let pref of [
+    ENABLED_PREF,
+    PROVENANCE_PREF,
+    RAW_JSON_PREF,
+    IMAGES_PREF,
+  ]) {
     let original = Services.prefs.getBoolPref(pref);
     let control = getSettingControl(pref, win);
     ok(control, `${pref} setting-control exists`);

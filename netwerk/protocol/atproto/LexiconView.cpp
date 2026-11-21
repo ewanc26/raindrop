@@ -74,13 +74,25 @@ void AppendBlob(std::string& aHtml, std::string_view aLabel,
   const Json::Value& ref = aBlob["ref"];
   const Json::Value& link =
       ref.isObject() && ref.isMember("$link") ? ref["$link"] : aBlob["cid"];
+  std::string url;
+  bool hasUrl = link.isString() && !link.asString().empty() &&
+                BuildGetBlobUrl(aProvenance.mPds, aProvenance.mDid,
+                                link.asString(), url) == PdsUrlError::None;
+  if (hasUrl && aProvenance.mShowImages && mimeType.isString() &&
+      mimeType.asString().rfind("image/", 0) == 0) {
+    aHtml += "<img class=\"blob\" src=\"";
+    aHtml += EscapeHtml(url);
+    aHtml += "\" alt=\"";
+    if (aAlt.isString()) {
+      aHtml += EscapeHtml(aAlt.asString());
+    }
+    aHtml += "\" loading=\"lazy\">";
+  }
   if (link.isString() && !link.asString().empty()) {
-    std::string url;
     aHtml += " — CID <code>";
     aHtml += EscapeHtml(link.asString());
     aHtml += "</code>";
-    if (BuildGetBlobUrl(aProvenance.mPds, aProvenance.mDid, link.asString(),
-                        url) == PdsUrlError::None) {
+    if (hasUrl) {
       aHtml += " <a href=\"";
       aHtml += EscapeHtml(url);
       aHtml += "\" rel=\"noreferrer\">Open</a>";

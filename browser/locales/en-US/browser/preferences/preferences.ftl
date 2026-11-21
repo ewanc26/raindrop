@@ -271,6 +271,11 @@ at-protocol-show-raw-json =
   .description = Display the complete record response below the formatted fields.
   .accesskey = R
 
+at-protocol-show-images =
+  .label = Show images inline
+  .description = Load image blobs from the record's PDS when the page opens. Turn this off to keep the CID link but avoid automatic image requests.
+  .accesskey = I
+
 tabs-group-header2 =
   .label = Tabs
 

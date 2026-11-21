@@ -94,7 +94,7 @@ TEST(LexiconView, RendersBlobCidAndPdsLink)
   })";
   std::string html = RenderLexiconSummary(
       "app.bsky.feed.post", value,
-      LexiconViewProvenance{"did:plc:a", "https://pds.example.com"});
+      LexiconViewProvenance{"did:plc:a", "https://pds.example.com", false});
   EXPECT_NE(html.find("bafyreiba432alns2ilh32ovfgepvret2oys27j3dzxxuko3wmddn"
                       "h5x5ga"),
             std::string::npos);
@@ -195,6 +195,55 @@ TEST(LexiconView, RendersRecordWithMediaReference)
   EXPECT_NE(html.find("href=\"at://did:plc:a/app.bsky.feed.post/quoted\""),
             std::string::npos);
   EXPECT_NE(html.find("image/png"), std::string::npos);
+}
+
+TEST(LexiconView, RendersInlineImageWithEscapedAlt)
+{
+  const std::string value = R"({
+    "embed": {"$type": "app.bsky.embed.images", "images": [
+      {"alt": "a <b>cat</b>", "image": {"mimeType": "image/jpeg",
+       "ref": {"$link": "bafyreivalidcid"}}}
+    ]}
+  })";
+  std::string html = RenderLexiconSummary(
+      "app.bsky.feed.post", value,
+      LexiconViewProvenance{"did:plc:a", "https://pds.example.com"});
+  EXPECT_NE(html.find("<img class=\"blob\" "
+                      "src=\"https://pds.example.com/xrpc/"
+                      "com.atproto.sync.getBlob?did=did%3Aplc%3Aa&amp;"
+                      "cid=bafyreivalidcid\""),
+            std::string::npos);
+  EXPECT_NE(html.find("alt=\"a &lt;b&gt;cat&lt;/b&gt;\""), std::string::npos);
+  EXPECT_NE(html.find("loading=\"lazy\""), std::string::npos);
+}
+
+TEST(LexiconView, OmitsInlineImageWhenDisabled)
+{
+  const std::string value = R"({
+    "embed": {"$type": "app.bsky.embed.images", "images": [
+      {"image": {"mimeType": "image/png", "ref": {"$link": "bafyreicid"}}}
+    ]}
+  })";
+  std::string html = RenderLexiconSummary(
+      "app.bsky.feed.post", value,
+      LexiconViewProvenance{"did:plc:a", "https://pds.example.com", false});
+  EXPECT_EQ(html.find("<img"), std::string::npos);
+  EXPECT_NE(html.find("getBlob"), std::string::npos);
+}
+
+TEST(LexiconView, OmitsInlineImageForNonImageMime)
+{
+  const std::string value = R"({
+    "embed": {"$type": "app.bsky.embed.images", "images": [
+      {"image": {"mimeType": "application/octet-stream",
+       "ref": {"$link": "bafyreicid"}}}
+    ]}
+  })";
+  std::string html = RenderLexiconSummary(
+      "app.bsky.feed.post", value,
+      LexiconViewProvenance{"did:plc:a", "https://pds.example.com"});
+  EXPECT_EQ(html.find("<img"), std::string::npos);
+  EXPECT_NE(html.find("getBlob"), std::string::npos);
 }
 
 TEST(LexiconView, RendersProfileAvatarLink)
