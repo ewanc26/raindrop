@@ -40,12 +40,21 @@ TEST(PdsClient, BuildListRecordsUrl)
   std::string url;
   EXPECT_EQ(BuildListRecordsUrl("https://pds.example.com/",
                                 "did:plc:vwzwgnygau7ed7b7wt5ux7y2",
-                                "app.bsky.feed.post", url),
+                                "app.bsky.feed.post", "", url),
             PdsUrlError::None);
   EXPECT_EQ(url,
             "https://pds.example.com/xrpc/com.atproto.repo.listRecords"
             "?repo=did%3Aplc%3Avwzwgnygau7ed7b7wt5ux7y2"
             "&collection=app.bsky.feed.post&limit=50");
+
+  EXPECT_EQ(BuildListRecordsUrl("https://pds.example.com/",
+                                "did:plc:vwzwgnygau7ed7b7wt5ux7y2",
+                                "app.bsky.feed.post", "3n2tjsaiwrs24", url),
+            PdsUrlError::None);
+  EXPECT_EQ(url,
+            "https://pds.example.com/xrpc/com.atproto.repo.listRecords"
+            "?repo=did%3Aplc%3Avwzwgnygau7ed7b7wt5ux7y2"
+            "&collection=app.bsky.feed.post&limit=50&cursor=3n2tjsaiwrs24");
 }
 
 TEST(PdsClient, ListRecordsUrlRejectsInvalidInputs)
@@ -53,14 +62,20 @@ TEST(PdsClient, ListRecordsUrlRejectsInvalidInputs)
   std::string url;
   constexpr const char* kCollection = "app.bsky.feed.post";
   EXPECT_EQ(BuildListRecordsUrl("http://pds.example.com", "did:plc:abc",
-                                kCollection, url),
+                                kCollection, "", url),
             PdsUrlError::InvalidEndpoint);
   EXPECT_EQ(BuildListRecordsUrl("https://pds.example.com", "not-a-did",
-                                kCollection, url),
+                                kCollection, "", url),
             PdsUrlError::InvalidRepo);
   EXPECT_EQ(BuildListRecordsUrl("https://pds.example.com", "did:plc:abc",
-                                "bad collection", url),
+                                "bad collection", "", url),
             PdsUrlError::InvalidCollection);
+  EXPECT_EQ(BuildListRecordsUrl("https://pds.example.com", "did:plc:abc",
+                                kCollection, "a&limit=100", url),
+            PdsUrlError::InvalidCursor);
+  EXPECT_EQ(BuildListRecordsUrl("https://pds.example.com", "did:plc:abc",
+                                kCollection, "abc%2", url),
+            PdsUrlError::InvalidCursor);
 }
 
 TEST(PdsClient, QueryValuesAreEncoded)

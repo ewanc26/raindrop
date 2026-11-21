@@ -17,6 +17,7 @@ constexpr size_t kMaxNsidLength = 317;
 constexpr size_t kMaxNsidDomainLength = 253;
 constexpr size_t kMaxLabelLength = 63;
 constexpr size_t kMaxRecordKeyLength = 512;
+constexpr size_t kMaxCursorTokenLength = 512;
 
 bool IsAlpha(char aChar) {
   return (aChar >= 'a' && aChar <= 'z') || (aChar >= 'A' && aChar <= 'Z');
@@ -94,15 +95,12 @@ bool DecodeUnreserved(std::string_view aInput, std::string& aOutput) {
         !IsHexDigit(aInput[i + 2])) {
       return false;
     }
-    char decoded = static_cast<char>((IsDigit(aInput[i + 1])
-                                          ? aInput[i + 1] - '0'
-                                          : ToUpperAscii(aInput[i + 1]) - 'A' +
-                                                10) *
-                                         16 +
-                                     (IsDigit(aInput[i + 2])
-                                          ? aInput[i + 2] - '0'
-                                          : ToUpperAscii(aInput[i + 2]) - 'A' +
-                                                10));
+    char decoded = static_cast<char>(
+        (IsDigit(aInput[i + 1]) ? aInput[i + 1] - '0'
+                                : ToUpperAscii(aInput[i + 1]) - 'A' + 10) *
+            16 +
+        (IsDigit(aInput[i + 2]) ? aInput[i + 2] - '0'
+                                : ToUpperAscii(aInput[i + 2]) - 'A' + 10));
     if (IsUnreserved(decoded)) {
       aOutput.push_back(decoded);
     } else {
@@ -188,6 +186,8 @@ const char* AtURIErrorName(AtURIError aError) {
       return "InvalidCollection";
     case AtURIError::InvalidRecordKey:
       return "InvalidRecordKey";
+    case AtURIError::InvalidCursor:
+      return "InvalidCursor";
     case AtURIError::InvalidPath:
       return "InvalidPath";
   }
@@ -296,6 +296,29 @@ bool IsValidRecordKey(std::string_view aRecordKey) {
   return true;
 }
 
+bool IsValidCursorToken(std::string_view aToken) {
+  if (aToken.empty() || aToken.size() > kMaxCursorTokenLength) {
+    return false;
+  }
+  for (size_t i = 0; i < aToken.size(); ++i) {
+    char c = aToken[i];
+    if (IsUnreserved(c)) {
+      continue;
+    }
+    if (c != '%' || i + 2 >= aToken.size()) {
+      return false;
+    }
+    for (size_t j = 1; j <= 2; ++j) {
+      char hex = aToken[i + j];
+      if (!IsDigit(hex) && !(hex >= 'A' && hex <= 'F')) {
+        return false;
+      }
+    }
+    i += 2;
+  }
+  return true;
+}
+
 AtURIError ParseAtURI(std::string_view aSpec, AtURI& aResult) {
   aResult = AtURI{};
   if (aSpec.size() > kMaxURILength) {
@@ -321,7 +344,8 @@ AtURIError ParseAtURI(std::string_view aSpec, AtURI& aResult) {
   if (slash != std::string_view::npos && slash + 1 == rest.size()) {
     return AtURIError::InvalidPath;
   }
-  auto authority = slash == std::string_view::npos ? rest : rest.substr(0, slash);
+  auto authority =
+      slash == std::string_view::npos ? rest : rest.substr(0, slash);
   auto path = slash == std::string_view::npos ? std::string_view{}
                                               : rest.substr(slash + 1);
   if (authority.empty()) {
@@ -345,7 +369,8 @@ AtURIError ParseAtURI(std::string_view aSpec, AtURI& aResult) {
       return AtURIError::InvalidPath;
     }
     auto segments = Split(path, '/');
-    if (segments.size() > 2) {
+    if (segments.size() > 2 &&
+        (segments.size() != 3 || segments[1] != "cursor")) {
       return AtURIError::InvalidPath;
     }
     for (auto segment : segments) {
@@ -370,6 +395,12 @@ AtURIError ParseAtURI(std::string_view aSpec, AtURI& aResult) {
       }
       aResult.mRecordKey = recordKey;
       aResult.mHasRecordKey = true;
+    } else if (segments.size() == 3) {
+      if (!IsValidCursorToken(segments[2])) {
+        return AtURIError::InvalidCursor;
+      }
+      aResult.mCursor.assign(segments[2]);
+      aResult.mHasCursor = true;
     }
   }
 
@@ -403,6 +434,9 @@ std::string NormalizeAtURI(std::string_view aSpec, AtURIError& aError) {
   }
   if (uri.mHasRecordKey) {
     result += "/" + uri.mRecordKey;
+  }
+  if (uri.mHasCursor) {
+    result += "/cursor/" + uri.mCursor;
   }
   if (uri.mHasFragment) {
     result += "#" + uri.mFragment;
