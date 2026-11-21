@@ -14,6 +14,7 @@ enum class FailureKind {
   HandleBindingFailed,
   DidResolutionFailed,
   DidDocumentRejected,
+  OnionEndpointUnsupported,
   PdsUnreachable,
   RecordNotFound,
   RecordInvalid,
