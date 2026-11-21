@@ -1,8 +1,7 @@
 # Verifying AT Protocol in a local build
 
-This is the AT Protocol companion to [BUILDING.md](BUILDING.md). It closes the
-loop from a clean machine to a browser that demonstrably resolves `at://`
-without a gateway.
+This is the AT Protocol companion to [BUILDING.md](BUILDING.md). It covers local
+verification of `at://` resolution without a content gateway.
 
 ## 1. Build
 
@@ -71,13 +70,13 @@ browser-pref xpcshell checks and three mochitests. Exact counts are recorded in
 No load should contact an HTTP gateway for content. `plc.directory` and DNS are
 identity-resolution authorities, not content gateways.
 
-## 5. Expected security properties
+## 5. Security behaviour
 
 - `at://` has an opaque origin (`window.origin === "null"`) and is not a secure
   context. Identity UI must not claim a verified web domain.
 - Web pages can follow `at://` links, but scripted `fetch("at://...")` access is
   not part of the navigation contract.
-- Record CID verification proves integrity, not authorship. See issue #89 for
+- Record CID verification covers integrity, not authorship. See issue #89 for
   the blob and authenticity policy work.
 - Generated-document hardening and referrer leakage are tracked in issue #88.
 
