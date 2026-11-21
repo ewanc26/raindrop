@@ -82,3 +82,64 @@ TEST(LexiconView, RendersProfileAvatarMetadata)
   EXPECT_NE(html.find("image/webp"), std::string::npos);
   EXPECT_NE(html.find("2048 bytes"), std::string::npos);
 }
+
+TEST(LexiconView, RendersBlobCidAndPdsLink)
+{
+  const std::string value = R"({
+    "embed": {"$type": "app.bsky.embed.images", "images": [
+      {"alt": "cat", "image": {"mimeType": "image/png", "size": 10,
+       "ref": {"$link":
+        "bafyreiba432alns2ilh32ovfgepvret2oys27j3dzxxuko3wmddnh5x5ga"}}}
+    ]}
+  })";
+  std::string html = RenderLexiconSummary(
+      "app.bsky.feed.post", value,
+      LexiconViewProvenance{"did:plc:a", "https://pds.example.com"});
+  EXPECT_NE(html.find("bafyreiba432alns2ilh32ovfgepvret2oys27j3dzxxuko3wmddn"
+                      "h5x5ga"),
+            std::string::npos);
+  EXPECT_NE(html.find("href=\"https://pds.example.com/xrpc/"
+                      "com.atproto.sync.getBlob?did=did%3Aplc%3Aa&amp;"
+                      "cid=bafyreiba432alns2ilh32ovfgepvret2oys27j3dzxxuko3w"
+                      "mddnh5x5ga\""),
+            std::string::npos);
+  EXPECT_NE(html.find("rel=\"noreferrer\""), std::string::npos);
+  EXPECT_EQ(html.find("<img"), std::string::npos);
+}
+
+TEST(LexiconView, OmitsBlobLinkForInvalidCidOrMissingProvenance)
+{
+  const std::string value = R"({
+    "embed": {"$type": "app.bsky.embed.images", "images": [
+      {"image": {"mimeType": "image/png", "ref": {"$link": "bad cid!"}}}
+    ]}
+  })";
+  const LexiconViewProvenance provenance{"did:plc:a",
+                                         "https://pds.example.com"};
+  std::string withProvenance =
+      RenderLexiconSummary("app.bsky.feed.post", value, provenance);
+  EXPECT_NE(withProvenance.find("bad cid!"), std::string::npos);
+  EXPECT_EQ(withProvenance.find("getBlob"), std::string::npos);
+
+  const std::string validValue = R"({
+    "embed": {"$type": "app.bsky.embed.images", "images": [
+      {"image": {"mimeType": "image/png", "ref": {"$link": "bafyreivalidcid"}}}
+    ]}
+  })";
+  EXPECT_EQ(
+      RenderLexiconSummary("app.bsky.feed.post", validValue).find("getBlob"),
+      std::string::npos);
+}
+
+TEST(LexiconView, RendersProfileAvatarLink)
+{
+  const std::string value = R"({"avatar":{"mimeType":"image/webp",)"
+                            R"("ref":{"$link":"bafyreivalidcid"}}})";
+  std::string html = RenderLexiconSummary(
+      "app.bsky.actor.profile", value,
+      LexiconViewProvenance{"did:plc:a", "https://pds.example.com/"});
+  EXPECT_NE(html.find("bafyreivalidcid"), std::string::npos);
+  EXPECT_NE(html.find("https://pds.example.com/xrpc/com.atproto.sync.getBlob"),
+            std::string::npos);
+  EXPECT_NE(html.find("&amp;cid=bafyreivalidcid"), std::string::npos);
+}
