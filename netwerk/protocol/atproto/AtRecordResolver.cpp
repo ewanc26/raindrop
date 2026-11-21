@@ -5,6 +5,7 @@
 #include "AtRecordResolver.h"
 
 #include <algorithm>
+#include <vector>
 
 #include "DidResolver.h"
 #include "HandleResolver.h"
@@ -12,11 +13,15 @@
 #include "PdsClient.h"
 #include "RecordView.h"
 #include "mozilla/Logging.h"
+#include "mozilla/OriginAttributes.h"
 #include "nsIChannel.h"
+#include "nsIDNSByTypeRecord.h"
+#include "nsIDNSService.h"
 #include "nsIHttpChannel.h"
 #include "nsIInputStream.h"
 #include "nsILoadInfo.h"
 #include "nsIURI.h"
+#include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsStreamUtils.h"
 #include "nsStringStream.h"
@@ -61,13 +66,99 @@ nsresult AtRecordResolver::StartResolution() {
   }
 
   mHandle = mUri.mAuthority;
-  std::string url;
-  HandleError herr = BuildHandleDidUrl(mHandle, url);
+  return StartHandleDnsLookup();
+}
+
+nsresult AtRecordResolver::StartHandleDnsLookup() {
+  std::string host;
+  HandleError herr = BuildHandleTxtHost(mHandle, host);
   if (herr != HandleError::None) {
     AT_LOG(("atproto: invalid handle authority (%s)\n", HandleErrorName(herr)));
     return NS_ERROR_MALFORMED_URI;
   }
+
+  nsCOMPtr<nsIDNSService> dns = do_GetService(NS_DNSSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(dns, NS_ERROR_UNEXPECTED);
+
+  OriginAttributes oa;
+  if (mLoadInfo) {
+    oa = mLoadInfo->GetOriginAttributes();
+  }
+
+  nsCOMPtr<nsIEventTarget> target = do_GetMainThread();
+  NS_ENSURE_TRUE(target, NS_ERROR_UNEXPECTED);
+
+  nsCOMPtr<nsICancelable> request;
+  nsresult rv = dns->AsyncResolveNative(
+      nsCString(host.c_str()), nsIDNSService::RESOLVE_TYPE_TXT,
+      nsIDNSService::RESOLVE_DEFAULT_FLAGS, nullptr, this, target, oa,
+      getter_AddRefs(request));
+  NS_ENSURE_SUCCESS(rv, rv);
+  mDnsRequest = request;
+  // A cached lookup can call back inside AsyncResolveNative. Do not keep a
+  // request that has already completed.
+  if (mDnsCompleted) {
+    mDnsRequest = nullptr;
+  }
+  return NS_OK;
+}
+
+nsresult AtRecordResolver::StartHandleHttpLookup() {
+  std::string url;
+  HandleError herr = BuildHandleDidUrl(mHandle, url);
+  if (herr != HandleError::None) {
+    return NS_ERROR_MALFORMED_URI;
+  }
   return StartFetch(url, Phase::Handle);
+}
+
+NS_IMETHODIMP
+AtRecordResolver::OnLookupComplete(nsICancelable* aRequest,
+                                   nsIDNSRecord* aRecord, nsresult aStatus) {
+  mDnsCompleted = true;
+  mDnsRequest = nullptr;
+  if (mCanceled) {
+    DeliverFailure(aStatus);
+    return NS_OK;
+  }
+
+  nsresult rv = NS_OK;
+  bool resolved = false;
+  if (NS_SUCCEEDED(aStatus) && aRecord) {
+    nsCOMPtr<nsIDNSTXTRecord> txt = do_QueryInterface(aRecord);
+    if (txt) {
+      CopyableTArray<nsCString> records;
+      if (NS_SUCCEEDED(txt->GetRecords(records)) && !records.IsEmpty()) {
+        std::vector<std::string> strings;
+        strings.reserve(records.Length());
+        for (const nsCString& record : records) {
+          strings.emplace_back(record.BeginReading(), record.Length());
+        }
+        std::string did;
+        HandleError herr = ParseHandleTxtRecords(strings, did);
+        if (herr == HandleError::None) {
+          mDid = did;
+          rv = StartDidDocumentFetch();
+          resolved = true;
+        } else if (herr == HandleError::TxtMultipleDid) {
+          // Ambiguous records must not be silently bypassed: falling back to
+          // HTTPS could let whoever controls one channel win.
+          SetFailure(FailureKind::HandleResolutionFailed,
+                     HandleErrorName(herr));
+          DeliverFailure(NS_ERROR_NOT_AVAILABLE);
+          return NS_OK;
+        }
+      }
+    }
+  }
+
+  if (!resolved) {
+    rv = StartHandleHttpLookup();
+  }
+  if (NS_FAILED(rv)) {
+    DeliverFailure(rv);
+  }
+  return NS_OK;
 }
 
 nsresult AtRecordResolver::StartDidDocumentFetch() {
@@ -374,6 +465,9 @@ void AtRecordResolver::DeliverFailure(nsresult aStatus) {
 NS_IMETHODIMP
 AtRecordResolver::Cancel(nsresult aReason) {
   mCanceled = true;
+  if (mDnsRequest) {
+    mDnsRequest->Cancel(aReason);
+  }
   if (mCurrentRequest) {
     mCurrentRequest->Cancel(aReason);
   }
@@ -381,7 +475,7 @@ AtRecordResolver::Cancel(nsresult aReason) {
 }
 
 NS_IMPL_ISUPPORTS(AtRecordResolver, nsIStreamListener, nsIRequestObserver,
-                  nsICancelable)
+                  nsIDNSListener, nsICancelable)
 
 }  // namespace atproto
 }  // namespace net

@@ -19,6 +19,10 @@ const char* HandleErrorName(HandleError aError) {
       return "InvalidResponse";
     case HandleError::TooLong:
       return "TooLong";
+    case HandleError::TxtNoDid:
+      return "TxtNoDid";
+    case HandleError::TxtMultipleDid:
+      return "TxtMultipleDid";
   }
   return "Unknown";
 }
@@ -53,6 +57,56 @@ HandleError ParseHandleDidResponse(std::string_view aBody, std::string& aDid) {
     return HandleError::InvalidResponse;
   }
   aDid = did.mFull;
+  return HandleError::None;
+}
+
+HandleError BuildHandleTxtHost(std::string_view aHandle, std::string& aHost) {
+  aHost.clear();
+  if (!IsValidHandle(aHandle)) {
+    return HandleError::InvalidHandle;
+  }
+  aHost = "_atproto.";
+  aHost += aHandle;
+  return HandleError::None;
+}
+
+HandleError ParseHandleTxtRecords(const std::vector<std::string>& aRecords,
+                                  std::string& aDid) {
+  aDid.clear();
+  constexpr std::string_view prefix = "did=";
+
+  std::string candidate;
+  for (const std::string& record : aRecords) {
+    if (record.size() > kMaxHandleResponseLength) {
+      return HandleError::TooLong;
+    }
+    std::string_view trimmed(record);
+    constexpr std::string_view whitespace = " \t\r\n";
+    auto first = trimmed.find_first_not_of(whitespace);
+    if (first == std::string_view::npos) {
+      continue;
+    }
+    auto last = trimmed.find_last_not_of(whitespace);
+    trimmed = trimmed.substr(first, last - first + 1);
+    if (trimmed.substr(0, prefix.size()) != prefix) {
+      continue;
+    }
+    if (!candidate.empty()) {
+      // atproto forbids guessing when a TXT record set is ambiguous.
+      return HandleError::TxtMultipleDid;
+    }
+    trimmed.remove_prefix(prefix.size());
+    Did did;
+    if (ParseDid(trimmed, did) != DidError::None) {
+      return HandleError::InvalidResponse;
+    }
+    candidate = did.mFull;
+  }
+
+  if (candidate.empty()) {
+    return HandleError::TxtNoDid;
+  }
+  aDid = candidate;
   return HandleError::None;
 }
 

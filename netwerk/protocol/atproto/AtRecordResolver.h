@@ -10,6 +10,7 @@
 #include "SimpleChannel.h"
 #include "nsCOMPtr.h"
 #include "nsICancelable.h"
+#include "nsIDNSListener.h"
 #include "nsIStreamListener.h"
 #include "nsString.h"
 
@@ -23,26 +24,29 @@ namespace mozilla {
 namespace net {
 namespace atproto {
 
-// Drives the HTTPS fetches behind an at:// navigation. DID authorities take
-// two steps; handle authorities take three (ADR 0003):
-//   1. GET https://<handle>/.well-known/atproto-did  (handle authorities only)
-//   2. GET the DID document (did:plc / did:web), verifying alsoKnownAs for
+// Drives the lookups behind an at:// navigation. DID authorities take two
+// steps; handle authorities first resolve the handle to a DID via DNS TXT at
+// _atproto.<handle> (falling back to the HTTPS well-known route), then:
+//   1. GET the DID document (did:plc / did:web), verifying alsoKnownAs for
 //      handle authorities.
-//   3. GET com.atproto.repo.getRecord from the PDS named in that document.
+//   2. GET com.atproto.repo.getRecord from the PDS named in that document.
 //
 // It is the context object of NS_NewSimpleChannel. The at:// channel itself
 // (a SimpleChannel/nsBaseChannel) owns the public nsIChannel behaviour; this
-// class implements the internal stream listeners and an nsICancelable so a
-// cancel of the outer channel reaches whichever HTTP request is in flight.
+// class implements the internal stream and DNS listeners and an nsICancelable
+// so a cancel of the outer channel reaches whichever lookup is in flight.
 //
 // The consumer sees exactly one OnStartRequest/OnDataAvailable/OnStopRequest
 // sequence carrying the final record JSON, with the at:// channel as the
 // request. Intermediate responses are consumed internally and never exposed.
-class AtRecordResolver final : public nsIStreamListener, public nsICancelable {
+class AtRecordResolver final : public nsIStreamListener,
+                               public nsIDNSListener,
+                               public nsICancelable {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSIDNSLISTENER
   NS_DECL_NSICANCELABLE
 
   AtRecordResolver(const AtURI& aUri, nsILoadInfo* aLoadInfo);
@@ -59,6 +63,8 @@ class AtRecordResolver final : public nsIStreamListener, public nsICancelable {
   enum class Phase { None, Handle, DidDocument, Record };
 
   nsresult StartResolution();
+  nsresult StartHandleDnsLookup();
+  nsresult StartHandleHttpLookup();
   nsresult StartDidDocumentFetch();
   nsresult StartFetch(const std::string& aUrl, Phase aPhase);
   nsresult CheckResponse(nsIRequest* aRequest, nsresult aStatus);
@@ -84,7 +90,9 @@ class AtRecordResolver final : public nsIStreamListener, public nsICancelable {
   nsCOMPtr<nsILoadInfo> mLoadInfo;
   nsCOMPtr<nsIStreamListener> mTarget;
   nsCOMPtr<nsIRequest> mCurrentRequest;
+  nsCOMPtr<nsICancelable> mDnsRequest;
   Phase mPhase = Phase::None;
+  bool mDnsCompleted = false;
   bool mDeliveredStart = false;
   bool mDeliveredStop = false;
   bool mCanceled = false;
