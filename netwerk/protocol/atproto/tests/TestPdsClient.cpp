@@ -81,3 +81,46 @@ TEST(PdsClient, DescribeRepoRejectsInvalidInputs)
   EXPECT_EQ(BuildDescribeRepoUrl("https://pds.example.com", "not-a-did", url),
             PdsUrlError::InvalidRepo);
 }
+
+TEST(PdsClient, BuildGetBlobUrl)
+{
+  std::string url;
+  EXPECT_EQ(
+      BuildGetBlobUrl(
+          "https://pds.example.com/", "did:plc:vwzwgnygau7ed7b7wt5ux7y2",
+          "bafyreidyc6ykjx5kurjt5kxdqcdxf5nl6qpsbpp2w4mzd3c6spkm4hdxq", url),
+      PdsUrlError::None);
+  EXPECT_EQ(url,
+            "https://pds.example.com/xrpc/com.atproto.sync.getBlob"
+            "?did=did%3Aplc%3Avwzwgnygau7ed7b7wt5ux7y2"
+            "&cid=bafyreidyc6ykjx5kurjt5kxdqcdxf5nl6qpsbpp2w4mzd3c6spkm4hdxq");
+}
+
+TEST(PdsClient, BlobUrlRejectsInvalidInputs)
+{
+  std::string url;
+  constexpr const char* kCid =
+      "bafyreidyc6ykjx5kurjt5kxdqcdxf5nl6qpsbpp2w4mzd3c6spkm4hdxq";
+  EXPECT_EQ(BuildGetBlobUrl("http://pds.example.com", "did:plc:abc", kCid, url),
+            PdsUrlError::InvalidEndpoint);
+  EXPECT_EQ(BuildGetBlobUrl("https://pds.example.com", "not-a-did", kCid, url),
+            PdsUrlError::InvalidRepo);
+  EXPECT_EQ(BuildGetBlobUrl("https://pds.example.com", "did:plc:abc",
+                            "cid&repo=evil", url),
+            PdsUrlError::InvalidCid);
+  EXPECT_EQ(BuildGetBlobUrl("https://pds.example.com", "did:plc:abc", "", url),
+            PdsUrlError::InvalidCid);
+}
+
+TEST(PdsClient, BlobUrlAcceptsBase58Cid)
+{
+  std::string url;
+  EXPECT_EQ(
+      BuildGetBlobUrl("https://pds.example.com", "did:web:user.example",
+                      "QmYwAPJzv5CZsnAzt8auVZRnV7pFDxbmvG5jM5vGdcbqZa", url),
+      PdsUrlError::None);
+  EXPECT_EQ(url,
+            "https://pds.example.com/xrpc/com.atproto.sync.getBlob"
+            "?did=did%3Aweb%3Auser.example"
+            "&cid=QmYwAPJzv5CZsnAzt8auVZRnV7pFDxbmvG5jM5vGdcbqZa");
+}
