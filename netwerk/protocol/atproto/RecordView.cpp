@@ -27,6 +27,7 @@ const char* RecordViewErrorName(RecordViewError aError) {
 
 RecordViewError ParseRecordResponse(std::string_view aJson,
                                     RecordViewData& aOut) {
+  aOut = RecordViewData{};
   if (aJson.size() > kMaxRecordResponseLength) {
     return RecordViewError::TooLong;
   }

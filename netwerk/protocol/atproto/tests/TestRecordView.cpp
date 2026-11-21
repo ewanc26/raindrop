@@ -87,6 +87,19 @@ TEST(RecordView, RejectsBadEnvelopes) {
   EXPECT_EQ(ParseRecordResponse(tooLong, data), RecordViewError::TooLong);
 }
 
+TEST(RecordView, ReuseClearsStaleOutput) {
+  RecordViewData data;
+  ASSERT_EQ(ParseRecordResponse(kResponse, data), RecordViewError::None);
+  EXPECT_FALSE(data.mRawJson.empty());
+  EXPECT_FALSE(data.mFields.empty());
+  EXPECT_EQ(ParseRecordResponse("not json", data),
+            RecordViewError::InvalidJson);
+  EXPECT_TRUE(data.mRawJson.empty());
+  EXPECT_TRUE(data.mValueJson.empty());
+  EXPECT_TRUE(data.mLexicon.empty());
+  EXPECT_TRUE(data.mFields.empty());
+}
+
 TEST(RecordView, OptionalFields) {
   RecordViewData data;
   EXPECT_EQ(ParseRecordResponse(R"({"value":{"text":"x"}})", data),
