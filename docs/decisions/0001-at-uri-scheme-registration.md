@@ -108,6 +108,25 @@ build.**
 | `docshell/base/URIFixup.sys.mjs`, `browser/components/urlbar/UrlbarUtils.sys.mjs` | Handler registration already drives classification; UX changes are a separate decision |
 | `modules/libpref/init/StaticPrefList.yaml`, browser front-end files | Broadly patched by forks; high conflict probability for no benefit at this stage |
 
+## Protocol flags decision
+
+The initial manifest used `URI_DANGEROUS_TO_LOAD`. A runtime probe with
+`nsIScriptSecurityManager.checkLoadURIWithPrincipal` showed that this makes
+`CheckLoadURIFlags` deny **every** `at://` load originating from web content
+with `NS_ERROR_DOM_BAD_URI` ("Load of at://... from https://... denied"). That
+breaks the roadmap's link-handling requirement: an `at://` link on any website
+would not be followable in raindrop.
+
+`at://` is a navigable content scheme in the same class as `http`, `https` and
+`data`, all of which set `URI_LOADABLE_BY_ANYONE`. The manifest now uses
+`URI_LOADABLE_BY_ANYONE` (with `URI_NORELATIVE | URI_NOAUTH` retained) so web
+content can follow `at://` links and the scheme is persistable for bookmarks and
+history. This is safe because the handler renders escaped HTML with an opaque
+origin (no `URI_HAS_WEB_EXPOSED_ORIGIN`): a cross-origin page cannot script into
+the resulting document, and the DID authority is never treated as a host. The
+`at_uri_is_loadable_by_web_content` test pins both the flag class and the
+permitted navigation.
+
 ## Rebase risk assessment
 
 - **New module files:** low risk. They are additions; upstream changes cannot
