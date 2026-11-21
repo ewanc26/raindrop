@@ -19,6 +19,7 @@ SOURCES += [
     "PdsClient.cpp",
     "PrivacyFlags.cpp",
     "RecordView.cpp",
+    "RepoView.cpp",
 ]
 
 LOCAL_INCLUDES += [

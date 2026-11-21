@@ -11,6 +11,7 @@ const { NetUtil } = ChromeUtils.importESModule(
 const DID_URI =
   "at://did:plc:vwzwgnygau7ed7b7wt5ux7y2/app.bsky.feed.post/3k5nobkf2w72g";
 const HANDLE_URI = "at://jay.bsky.social/app.bsky.feed.post/3k5nobkf2w72g";
+const REPO_URI = "at://ewancroft.uk";
 
 add_task(async function protocol_handler_is_registered() {
   const handler = Services.io.getProtocolHandler("at");
@@ -64,7 +65,7 @@ add_task(async function at_uri_is_classified_as_a_url_not_a_search() {
   // URL, not a search query, because the scheme has a registered handler.
   // Allowing keyword lookup is what makes this a meaningful classification
   // test: an unhandled scheme would be turned into keywordAsSent instead.
-  for (const spec of [DID_URI, HANDLE_URI]) {
+  for (const spec of [DID_URI, HANDLE_URI, REPO_URI]) {
     const info = Services.uriFixup.getFixupURIInfo(
       spec,
       Services.uriFixup.FIXUP_FLAG_ALLOW_KEYWORD_LOOKUP
@@ -94,18 +95,29 @@ add_task(async function at_uri_is_loadable_by_web_content() {
 
   const ssm = Services.scriptSecurityManager;
   const web = ssm.createContentPrincipalFromOrigin("https://example.com");
-  for (const spec of [DID_URI, HANDLE_URI]) {
+  for (const spec of [DID_URI, HANDLE_URI, REPO_URI]) {
     const uri = Services.io.newURI(spec);
     ssm.checkLoadURIWithPrincipal(web, uri, 0);
     Assert.ok(true, `web content may load ${spec}`);
   }
 });
 
-add_task(async function authority_only_uri_is_rejected() {
+add_task(async function authority_only_uri_creates_an_html_channel() {
+  for (const spec of ["at://did:plc:vwzwgnygau7ed7b7wt5ux7y2", REPO_URI]) {
+    const chan = NetUtil.newChannel({
+      uri: spec,
+      loadUsingSystemPrincipal: true,
+    });
+    Assert.equal(chan.URI.spec, spec);
+    Assert.equal(chan.contentType, "text/html");
+  }
+});
+
+add_task(async function collection_without_record_key_is_rejected() {
   Assert.throws(
     () =>
       NetUtil.newChannel({
-        uri: "at://did:plc:vwzwgnygau7ed7b7wt5ux7y2",
+        uri: "at://ewancroft.uk/app.bsky.feed.post",
         loadUsingSystemPrincipal: true,
       }),
     /NS_ERROR_MALFORMED_URI|component returned failure code|0x80570009/

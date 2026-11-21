@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "PdsClient.h"
-
 #include "gtest/gtest.h"
 
 using namespace mozilla::net::atproto;
@@ -21,7 +20,8 @@ void ExpectUrl(std::string_view aEndpoint, std::string_view aRepo,
 
 }  // namespace
 
-TEST(PdsClient, BuildGetRecordUrl) {
+TEST(PdsClient, BuildGetRecordUrl)
+{
   ExpectUrl("https://pds.example.com", "did:plc:vwzwgnygau7ed7b7wt5ux7y2",
             "app.bsky.feed.post", "3k5nobkf2w72g",
             "https://pds.example.com/xrpc/com.atproto.repo.getRecord"
@@ -35,13 +35,15 @@ TEST(PdsClient, BuildGetRecordUrl) {
             "&rkey=com.atproto.lexicon.schema");
 }
 
-TEST(PdsClient, QueryValuesAreEncoded) {
+TEST(PdsClient, QueryValuesAreEncoded)
+{
   EXPECT_EQ(EncodeQueryValue("did:plc:abc"), "did%3Aplc%3Aabc");
   EXPECT_EQ(EncodeQueryValue("a.b_c-d~e"), "a.b_c-d~e");
   EXPECT_EQ(EncodeQueryValue("a b/c?"), "a%20b%2Fc%3F");
 }
 
-TEST(PdsClient, RejectsInvalidInputs) {
+TEST(PdsClient, RejectsInvalidInputs)
+{
   std::string url;
   EXPECT_EQ(BuildGetRecordUrl("http://pds.example.com", "did:plc:abc",
                               "app.bsky.feed.post", "self", url),
@@ -58,4 +60,24 @@ TEST(PdsClient, RejectsInvalidInputs) {
   EXPECT_EQ(BuildGetRecordUrl("https://pds.example.com", "did:plc:abc",
                               "app.bsky.feed.post", "../self", url),
             PdsUrlError::InvalidRecordKey);
+}
+
+TEST(PdsClient, BuildDescribeRepoUrl)
+{
+  std::string url;
+  EXPECT_EQ(BuildDescribeRepoUrl("https://pds.example.com/",
+                                 "did:plc:vwzwgnygau7ed7b7wt5ux7y2", url),
+            PdsUrlError::None);
+  EXPECT_EQ(url,
+            "https://pds.example.com/xrpc/com.atproto.repo.describeRepo"
+            "?repo=did%3Aplc%3Avwzwgnygau7ed7b7wt5ux7y2");
+}
+
+TEST(PdsClient, DescribeRepoRejectsInvalidInputs)
+{
+  std::string url;
+  EXPECT_EQ(BuildDescribeRepoUrl("http://pds.example.com", "did:plc:abc", url),
+            PdsUrlError::InvalidEndpoint);
+  EXPECT_EQ(BuildDescribeRepoUrl("https://pds.example.com", "not-a-did", url),
+            PdsUrlError::InvalidRepo);
 }
