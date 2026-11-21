@@ -60,17 +60,21 @@ export MOZCONFIG="$PWD/build/raindrop-unofficial.mozconfig"
 `build/raindrop-unofficial.mozconfig` deliberately selects `unofficial`
 branding so no Mozilla trademarked names or artwork appear in local builds.
 A root-level `.mozconfig` is gitignored upstream, which is why the tracked
-config lives under `build/` and is selected with `MOZCONFIG`. Its exact
-contents are:
+config lives under `build/` and is selected with `MOZCONFIG`. The tracked file
+is the source of truth; its three active options are:
 
 ```sh
 mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-raindrop-unofficial
-
-# Unbranded build: no Mozilla names, logos or trade dress. This is the
-# correct branding for local developer builds; release builds will select
-# browser/branding/raindrop instead (issue #11).
+ac_add_options --enable-bootstrap
 ac_add_options --with-branding=browser/branding/unofficial
 ```
+
+`--enable-bootstrap` is required on a clean machine: the release tarball does
+not bundle the pinned clang and WASI toolchains, so the first build fetches
+them. `--with-branding=browser/branding/unofficial` is why local builds carry
+no Mozilla marks; release builds select `browser/branding/raindrop` instead
+(issue #11). The tracked file also documents an optional
+`--enable-artifact-builds` line for faster iteration after the first build.
 
 (`browser/config/mozconfig` is sourced by the tree itself and supplies
 `--enable-project=browser`; the fork config does not need to repeat it.)
