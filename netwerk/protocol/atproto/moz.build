@@ -15,6 +15,7 @@ SOURCES += [
     "DidResolver.cpp",
     "ErrorView.cpp",
     "HandleResolver.cpp",
+    "LexiconView.cpp",
     "PdsClient.cpp",
     "PrivacyFlags.cpp",
     "RecordView.cpp",

@@ -55,7 +55,9 @@ used, even if it is small.
 
 ## Phase 3 - grown (M3)
 
-- [ ] Bundled views for common lexicons (posts, profiles, blobs) rendered natively.
+- [x] Bundled views for common lexicons (posts, profiles) rendered natively, with
+      escaped, friendly summaries layered above the generic view; unknown lexicons
+      fall back to the generic field table. Blob rendering remains a follow-up.
 - [ ] Browser integration polish: `at://` in bookmarks, history, and link handling.
 - [ ] Fork maintenance automation: scripted rebases onto upstream Firefox releases
       and an upgrade CI job, so the fork never rots.
