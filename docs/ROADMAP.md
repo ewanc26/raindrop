@@ -43,10 +43,10 @@ used, even if it is small.
 - [x] Data integrity: content fetched from PDSes can be verified against its CID.
       The record value is re-encoded as canonical DAG-CBOR and its SHA-256 digest
       compared with the CID; the result is shown as provenance metadata.
-- [ ] Clear provenance UI: which DID, which PDS, and whether resolution succeeded
+- [x] Clear provenance UI: which DID, which PDS, and whether resolution succeeded
       end to end; honest failure states (unknown DID, PDS down, record deleted).
-      The success-path provenance table is done; honest, step-specific failure
-      pages are still outstanding.
+      The success view shows DID/PDS/CID and verification outcome; failures render
+      a step-specific HTML page distinguishing handle, DID, PDS and record errors.
 - [ ] Privacy defaults: no fallback gateway, no third-party fetch to "fix" a lookup;
       caching stays local and respects private-browsing mode.
 
