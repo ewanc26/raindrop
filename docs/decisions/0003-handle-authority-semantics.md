@@ -42,12 +42,13 @@ durability warning. Never persist the mapping.**
    resolves to a DID whose document does not claim it is a failed resolution,
    not a warning. This blocks a stale or hostile handle record from redirecting
    the viewer to an unrelated repo.
-3. **Caching.** Keep handle→DID results in a process-local, in-memory cache for
-   the current session only. Nothing is written to disk, nothing survives a
-   restart, and private browsing uses a cache that is discarded with the
-   private session. There is no persistent handle→DID map, because detecting a
-   change would require re-resolution anyway and a stale on-disk entry can
-   outlive the handle's right to the name.
+3. **Caching.** No application-level handle→DID cache is implemented. Each
+   navigation re-resolves the handle, and HTTP identity fetches set
+   `INHIBIT_PERSISTENT_CACHING | LOAD_BYPASS_CACHE` so nothing is written to
+   disk. The only in-memory caching is the platform DNS resolver's, which is
+   session-scoped and never persisted. Whether to add an application-level
+   cache, and if so its TTL and private-browsing behaviour, is an open design
+   question tracked in issue #6 — it is not decided here.
 4. **Change detection.** Because resolution happens on navigation, a changed
    handle is seen at the next load. If the reverse check fails, the load fails
    with an explicit "handle no longer resolves to this identity" state; the
@@ -71,9 +72,9 @@ durability warning. Never persist the mapping.**
    unusable in raindrop even if another viewer would accept it. This is
    intentional; the cost of a false positive is showing the wrong person's
    data.
-- The in-memory cache needs to expire (short TTL) and be cleared on identity
-   changes between sessions. The exact TTL is a tuning detail, not an ADR
-   decision.
+- If an application-level cache is added, it will need a short TTL and to be
+   cleared on identity changes between sessions. That TTL and the private-
+   browsing behaviour are open questions in issue #6, not ADR decisions.
 
 ## Alternatives considered
 
