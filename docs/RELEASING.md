@@ -37,7 +37,7 @@ Run with the tracked release mozconfig exported in the same shell:
 ```sh
 export MOZCONFIG="$PWD/build/raindrop.mozconfig"
 ./mach build
-python3.12 ./mach gtest 'AtURI.*:DidResolver.*:PdsClient.*:HandleResolver.*:RecordView.*:CidVerifier.*:ErrorView.*:PrivacyFlags.*:LexiconView.*:AtRecordResolver.*'
+python3.12 ./mach gtest 'AtURI.*:DidResolver.*:PdsClient.*:HandleResolver.*:RecordView.*:CidVerifier.*:ErrorView.*:PrivacyFlags.*:LexiconView.*:AtRecordResolver.*:RepoView.*'
 ./mach xpcshell-test netwerk/protocol/atproto/tests/test_at_protocol.js
 ./mach xpcshell-test browser/components/places/tests/unit/test_browserGlue_prefs.js
 ./mach mochitest browser/components/places/tests/browser/browser_bookmark_current_tabs.js --headless
@@ -47,13 +47,14 @@ python3.12 -m unittest discover -s tools/raindrop/tests
 python3.12 ./mach package
 ```
 
-The expected counts are 74 GTests across 10 suites, 29 atproto xpcshell checks,
+The expected counts are 84 GTests across 11 suites, 37 atproto xpcshell checks,
 22 browser-pref xpcshell checks and 66 offline tests. The second xpcshell test
 catches `MOZ_APP_NAME` and `appdir` harness mismatches introduced by rebranding;
 the mochitests catch app-ID gates that stop browser actors from starting, and
 the preferences mochitest checks the AT Protocol settings pane and its prefs. The
 offline suite also guards the app-ID gates for automation, downloads and reader
-mode that a rebase can silently restore.
+mode that a rebase can silently restore, and runs on every pull request through
+`.github/workflows/offline-suite.yml`.
 GTest suites must be passed as one colon-separated argument; separate
 invocations can report a false green. Confirm `./mach format` and
 `git diff --check` are clean.
