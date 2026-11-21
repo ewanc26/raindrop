@@ -99,12 +99,14 @@ check against a saved product-details payload. Its logic is covered by
    done
    ./mach xpcshell-test netwerk/protocol/atproto/tests/test_at_protocol.js
    ./mach xpcshell-test browser/components/places/tests/unit/test_browserGlue_prefs.js
+   ./mach mochitest browser/components/places/tests/browser/browser_bookmark_current_tabs.js --headless
    python3.12 -m unittest discover -s tools/raindrop/tests
    ```
 
    The second xpcshell test catches test-harness regressions caused by the
-   rebranded `MOZ_APP_NAME`; the offline suite guards branding and harness
-   aliases that a rebase can silently restore to Firefox values.
+   rebranded `MOZ_APP_NAME`; the mochitest catches app-ID gates that prevent
+   browser startup. The offline suite guards branding, harness aliases and
+   application identity that a rebase can silently restore to Firefox values.
 
 5. **Record and publish.** Update the version table and hash in
    `docs/BUILDING.md`, then push `upstream`, `main`, the new `firefox-$V` tag,

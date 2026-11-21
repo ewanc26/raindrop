@@ -30,6 +30,8 @@ BROWSER_BOOKMARK_TEST = (
 UNIT_BOOKMARK_TEST = (
     REPO_ROOT / "browser/components/places/tests/unit/test_browserGlue_prefs.js"
 )
+BROWSER_CONFIGURE = REPO_ROOT / "browser/moz.configure"
+BROWSER_COMPONENTS = REPO_ROOT / "browser/components/BrowserComponents.manifest"
 BRANDING_DIR = REPO_ROOT / "browser/branding/raindrop"
 WINDOWS_NSI = BRANDING_DIR / "branding.nsi"
 WINDOWS_MANIFESTS = (
@@ -55,6 +57,20 @@ class BrandingSelectionTests(unittest.TestCase):
             "--with-branding=browser/branding/unofficial",
             STOCK_MOZCONFIG.read_text(),
         )
+
+
+class ApplicationStartupTests(unittest.TestCase):
+    def test_browser_glue_is_registered_for_raindrop_app_id(self):
+        configure = BROWSER_CONFIGURE.read_text()
+        match = re.search(r'imply_option\("MOZ_APP_ID", "(\{[^}]+\})"\)', configure)
+        self.assertIsNotNone(match, "raindrop app ID is not configured")
+        app_id = match.group(1)
+        line = next(
+            line
+            for line in BROWSER_COMPONENTS.read_text().splitlines()
+            if "app-startup nsBrowserGlue" in line
+        )
+        self.assertIn(f"application={app_id}", line)
 
 
 class BundleSignatureTests(unittest.TestCase):

@@ -14,7 +14,9 @@ A tag is cut only when every gate below is satisfied:
 - [x] The design review is signed off and recorded in
       [ADR 0005](decisions/0005-identity-authority-and-freshness-signoff.md).
 - [x] Trademark sign-off is recorded in [TRADEMARKS.md](TRADEMARKS.md); the
-      release uses no Mozilla marks and makes no unprompted Mozilla requests.
+      release uses no Mozilla branding marks outside required license notices
+      and the non-affiliation disclaimer, and makes no unprompted Mozilla
+      requests.
 - [x] macOS packaged branding, bundle signature and no-phone-home prefs are
       verified in the shipped app bundle.
 - [ ] The stock-upstream build passes in CI on a registered self-hosted runner
@@ -36,13 +38,15 @@ export MOZCONFIG="$PWD/build/raindrop.mozconfig"
 python3.12 ./mach gtest 'AtURI.*:DidResolver.*:PdsClient.*:HandleResolver.*:RecordView.*:CidVerifier.*:ErrorView.*:PrivacyFlags.*:LexiconView.*:AtRecordResolver.*'
 ./mach xpcshell-test netwerk/protocol/atproto/tests/test_at_protocol.js
 ./mach xpcshell-test browser/components/places/tests/unit/test_browserGlue_prefs.js
+./mach mochitest browser/components/places/tests/browser/browser_bookmark_current_tabs.js --headless
 python3.12 -m unittest discover -s tools/raindrop/tests
 python3.12 ./mach package
 ```
 
 The expected counts are 73 GTests across 10 suites, 27 atproto xpcshell checks,
-22 browser-pref xpcshell checks and 39 offline tests. The second xpcshell test
-catches `MOZ_APP_NAME` and `appdir` harness mismatches introduced by rebranding.
+22 browser-pref xpcshell checks and 40 offline tests. The second xpcshell test
+catches `MOZ_APP_NAME` and `appdir` harness mismatches introduced by rebranding;
+the mochitest catches app-ID gates that stop browser actors from starting.
 GTest suites must be passed as one colon-separated argument; separate
 invocations can report a false green. Confirm `./mach format` and
 `git diff --check` are clean.
