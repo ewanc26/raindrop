@@ -131,6 +131,72 @@ TEST(LexiconView, OmitsBlobLinkForInvalidCidOrMissingProvenance)
       std::string::npos);
 }
 
+TEST(LexiconView, RendersReplyAndQuoteReferences)
+{
+  const std::string value = R"({
+    "text": "hello",
+    "reply": {
+      "parent": {"uri": "at://did:plc:a/app.bsky.feed.post/parent"},
+      "root": {"uri": "at://did:plc:a/app.bsky.feed.post/root"}
+    },
+    "embed": {"$type": "app.bsky.embed.record", "record": {
+      "uri": "at://did:plc:b/app.bsky.feed.post/quote"
+    }}
+  })";
+  std::string html = RenderLexiconSummary("app.bsky.feed.post", value);
+  EXPECT_NE(html.find("References:"), std::string::npos);
+  EXPECT_NE(html.find("href=\"at://did:plc:a/app.bsky.feed.post/parent\""),
+            std::string::npos);
+  EXPECT_NE(html.find("href=\"at://did:plc:a/app.bsky.feed.post/root\""),
+            std::string::npos);
+  EXPECT_NE(html.find("href=\"at://did:plc:b/app.bsky.feed.post/quote\""),
+            std::string::npos);
+}
+
+TEST(LexiconView, IgnoresInvalidReferenceUris)
+{
+  const std::string value = R"({
+    "reply": {
+      "parent": {"uri": "https://example.com/post"},
+      "root": {"uri": "javascript:alert"}
+    },
+    "embed": {"$type": "app.bsky.embed.record", "record": {
+      "uri": "at://did:plc:a/app.bsky.feed.post/bad key"
+    }}
+  })";
+  std::string html = RenderLexiconSummary("app.bsky.feed.post", value);
+  EXPECT_EQ(html.find("<a href="), std::string::npos);
+  EXPECT_EQ(html.find("References:"), std::string::npos);
+}
+
+TEST(LexiconView, NormalizesReferenceUri)
+{
+  const std::string value = R"({
+    "reply": {"parent": {
+      "uri": "at://did:plc:a/app.bsky.feed.post/self#/%ff"
+    }}
+  })";
+  std::string html = RenderLexiconSummary("app.bsky.feed.post", value);
+  EXPECT_NE(html.find("href=\"at://did:plc:a/app.bsky.feed.post/self#/%FF\""),
+            std::string::npos);
+}
+
+TEST(LexiconView, RendersRecordWithMediaReference)
+{
+  const std::string value = R"({
+    "embed": {"$type": "app.bsky.embed.recordWithMedia",
+      "record": {"uri": "at://did:plc:a/app.bsky.feed.post/quoted"},
+      "media": {"$type": "app.bsky.embed.images", "images": [
+        {"image": {"mimeType": "image/png", "ref": {"$link": "bafyreicid"}}}
+      ]}
+    }
+  })";
+  std::string html = RenderLexiconSummary("app.bsky.feed.post", value);
+  EXPECT_NE(html.find("href=\"at://did:plc:a/app.bsky.feed.post/quoted\""),
+            std::string::npos);
+  EXPECT_NE(html.find("image/png"), std::string::npos);
+}
+
 TEST(LexiconView, RendersProfileAvatarLink)
 {
   const std::string value = R"({"avatar":{"mimeType":"image/webp",)"
