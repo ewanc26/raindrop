@@ -35,6 +35,34 @@ TEST(PdsClient, BuildGetRecordUrl)
             "&rkey=com.atproto.lexicon.schema");
 }
 
+TEST(PdsClient, BuildListRecordsUrl)
+{
+  std::string url;
+  EXPECT_EQ(BuildListRecordsUrl("https://pds.example.com/",
+                                "did:plc:vwzwgnygau7ed7b7wt5ux7y2",
+                                "app.bsky.feed.post", url),
+            PdsUrlError::None);
+  EXPECT_EQ(url,
+            "https://pds.example.com/xrpc/com.atproto.repo.listRecords"
+            "?repo=did%3Aplc%3Avwzwgnygau7ed7b7wt5ux7y2"
+            "&collection=app.bsky.feed.post&limit=50");
+}
+
+TEST(PdsClient, ListRecordsUrlRejectsInvalidInputs)
+{
+  std::string url;
+  constexpr const char* kCollection = "app.bsky.feed.post";
+  EXPECT_EQ(BuildListRecordsUrl("http://pds.example.com", "did:plc:abc",
+                                kCollection, url),
+            PdsUrlError::InvalidEndpoint);
+  EXPECT_EQ(BuildListRecordsUrl("https://pds.example.com", "not-a-did",
+                                kCollection, url),
+            PdsUrlError::InvalidRepo);
+  EXPECT_EQ(BuildListRecordsUrl("https://pds.example.com", "did:plc:abc",
+                                "bad collection", url),
+            PdsUrlError::InvalidCollection);
+}
+
 TEST(PdsClient, QueryValuesAreEncoded)
 {
   EXPECT_EQ(EncodeQueryValue("did:plc:abc"), "did%3Aplc%3Aabc");

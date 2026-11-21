@@ -6,6 +6,7 @@ UNIFIED_SOURCES += [
     "TestAtRecordResolver.cpp",
     "TestAtURI.cpp",
     "TestCidVerifier.cpp",
+    "TestCollectionView.cpp",
     "TestDidResolver.cpp",
     "TestErrorView.cpp",
     "TestHandleResolver.cpp",

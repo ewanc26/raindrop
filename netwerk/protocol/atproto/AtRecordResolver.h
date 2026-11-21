@@ -75,7 +75,7 @@ class AtRecordResolver final : public nsIStreamListener,
   ~AtRecordResolver() = default;
   friend class AtRecordResolverTestAccess;
 
-  enum class Phase { None, Handle, DidDocument, Record, Repo };
+  enum class Phase { None, Handle, DidDocument, Record, Repo, Collection };
 
   nsresult StartResolution();
   nsresult StartHandleDnsLookup();
@@ -87,6 +87,7 @@ class AtRecordResolver final : public nsIStreamListener,
   nsresult OnDidDocumentStop(nsIRequest* aRequest, nsresult aStatus);
   nsresult OnRecordStop(nsIRequest* aRequest, nsresult aStatus);
   nsresult OnRepoStop(nsIRequest* aRequest, nsresult aStatus);
+  nsresult OnCollectionStop(nsIRequest* aRequest, nsresult aStatus);
 
   void SetFailure(FailureKind aKind, std::string_view aDetail);
   nsresult DeliverHtml(std::string_view aHtml);

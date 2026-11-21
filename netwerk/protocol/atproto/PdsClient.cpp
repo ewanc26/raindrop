@@ -120,6 +120,27 @@ PdsUrlError BuildDescribeRepoUrl(std::string_view aEndpoint,
   return PdsUrlError::None;
 }
 
+PdsUrlError BuildListRecordsUrl(std::string_view aEndpoint,
+                                std::string_view aRepo,
+                                std::string_view aCollection,
+                                std::string& aUrl) {
+  aUrl.clear();
+  if (!IsValidPdsEndpoint(aEndpoint)) {
+    return PdsUrlError::InvalidEndpoint;
+  }
+  if (!IsValidDid(aRepo)) {
+    return PdsUrlError::InvalidRepo;
+  }
+  if (!IsValidNsid(aCollection)) {
+    return PdsUrlError::InvalidCollection;
+  }
+
+  aUrl = std::string(TrimTrailingSlashes(aEndpoint)) +
+         "/xrpc/com.atproto.repo.listRecords?repo=" + EncodeQueryValue(aRepo) +
+         "&collection=" + EncodeQueryValue(aCollection) + "&limit=50";
+  return PdsUrlError::None;
+}
+
 PdsUrlError BuildGetBlobUrl(std::string_view aEndpoint, std::string_view aRepo,
                             std::string_view aCid, std::string& aUrl) {
   aUrl.clear();

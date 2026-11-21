@@ -23,10 +23,12 @@ at://did:plc:abc.../app.bsky.feed.post/3lz...
    document. This is where the record lives.
 4. **Fetch.** A full record URI calls `com.atproto.repo.getRecord` on the PDS
    for the collection and rkey. An authority-only URI calls
-   `com.atproto.repo.describeRepo` to describe the repository. Blob rendering
-   is deferred.
-5. **Rendering.** A repository description renders a summary with its handle,
-   DID, PDS and advertised collections. Record responses dispatch on lexicon:
+   `com.atproto.repo.describeRepo` to describe the repository, and a
+   collection URI calls `com.atproto.repo.listRecords`.
+5. **Rendering.** A repository description renders a summary whose advertised
+   collections link to collection listings. A collection listing renders
+   escaped record links built from the resolved DID, never from the URI the
+   PDS returned. Record responses dispatch on lexicon:
    - Known lexicons (Phase 3) get a bundled native view.
    - Everything else gets the generic record view (Phase 1) with the option to
    inspect raw JSON.
