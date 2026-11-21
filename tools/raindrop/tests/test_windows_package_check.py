@@ -212,6 +212,16 @@ class WindowsWorkflowWiringTests(unittest.TestCase):
         self.assertIn("$env:GMAKE", text)
         self.assertIn("$env:NODEJS", text)
         self.assertIn("$env:MAKENSISU", text)
+        self.assertIn("${env:7Z}", text)
+
+    def test_workflow_installs_pinned_7z(self):
+        text = WORKFLOW.read_text()
+        self.assertIn("7zz.tar.zst", text)
+        self.assertIn(
+            "b34ecc2cc20babe4ebc18b54f53843ebc19797f8eca53ff5cb79dc33136e2563",
+            text,
+        )
+        self.assertIn(".mozbuild\\7zz", text)
 
     def test_workflow_installs_mozilla_signed_nsis(self):
         text = WORKFLOW.read_text()

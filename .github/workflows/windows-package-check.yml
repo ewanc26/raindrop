@@ -133,6 +133,32 @@ jobs:
             throw "Pinned mozmake package did not provide mozmake.exe"
           }
 
+      - name: Install pinned 7-Zip
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $ProgressPreference = "SilentlyContinue"
+          $url = "https://firefox-ci-tc.services.mozilla.com/api/queue/v1/task/A7IAGKf8RLeiuUd6D8AWtg/artifacts/public/build/7zz.tar.zst"
+          $archive = Join-Path $env:RUNNER_TEMP "7zz.tar.zst"
+          Invoke-WebRequest -Uri $url -OutFile $archive
+          $hash = (Get-FileHash -Algorithm SHA256 -Path $archive).Hash.ToLowerInvariant()
+          $expected = "b34ecc2cc20babe4ebc18b54f53843ebc19797f8eca53ff5cb79dc33136e2563"
+          if ($hash -ne $expected) {
+            throw "7-Zip SHA-256 mismatch: $hash"
+          }
+          $extract = Join-Path $env:RUNNER_TEMP "7zz-extract"
+          if (Test-Path $extract) {
+            Remove-Item -Recurse -Force $extract
+          }
+          New-Item -ItemType Directory -Force -Path $extract | Out-Null
+          tar -xf $archive -C $extract
+          $destination = Join-Path $env:USERPROFILE ".mozbuild\7zz"
+          New-Item -ItemType Directory -Force -Path $destination | Out-Null
+          Copy-Item -Path (Join-Path $extract "7zz\*") -Destination $destination -Recurse -Force
+          if (-not (Test-Path (Join-Path $destination "7zz.exe"))) {
+            throw "Pinned 7-Zip package did not provide 7zz.exe"
+          }
+
       - name: Derive pinned artifact revision
         shell: pwsh
         run: |
@@ -155,6 +181,7 @@ jobs:
           $env:GMAKE = Join-Path $env:USERPROFILE ".mozbuild\mozmake\mozmake.exe"
           $env:NODEJS = Join-Path $env:USERPROFILE ".mozbuild\node\node.exe"
           $env:MAKENSISU = Join-Path $env:USERPROFILE ".mozbuild\nsis\bin\makensis.exe"
+          ${env:7Z} = Join-Path $env:USERPROFILE ".mozbuild\7zz\7zz.exe"
           python .\mach build
           python .\mach package
 
