@@ -116,7 +116,8 @@ void AppendMeta(std::string& aHtml, const char* aLabel,
 }  // namespace
 
 std::string RenderRecordHtml(const RecordViewData& aData,
-                             const RecordViewProvenance& aProvenance) {
+                             const RecordViewProvenance& aProvenance,
+                             const RecordViewOptions& aOptions) {
   std::string html;
   html.reserve(aData.mValueJson.size() + 2048);
 
@@ -127,12 +128,15 @@ std::string RenderRecordHtml(const RecordViewData& aData,
   html += "</title>\n<style>\n";
   html += "body{font:14px system-ui,sans-serif;margin:2em;max-width:60em}\n";
   html += "table{border-collapse:collapse;margin-bottom:1em}\n";
-  html += "th,td{border:1px solid #ccc;padding:.3em .6em;text-align:left;"
-         "vertical-align:top}\n";
+  html +=
+      "th,td{border:1px solid #ccc;padding:.3em .6em;text-align:left;"
+      "vertical-align:top}\n";
   html += "th{background:#f4f4f4;white-space:nowrap}\n";
   html += "pre{white-space:pre-wrap;word-break:break-word}\n";
   html += ".hint{color:#555;font-size:.9em}\n";
-  html += ".lexicon{margin:1em 0;padding:.5em 1em;background:#fafafa;border-left:3px solid #999}\n";
+  html +=
+      ".lexicon{margin:1em 0;padding:.5em "
+      "1em;background:#fafafa;border-left:3px solid #999}\n";
   html += ".langs{color:#555;font-size:.9em}\n";
   html += "</style></head><body>\n";
 
@@ -141,29 +145,32 @@ std::string RenderRecordHtml(const RecordViewData& aData,
                                             : aData.mLexicon);
   html += "</h1>\n";
 
-  html += "<h2>Provenance</h2>\n<table>\n";
-  AppendMeta(html, "Collection", aProvenance.mCollection);
-  AppendMeta(html, "Record key", aProvenance.mRecordKey);
-  AppendMeta(html, "Lexicon", aData.mLexicon);
-  AppendMeta(html, "DID", aProvenance.mDid);
-  if (!aProvenance.mHandle.empty()) {
-    AppendMeta(html, "Handle", aProvenance.mHandle);
-  }
-  AppendMeta(html, "PDS", aProvenance.mPds);
-  AppendMeta(html, "CID", aData.mCid);
-  AppendMeta(html, "CID verification", CidStatusName(aData.mCidStatus));
-  html += "</table>\n";
+  if (aOptions.mShowProvenance) {
+    html += "<h2>Provenance</h2>\n<table>\n";
+    AppendMeta(html, "Collection", aProvenance.mCollection);
+    AppendMeta(html, "Record key", aProvenance.mRecordKey);
+    AppendMeta(html, "Lexicon", aData.mLexicon);
+    AppendMeta(html, "DID", aProvenance.mDid);
+    if (!aProvenance.mHandle.empty()) {
+      AppendMeta(html, "Handle", aProvenance.mHandle);
+    }
+    AppendMeta(html, "PDS", aProvenance.mPds);
+    AppendMeta(html, "CID", aData.mCid);
+    AppendMeta(html, "CID verification", CidStatusName(aData.mCidStatus));
+    html += "</table>\n";
 
-  if (!aProvenance.mHandle.empty()) {
-    html += "<p class=\"hint\">Handle — may change; resolved to ";
-    html += EscapeHtml(aProvenance.mDid);
-    html += ".</p>\n";
-  }
+    if (!aProvenance.mHandle.empty()) {
+      html += "<p class=\"hint\">Handle — may change; resolved to ";
+      html += EscapeHtml(aProvenance.mDid);
+      html += ".</p>\n";
+    }
 
-  if (aData.mCidStatus != CidStatus::Absent) {
-    html += "<p class=\"hint\">CID verification checks the record against the "
-            "CID returned with it — integrity only, not a repository "
-            "signature or proof of authorship.</p>\n";
+    if (aData.mCidStatus != CidStatus::Absent) {
+      html +=
+          "<p class=\"hint\">CID verification checks the record against "
+          "the CID returned with it — integrity only, not a repository "
+          "signature or proof of authorship.</p>\n";
+    }
   }
 
   std::string summary = RenderLexiconSummary(aData.mLexicon, aData.mValueJson);
@@ -187,9 +194,11 @@ std::string RenderRecordHtml(const RecordViewData& aData,
     html += "</table>\n";
   }
 
-  html += "<h2>Raw JSON</h2>\n<pre>";
-  html += EscapeHtml(aData.mRawJson);
-  html += "</pre>\n";
+  if (aOptions.mShowRawJson) {
+    html += "<h2>Raw JSON</h2>\n<pre>";
+    html += EscapeHtml(aData.mRawJson);
+    html += "</pre>\n";
+  }
 
   html += "</body></html>\n";
   return html;

@@ -2,10 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "RecordView.h"
-
 #include <string>
 
+#include "RecordView.h"
 #include "gtest/gtest.h"
 
 using namespace mozilla::net::atproto;
@@ -36,7 +35,8 @@ void ExpectField(const RecordViewData& aData, const std::string& aName,
 
 }  // namespace
 
-TEST(RecordView, ParsesEnvelope) {
+TEST(RecordView, ParsesEnvelope)
+{
   RecordViewData data;
   EXPECT_EQ(ParseRecordResponse(kResponse, data), RecordViewError::None);
   EXPECT_EQ(data.mCid, "bafyreitest");
@@ -49,7 +49,8 @@ TEST(RecordView, ParsesEnvelope) {
   EXPECT_EQ(data.mRawJson, kResponse);
 }
 
-TEST(RecordView, ReportsCidVerificationStatus) {
+TEST(RecordView, ReportsCidVerificationStatus)
+{
   RecordViewData data;
   const std::string response =
       R"({"cid":"bafyreiba432alns2ilh32ovfgepvret2oys27j3dzxxuko3wmddnh5x5ga",)"
@@ -73,12 +74,12 @@ TEST(RecordView, ReportsCidVerificationStatus) {
   EXPECT_EQ(tampered.mCidStatus, CidStatus::Mismatch);
 }
 
-TEST(RecordView, RejectsBadEnvelopes) {
+TEST(RecordView, RejectsBadEnvelopes)
+{
   RecordViewData data;
   EXPECT_EQ(ParseRecordResponse("not json", data),
             RecordViewError::InvalidJson);
-  EXPECT_EQ(ParseRecordResponse("[]", data),
-            RecordViewError::InvalidJson);
+  EXPECT_EQ(ParseRecordResponse("[]", data), RecordViewError::InvalidJson);
   EXPECT_EQ(ParseRecordResponse(R"({"cid":"x"})", data),
             RecordViewError::MissingValue);
   EXPECT_EQ(ParseRecordResponse(R"({"value":[]})", data),
@@ -87,7 +88,8 @@ TEST(RecordView, RejectsBadEnvelopes) {
   EXPECT_EQ(ParseRecordResponse(tooLong, data), RecordViewError::TooLong);
 }
 
-TEST(RecordView, ReuseClearsStaleOutput) {
+TEST(RecordView, ReuseClearsStaleOutput)
+{
   RecordViewData data;
   ASSERT_EQ(ParseRecordResponse(kResponse, data), RecordViewError::None);
   EXPECT_FALSE(data.mRawJson.empty());
@@ -100,25 +102,27 @@ TEST(RecordView, ReuseClearsStaleOutput) {
   EXPECT_TRUE(data.mFields.empty());
 }
 
-TEST(RecordView, OptionalFields) {
+TEST(RecordView, OptionalFields)
+{
   RecordViewData data;
   EXPECT_EQ(ParseRecordResponse(R"({"value":{"text":"x"}})", data),
             RecordViewError::None);
   EXPECT_TRUE(data.mCid.empty());
   EXPECT_TRUE(data.mLexicon.empty());
 
-  std::string html = RenderRecordHtml(
-      data, {"did:plc:a", "", "https://pds", "x.y.z", "k"});
+  std::string html =
+      RenderRecordHtml(data, {"did:plc:a", "", "https://pds", "x.y.z", "k"});
   EXPECT_EQ(html.find("integrity only, not a repository signature"),
             std::string::npos);
 }
 
-TEST(RecordView, RendersProvenanceAndFields) {
+TEST(RecordView, RendersProvenanceAndFields)
+{
   RecordViewData data;
   ASSERT_EQ(ParseRecordResponse(kResponse, data), RecordViewError::None);
-  RecordViewProvenance provenance{
-      "did:plc:abc", "alice.example", "https://pds.example",
-      "app.bsky.feed.post", "xyz"};
+  RecordViewProvenance provenance{"did:plc:abc", "alice.example",
+                                  "https://pds.example", "app.bsky.feed.post",
+                                  "xyz"};
   std::string html = RenderRecordHtml(data, provenance);
 
   EXPECT_NE(html.find("<!DOCTYPE html>"), std::string::npos);
@@ -131,7 +135,26 @@ TEST(RecordView, RendersProvenanceAndFields) {
   EXPECT_NE(html.find("Raw JSON"), std::string::npos);
 }
 
-TEST(RecordView, ShowsHandleDurabilityHintOnlyForHandles) {
+TEST(RecordView, HonorsDisplayOptions)
+{
+  RecordViewData data;
+  ASSERT_EQ(ParseRecordResponse(kResponse, data), RecordViewError::None);
+  RecordViewProvenance provenance{"did:plc:abc", "alice.example",
+                                  "https://pds.example", "app.bsky.feed.post",
+                                  "xyz"};
+  RecordViewOptions options;
+  options.mShowProvenance = false;
+  options.mShowRawJson = false;
+
+  std::string html = RenderRecordHtml(data, provenance, options);
+  EXPECT_EQ(html.find("Provenance"), std::string::npos);
+  EXPECT_EQ(html.find("alice.example"), std::string::npos);
+  EXPECT_EQ(html.find("Raw JSON"), std::string::npos);
+  EXPECT_NE(html.find("<h2>Fields</h2>"), std::string::npos);
+}
+
+TEST(RecordView, ShowsHandleDurabilityHintOnlyForHandles)
+{
   RecordViewData data;
   ASSERT_EQ(ParseRecordResponse(R"({"value":{"$type":"x.y.z"}})", data),
             RecordViewError::None);
@@ -141,12 +164,13 @@ TEST(RecordView, ShowsHandleDurabilityHintOnlyForHandles) {
   EXPECT_NE(handleHtml.find("may change"), std::string::npos);
   EXPECT_NE(handleHtml.find("resolved to did:plc:abc"), std::string::npos);
 
-  std::string didHtml = RenderRecordHtml(
-      data, {"did:plc:abc", "", "https://pds", "x.y.z", "k"});
+  std::string didHtml =
+      RenderRecordHtml(data, {"did:plc:abc", "", "https://pds", "x.y.z", "k"});
   EXPECT_EQ(didHtml.find("may change"), std::string::npos);
 }
 
-TEST(RecordView, EscapesHtmlInRecordData) {
+TEST(RecordView, EscapesHtmlInRecordData)
+{
   const std::string response =
       R"({"cid":"x","value":{"$type":"x.y.z","text":"<script>alert('x')</script>&\""}})";
   RecordViewData data;

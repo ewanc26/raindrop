@@ -50,8 +50,14 @@ struct RecordViewProvenance {
   std::string_view mRecordKey;
 };
 
+struct RecordViewOptions {
+  bool mShowProvenance = true;
+  bool mShowRawJson = true;
+};
+
 std::string RenderRecordHtml(const RecordViewData& aData,
-                             const RecordViewProvenance& aProvenance);
+                             const RecordViewProvenance& aProvenance,
+                             const RecordViewOptions& aOptions = {});
 
 }  // namespace mozilla::net::atproto
 
