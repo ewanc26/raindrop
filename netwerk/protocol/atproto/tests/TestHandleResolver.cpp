@@ -175,3 +175,14 @@ TEST(HandleResolver, RejectsBadDnsTxtRecords) {
   std::string tooLong(kMaxHandleResponseLength + 1, 'a');
   EXPECT_EQ(ParseHandleTxtRecords({tooLong}, did), HandleError::TooLong);
 }
+
+TEST(HandleResolver, AmbiguityWinsOverMalformedFirstClaim) {
+  std::string did;
+  const std::string valid = "did:plc:vwzwgnygau7ed7b7wt5ux7y2";
+  EXPECT_EQ(ParseHandleTxtRecords({"did=not a did", "did=" + valid}, did),
+            HandleError::TxtMultipleDid);
+  EXPECT_TRUE(did.empty());
+  EXPECT_EQ(ParseHandleTxtRecords({"did=" + valid, "did=not a did"}, did),
+            HandleError::TxtMultipleDid);
+  EXPECT_TRUE(did.empty());
+}
