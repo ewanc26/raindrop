@@ -87,6 +87,14 @@ TEST(HandleResolver, VerifiesReverseBinding) {
                 HandleBindingError::HandleNotClaimed);
 }
 
+TEST(HandleResolver, BindingComparisonIsCaseInsensitive) {
+  const std::string json = R"({"alsoKnownAs":["at://Alice.Example.COM"]})";
+  ExpectBinding(json, "alice.example.com", HandleBindingError::None);
+  ExpectBinding(json, "ALICE.EXAMPLE.COM", HandleBindingError::None);
+  ExpectBinding(R"({"alsoKnownAs":["AT://alice.example.com"]})",
+                "alice.example.com", HandleBindingError::None);
+}
+
 TEST(HandleResolver, RejectsBadBindingDocuments) {
   ExpectBinding("not json", "alice.example",
                 HandleBindingError::InvalidJson);

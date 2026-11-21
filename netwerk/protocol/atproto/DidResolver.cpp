@@ -308,8 +308,21 @@ HandleBindingError VerifyHandleBinding(std::string_view aJson,
 
   const std::string expected = "at://" + std::string(aHandle);
   for (const auto& entry : alsoKnownAs) {
-    if (entry.isString() && entry.asString() == expected) {
-      return HandleBindingError::None;
+    if (!entry.isString()) {
+      continue;
+    }
+    const std::string candidate = entry.asString();
+    if (candidate.size() == expected.size()) {
+      bool equal = true;
+      for (size_t i = 0; i < expected.size(); ++i) {
+        if (ToLowerAscii(candidate[i]) != ToLowerAscii(expected[i])) {
+          equal = false;
+          break;
+        }
+      }
+      if (equal) {
+        return HandleBindingError::None;
+      }
     }
   }
   return HandleBindingError::HandleNotClaimed;
