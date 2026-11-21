@@ -84,11 +84,13 @@ Still to verify (tracked in
 - [x] `./mach build` with `build/raindrop.mozconfig` succeeds (`BUILD_EXIT=0`).
 - [ ] `./mach package` produces binaries/installers with no Mozilla mark. The
       macOS DMG builds (`PACKAGE_EXIT=0`) and its `.DS_Store` is byte-identical to
-      raindrop's clean artwork, but the bundle still contains upstream-hardcoded
-      marks: `CFBundleIconFile=firefox.icns`, `CFBundleSignature=MOZB` (`PkgInfo`
-      `APPLMOZB`), and `org.mozilla.dmgInstallHelper`/`org.mozilla.updater`
-      code-signing requirements carrying Mozilla's Apple team ID. Windows
-      resources need a Windows build runner.
+      raindrop's clean artwork. `CFBundleIconFile=firefox.icns` is a fixed
+      build-system path whose contents are byte-identical to raindrop's own
+      artwork, so it is not a mark. The bundle still contains upstream-hardcoded
+      values: `CFBundleSignature=MOZB` (`PkgInfo` `APPLMOZB`), and
+      `org.mozilla.dmgInstallHelper`/`org.mozilla.updater` code-signing
+      requirements carrying Mozilla's Apple team ID. Windows resources need a
+      Windows build runner.
 - [ ] No Firefox-branded chrome or defaults survive outside this directory.
       First-run default bookmarks still ship a "Mozilla Firefox" folder with
       mozilla.org links from `browser/base/content/default-bookmarks.html`.
