@@ -16,6 +16,7 @@ enum class PdsUrlError {
   InvalidRepo,
   InvalidCollection,
   InvalidRecordKey,
+  InvalidCid,
 };
 
 const char* PdsUrlErrorName(PdsUrlError aError);
@@ -31,6 +32,10 @@ PdsUrlError BuildGetRecordUrl(std::string_view aEndpoint,
 // Build a com.atproto.repo.describeRepo request URL for a repository summary.
 PdsUrlError BuildDescribeRepoUrl(std::string_view aEndpoint,
                                  std::string_view aRepo, std::string& aUrl);
+
+// Build a com.atproto.sync.getBlob request URL for a record's blob reference.
+PdsUrlError BuildGetBlobUrl(std::string_view aEndpoint, std::string_view aRepo,
+                            std::string_view aCid, std::string& aUrl);
 
 // Percent-encode a query value (only RFC 3986 unreserved bytes are kept).
 std::string EncodeQueryValue(std::string_view aValue);

@@ -21,6 +21,20 @@ char HexDigit(int aValue) {
   return aValue < 10 ? '0' + aValue : 'A' + aValue - 10;
 }
 
+bool IsValidBlobCid(std::string_view aCid) {
+  if (aCid.size() < 8 || aCid.size() > 128) {
+    return false;
+  }
+  for (char c : aCid) {
+    bool alphanumeric = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+                        (c >= '0' && c <= '9');
+    if (!alphanumeric) {
+      return false;
+    }
+  }
+  return true;
+}
+
 // Remove trailing slashes so that joining with "/xrpc/..." never creates a
 // double slash. The serviceEndpoint is an origin in practice, but accept an
 // explicit trailing slash for interoperability.
@@ -45,6 +59,8 @@ const char* PdsUrlErrorName(PdsUrlError aError) {
       return "InvalidCollection";
     case PdsUrlError::InvalidRecordKey:
       return "InvalidRecordKey";
+    case PdsUrlError::InvalidCid:
+      return "InvalidCid";
   }
   return "Unknown";
 }
@@ -101,6 +117,25 @@ PdsUrlError BuildDescribeRepoUrl(std::string_view aEndpoint,
 
   aUrl = std::string(TrimTrailingSlashes(aEndpoint)) +
          "/xrpc/com.atproto.repo.describeRepo?repo=" + EncodeQueryValue(aRepo);
+  return PdsUrlError::None;
+}
+
+PdsUrlError BuildGetBlobUrl(std::string_view aEndpoint, std::string_view aRepo,
+                            std::string_view aCid, std::string& aUrl) {
+  aUrl.clear();
+  if (!IsValidPdsEndpoint(aEndpoint)) {
+    return PdsUrlError::InvalidEndpoint;
+  }
+  if (!IsValidDid(aRepo)) {
+    return PdsUrlError::InvalidRepo;
+  }
+  if (!IsValidBlobCid(aCid)) {
+    return PdsUrlError::InvalidCid;
+  }
+
+  aUrl = std::string(TrimTrailingSlashes(aEndpoint)) +
+         "/xrpc/com.atproto.sync.getBlob?did=" + EncodeQueryValue(aRepo) +
+         "&cid=" + EncodeQueryValue(aCid);
   return PdsUrlError::None;
 }
 
