@@ -53,7 +53,7 @@ struct RecordViewProvenance {
 struct RecordViewOptions {
   bool mShowProvenance = true;
   bool mShowRawJson = true;
-  bool mShowImages = true;
+  bool mShowImages = false;
 };
 
 std::string RenderRecordHtml(const RecordViewData& aData,

@@ -526,7 +526,7 @@ nsresult AtRecordResolver::OnRecordStop(nsIRequest* aRequest,
   RecordViewOptions options{
       Preferences::GetBool("network.atprotocol.record.showProvenance", true),
       Preferences::GetBool("network.atprotocol.record.showRawJson", true),
-      Preferences::GetBool("network.atprotocol.record.showImages", true)};
+      Preferences::GetBool("network.atprotocol.record.showImages", false)};
   return DeliverHtml(RenderRecordHtml(data, provenance, options));
 }
 

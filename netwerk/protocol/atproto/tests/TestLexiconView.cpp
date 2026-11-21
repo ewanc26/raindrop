@@ -206,7 +206,7 @@ TEST(LexiconView, RendersInlineImageWithEscapedAlt)
   })";
   std::string html = RenderLexiconSummary(
       "app.bsky.feed.post", value,
-      LexiconViewProvenance{"did:plc:a", "https://pds.example.com"});
+      LexiconViewProvenance{"did:plc:a", "https://pds.example.com", true});
   EXPECT_NE(html.find("<img class=\"blob\" "
                       "src=\"https://pds.example.com/xrpc/"
                       "com.atproto.sync.getBlob?did=did%3Aplc%3Aa&amp;"
@@ -227,6 +227,21 @@ TEST(LexiconView, OmitsInlineImageWhenDisabled)
       "app.bsky.feed.post", value,
       LexiconViewProvenance{"did:plc:a", "https://pds.example.com", false});
   EXPECT_EQ(html.find("<img"), std::string::npos);
+  EXPECT_NE(html.find("getBlob"), std::string::npos);
+}
+
+TEST(LexiconView, DefaultsToCidLinkWithoutInlineFetch)
+{
+  const std::string value = R"({
+    "embed": {"$type": "app.bsky.embed.images", "images": [
+      {"image": {"mimeType": "image/png", "ref": {"$link": "bafyreivalidcid"}}}
+    ]}
+  })";
+  std::string html = RenderLexiconSummary(
+      "app.bsky.feed.post", value,
+      LexiconViewProvenance{"did:plc:a", "https://pds.example.com"});
+  EXPECT_EQ(html.find("<img"), std::string::npos);
+  EXPECT_NE(html.find("bafyreivalidcid"), std::string::npos);
   EXPECT_NE(html.find("getBlob"), std::string::npos);
 }
 

@@ -196,3 +196,23 @@ add_task(async function enabled_pref_controls_channel_creation() {
     }
   }
 });
+
+add_task(async function inline_images_default_to_off() {
+  const pref = "network.atprotocol.record.showImages";
+  const original = Services.prefs.getBoolPref(pref);
+  const hadUserValue = Services.prefs.prefHasUserValue(pref);
+  try {
+    Services.prefs.clearUserPref(pref);
+    Assert.equal(
+      Services.prefs.getBoolPref(pref),
+      false,
+      "inline image loading is off by default"
+    );
+  } finally {
+    if (hadUserValue) {
+      Services.prefs.setBoolPref(pref, original);
+    } else {
+      Services.prefs.clearUserPref(pref);
+    }
+  }
+});
