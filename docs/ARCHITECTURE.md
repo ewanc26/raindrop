@@ -33,7 +33,9 @@ at://did:plc:abc.../app.bsky.feed.post/3lz...
    collections link to collection listings. A collection listing renders
    escaped record links built from the resolved DID, never from the URI the
    PDS returned. Record responses dispatch on lexicon:
-   - Known lexicons (Phase 3) get a bundled native view.
+   - Known lexicons (Phase 3) get a bundled native view. Reply parents, roots
+     and quoted records are validated with `ParseAtURI` and rendered as
+     normalized `at://` links.
    - Everything else gets the generic record view (Phase 1) with the option to
    inspect raw JSON.
 6. **Verification (Phase 2).** The fetched bytes can be checked against the
