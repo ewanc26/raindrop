@@ -34,6 +34,51 @@ LazyLogModule gAtResolverLog("atproto-resolver");
 
 #define AT_LOG(args) MOZ_LOG(gAtResolverLog, LogLevel::Debug, args)
 
+namespace {
+
+bool EqualsIgnoreCase(std::string_view aLeft, std::string_view aRight) {
+  if (aLeft.size() != aRight.size()) {
+    return false;
+  }
+  for (size_t i = 0; i < aLeft.size(); ++i) {
+    char left = aLeft[i];
+    char right = aRight[i];
+    if (left >= 'A' && left <= 'Z') {
+      left += 'a' - 'A';
+    }
+    if (right >= 'A' && right <= 'Z') {
+      right += 'a' - 'A';
+    }
+    if (left != right) {
+      return false;
+    }
+  }
+  return true;
+}
+
+int32_t EffectivePort(std::string_view aScheme, int32_t aPort) {
+  if (aPort != -1) {
+    return aPort;
+  }
+  if (EqualsIgnoreCase(aScheme, "https")) {
+    return 443;
+  }
+  if (EqualsIgnoreCase(aScheme, "http")) {
+    return 80;
+  }
+  return -1;
+}
+
+}  // namespace
+
+bool IsSameOrigin(std::string_view aSchemeA, std::string_view aHostA,
+                  int32_t aPortA, std::string_view aSchemeB,
+                  std::string_view aHostB, int32_t aPortB) {
+  return EqualsIgnoreCase(aSchemeA, aSchemeB) &&
+         EqualsIgnoreCase(aHostA, aHostB) &&
+         EffectivePort(aSchemeA, aPortA) == EffectivePort(aSchemeB, aPortB);
+}
+
 AtRecordResolver::AtRecordResolver(const AtURI& aUri, nsILoadInfo* aLoadInfo)
     : mUri(aUri), mLoadInfo(aLoadInfo) {}
 
@@ -179,11 +224,19 @@ nsresult AtRecordResolver::StartFetch(const std::string& aUrl, Phase aPhase) {
   nsresult rv = NS_NewURI(getter_AddRefs(uri), nsCString(aUrl.c_str()));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Remember the expected host so a cross-origin redirect can be rejected:
+  // Remember the expected origin so a cross-origin redirect can be rejected:
   // for DID documents the domain is the identity anchor (ADR 0004), and for
-  // handle resolution the handle's own host must answer (ADR 0003).
+  // handle resolution the handle's own host must answer (ADR 0003). Scheme and
+  // port are part of the origin: an https to http downgrade or a port change
+  // must fail just as a host change does.
+  mExpectedScheme.Truncate(0);
   mExpectedHost.Truncate(0);
+  mExpectedPort = -1;
+  rv = uri->GetScheme(mExpectedScheme);
+  NS_ENSURE_SUCCESS(rv, rv);
   rv = uri->GetHost(mExpectedHost);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = uri->GetPort(&mExpectedPort);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIChannel> channel;
@@ -312,11 +365,21 @@ nsresult AtRecordResolver::CheckResponse(nsIRequest* aRequest,
     nsCOMPtr<nsIURI> finalUri;
     nsresult rv = responseChannel->GetURI(getter_AddRefs(finalUri));
     if (NS_SUCCEEDED(rv) && finalUri) {
+      nsAutoCString finalScheme;
       nsAutoCString finalHost;
-      rv = finalUri->GetHost(finalHost);
-      if (NS_SUCCEEDED(rv) && !finalHost.Equals(mExpectedHost)) {
-        AT_LOG(("atproto: response redirected to another host\n"));
-        SetFailure(FailureKind::RedirectRejected, "upstream changed host");
+      int32_t finalPort = -1;
+      rv = finalUri->GetScheme(finalScheme);
+      if (NS_SUCCEEDED(rv)) {
+        rv = finalUri->GetHost(finalHost);
+      }
+      if (NS_SUCCEEDED(rv)) {
+        rv = finalUri->GetPort(&finalPort);
+      }
+      if (NS_SUCCEEDED(rv) &&
+          !IsSameOrigin(mExpectedScheme, mExpectedHost, mExpectedPort,
+                        finalScheme, finalHost, finalPort)) {
+        AT_LOG(("atproto: response redirected to another origin\n"));
+        SetFailure(FailureKind::RedirectRejected, "upstream changed origin");
         return NS_ERROR_NOT_AVAILABLE;
       }
     }

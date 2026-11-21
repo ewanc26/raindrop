@@ -14,6 +14,7 @@
 #include "nsIStreamListener.h"
 #include "nsString.h"
 
+#include <cstdint>
 #include <string_view>
 
 class nsIInputStream;
@@ -23,6 +24,10 @@ class nsIRequest;
 namespace mozilla {
 namespace net {
 namespace atproto {
+
+bool IsSameOrigin(std::string_view aSchemeA, std::string_view aHostA,
+                  int32_t aPortA, std::string_view aSchemeB,
+                  std::string_view aHostB, int32_t aPortB);
 
 // Drives the lookups behind an at:// navigation. DID authorities take two
 // steps; handle authorities first resolve the handle to a DID via DNS TXT at
@@ -78,7 +83,9 @@ class AtRecordResolver final : public nsIStreamListener,
   void ForwardStop(nsresult aStatus);
 
   nsCOMPtr<nsIRequest> mOuterRequest;
+  nsCString mExpectedScheme;
   nsCString mExpectedHost;
+  int32_t mExpectedPort = -1;
   nsCString mBody;
   std::string mDid;
   // Non-empty only when the authority is a handle; drives reverse binding.
