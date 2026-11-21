@@ -71,7 +71,7 @@ used, even if it is small.
       bookmarks/history; the address bar classifies it as a URL (ADR 0001).
 - [x] Fork maintenance automation: scripted rebases onto upstream Firefox releases
       and an upgrade CI job, so the fork never rots. `tools/raindrop/upstream.py`
-      detects a due upgrade against Mozilla's release channel (21 offline tests),
+      detects a due upgrade against Mozilla's release channel (22 offline tests),
       `.github/workflows/upgrade-check.yml` opens/refreshes a triage issue daily,
       and [docs/UPGRADING.md](UPGRADING.md) records the signed import + rebase
       procedure per ADR 0002. The signed 160.0.1 release was imported and tagged.
