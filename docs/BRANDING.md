@@ -57,7 +57,10 @@ raindrop DMG.
   integration hooks, so nothing falls back to `firefox`. Test harnesses that
   key off `MOZ_APP_NAME` have explicit raindrop aliases: `mozrunner` selects
   `FirefoxRunner`, and xpcshell falls back to `firefox-appdir` when an upstream
-  manifest does not declare `<appname>-appdir`.
+  manifest does not declare `<appname>-appdir`. The raindrop application UUID
+  is also listed on the `app-startup` `nsBrowserGlue` category in
+  `browser/components/BrowserComponents.manifest`; without it browser actors
+  never register and chrome startup hangs.
 - `browser/moz.configure` replaces the implied `MOZ_APP_VENDOR` and `MOZ_APP_ID`
   with raindrop values. These are the only identity settings that cannot live in
   a branding directory's `configure.sh`: the options accept implied values only.
