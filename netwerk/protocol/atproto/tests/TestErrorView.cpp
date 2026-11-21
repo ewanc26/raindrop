@@ -22,6 +22,8 @@ TEST(ErrorView, NamesEveryFailureKind)
       FailureKind::RecordInvalid,
       FailureKind::RepoNotFound,
       FailureKind::RepoInvalid,
+      FailureKind::CollectionNotFound,
+      FailureKind::CollectionInvalid,
       FailureKind::UpstreamRejected,
       FailureKind::RedirectRejected,
       FailureKind::NetworkError,

@@ -64,12 +64,6 @@ AtProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
     return NS_ERROR_MALFORMED_URI;
   }
 
-  // A collection without a record key has no defined view yet. An
-  // authority-only URI renders a repository summary instead.
-  if (parsed.mHasCollection && !parsed.mHasRecordKey) {
-    return NS_ERROR_MALFORMED_URI;
-  }
-
   RefPtr<AtRecordResolver> resolver = new AtRecordResolver(parsed, aLoadInfo);
   nsCOMPtr<nsIChannel> channel =
       NS_NewSimpleChannel(aURI, aLoadInfo, resolver.get(),
@@ -79,7 +73,7 @@ AtProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
                           });
   NS_ENSURE_TRUE(channel, NS_ERROR_OUT_OF_MEMORY);
 
-  // The resolver renders record and repository responses into HTML views.
+  // The resolver renders record, repository and collection responses into HTML.
   rv = channel->SetContentType("text/html"_ns);
   NS_ENSURE_SUCCESS(rv, rv);
 

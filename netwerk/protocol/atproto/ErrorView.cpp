@@ -73,6 +73,10 @@ const char* FailureTitle(FailureKind aKind) {
       return "Repository not found";
     case FailureKind::RepoInvalid:
       return "Repository description could not be read";
+    case FailureKind::CollectionNotFound:
+      return "Collection not found";
+    case FailureKind::CollectionInvalid:
+      return "Collection listing could not be read";
     case FailureKind::UpstreamRejected:
       return "Server rejected the request";
     case FailureKind::RedirectRejected:
@@ -114,6 +118,12 @@ const char* FailureExplanation(FailureKind aKind) {
     case FailureKind::RepoInvalid:
       return "The repository server returned a response that could not be "
              "parsed as a repository description.";
+    case FailureKind::CollectionNotFound:
+      return "The repository server reports that this repository has no such "
+             "collection.";
+    case FailureKind::CollectionInvalid:
+      return "The repository server returned a response that could not be "
+             "parsed as a collection listing.";
     case FailureKind::UpstreamRejected:
       return "An upstream server returned a failure status; no gateway was "
              "tried.";

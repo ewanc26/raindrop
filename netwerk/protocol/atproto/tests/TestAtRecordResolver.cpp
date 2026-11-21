@@ -37,8 +37,18 @@ class AtRecordResolverTestAccess {
     aResolver.mBody.Assign(aBody.c_str());
   }
 
+  static void SetCollection(AtRecordResolver& aResolver,
+                            const std::string& aBody) {
+    aResolver.mPhase = AtRecordResolver::Phase::Collection;
+    aResolver.mBody.Assign(aBody.c_str());
+  }
+
   static bool IsRepoPhase(AtRecordResolver& aResolver) {
     return aResolver.mPhase == AtRecordResolver::Phase::Repo;
+  }
+
+  static bool IsCollectionPhase(AtRecordResolver& aResolver) {
+    return aResolver.mPhase == AtRecordResolver::Phase::Collection;
   }
 
   static void SetDidDocument(AtRecordResolver& aResolver,
@@ -76,6 +86,15 @@ namespace {
 already_AddRefed<AtRecordResolver> MakeResolver(const char* aAuthority) {
   AtURI uri;
   uri.mAuthority = aAuthority;
+  return do_AddRef(new AtRecordResolver(uri, nullptr));
+}
+
+already_AddRefed<AtRecordResolver> MakeCollectionResolver(
+    const char* aAuthority, const char* aCollection) {
+  AtURI uri;
+  uri.mAuthority = aAuthority;
+  uri.mCollection = aCollection;
+  uri.mHasCollection = true;
   return do_AddRef(new AtRecordResolver(uri, nullptr));
 }
 
@@ -166,6 +185,10 @@ constexpr const char* kRecordBody = R"({"value":{"text":"secret"}})";
 constexpr const char* kRepoBody =
     R"({"did":"did:plc:abc","handle":"alice.example",)"
     R"("collections":["app.bsky.feed.post"]})";
+constexpr const char* kCollectionBody =
+    R"({"records":[)"
+    R"({"uri":"at://did:plc:abc/app.bsky.feed.post/3k5nobkf2w72g",)"
+    R"("cid":"bafyreiexample"}]})";
 
 }  // namespace
 
@@ -354,4 +377,56 @@ TEST(AtRecordResolver, AuthorityOnlyUriSelectsRepositoryDescription)
 
   AtRecordResolverTestAccess::DidDocumentStop(*resolver, nullptr, NS_OK);
   EXPECT_TRUE(AtRecordResolverTestAccess::IsRepoPhase(*resolver));
+}
+
+TEST(AtRecordResolver, CompletionDeliversCollectionWhenNotCanceled)
+{
+  RefPtr<AtRecordResolver> resolver = MakeResolver("did:plc:abc");
+  RefPtr<RecordingListener> listener = new RecordingListener();
+  nsCOMPtr<nsIChannel> outer =
+      MakeChannel("https://pds.example.com/collection"_ns);
+  ASSERT_TRUE(outer);
+  AtRecordResolverTestAccess::SetTarget(*resolver, listener, outer);
+  AtRecordResolverTestAccess::SetCollection(*resolver, kCollectionBody);
+  ExpectOriginFromSpec(*resolver, "https://pds.example.com/collection"_ns);
+
+  nsresult rv = resolver->OnStopRequest(outer, NS_OK);
+  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  EXPECT_TRUE(listener->mStarted);
+  EXPECT_NE(listener->mData.Find("Collection"_ns), size_t(-1));
+  EXPECT_NE(listener->mData.Find("3k5nobkf2w72g"_ns), size_t(-1));
+  ASSERT_TRUE(listener->mStop);
+  EXPECT_EQ(*listener->mStop, NS_OK);
+}
+
+TEST(AtRecordResolver, InvalidCollectionListingFailsHonestly)
+{
+  RefPtr<AtRecordResolver> resolver = MakeResolver("did:plc:abc");
+  RefPtr<RecordingListener> listener = new RecordingListener();
+  nsCOMPtr<nsIChannel> outer =
+      MakeChannel("https://pds.example.com/collection"_ns);
+  ASSERT_TRUE(outer);
+  AtRecordResolverTestAccess::SetTarget(*resolver, listener, outer);
+  AtRecordResolverTestAccess::SetCollection(*resolver, "not json");
+  ExpectOriginFromSpec(*resolver, "https://pds.example.com/collection"_ns);
+
+  nsresult rv = resolver->OnStopRequest(outer, NS_OK);
+  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  std::string html(listener->mData.BeginReading(), listener->mData.Length());
+  EXPECT_NE(html.find("Collection listing could not be read"),
+            std::string::npos);
+}
+
+TEST(AtRecordResolver, CollectionUriSelectsListRecords)
+{
+  RefPtr<AtRecordResolver> resolver = MakeCollectionResolver(
+      "did:plc:vwzwgnygau7ed7b7wt5ux7y2", "app.bsky.feed.post");
+  const std::string didDocument =
+      R"({"id":"did:plc:vwzwgnygau7ed7b7wt5ux7y2","service":[)"
+      R"({"id":"#atproto_pds","serviceEndpoint":"https://pds.example.com"}]})";
+  AtRecordResolverTestAccess::SetDidDocument(
+      *resolver, "did:plc:vwzwgnygau7ed7b7wt5ux7y2", didDocument);
+
+  AtRecordResolverTestAccess::DidDocumentStop(*resolver, nullptr, NS_OK);
+  EXPECT_TRUE(AtRecordResolverTestAccess::IsCollectionPhase(*resolver));
 }

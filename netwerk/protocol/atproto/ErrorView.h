@@ -20,6 +20,8 @@ enum class FailureKind {
   RecordInvalid,
   RepoNotFound,
   RepoInvalid,
+  CollectionNotFound,
+  CollectionInvalid,
   UpstreamRejected,
   RedirectRejected,
   NetworkError,
