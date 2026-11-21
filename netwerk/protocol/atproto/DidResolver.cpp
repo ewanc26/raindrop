@@ -55,8 +55,9 @@ std::vector<std::string_view> Split(std::string_view aValue, char aSeparator) {
   }
 }
 
-// Decode percent escapes in one DID segment. Rejects malformed escapes and any
-// decoded byte outside the unreserved set plus ':' (needed for did:web ports).
+// Decode percent escapes in one DID segment, rejecting malformed escapes.
+// Callers must validate the decoded bytes with IsValidWebHost or
+// IsValidWebPathSegment before using them.
 bool DecodeSegment(std::string_view aInput, std::string& aOutput) {
   aOutput.clear();
   for (size_t i = 0; i < aInput.size(); ++i) {
