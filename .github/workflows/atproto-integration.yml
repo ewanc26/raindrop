@@ -1,0 +1,54 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# Issue #87: prove the AT Protocol implementation on trusted main revisions.
+# A full browser build needs a registered self-hosted runner; without it the
+# job is skipped rather than failing on a hosted runner without enough disk.
+
+name: AT Protocol integration
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: atproto-integration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration:
+    if: vars.RAINDROP_BUILD_RUNNER != ''
+    runs-on: ${{ vars.RAINDROP_BUILD_RUNNER }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify AT Protocol setup wiring
+        run: python3 tools/raindrop/verify_atproto_setup.py
+
+      - name: Build and run AT Protocol tests
+        env:
+          MOZCONFIG: ${{ github.workspace }}/build/raindrop-unofficial.mozconfig
+        run: |
+          set -euo pipefail
+          python3 ./mach build
+          python3 ./mach gtest 'AtURI.*:DidResolver.*:PdsClient.*:HandleResolver.*:RecordView.*:CidVerifier.*:ErrorView.*:PrivacyFlags.*:LexiconView.*:AtRecordResolver.*:RepoView.*:CollectionView.*'
+          python3 ./mach xpcshell-test netwerk/protocol/atproto/tests/test_at_protocol.js
+          python3 ./mach xpcshell-test browser/components/places/tests/unit/test_browserGlue_prefs.js
+          python3 ./mach mochitest browser/components/preferences/tests/browser_at_protocol_pane.js --headless
+          python3 ./mach mochitest browser/components/places/tests/browser/browser_bookmarks_checkDefaultBookmarks.js --headless
+          python3 -m unittest discover -s tools/raindrop/tests
+
+      - name: Remove object directory
+        if: always()
+        run: rm -rf obj-raindrop-unofficial
