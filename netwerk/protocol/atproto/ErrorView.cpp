@@ -1,0 +1,147 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "ErrorView.h"
+
+#include <string_view>
+
+namespace mozilla::net::atproto {
+
+namespace {
+
+std::string EscapeHtml(std::string_view aText) {
+  std::string out;
+  out.reserve(aText.size());
+  for (char c : aText) {
+    switch (c) {
+      case '&':
+        out += "&amp;";
+        break;
+      case '<':
+        out += "&lt;";
+        break;
+      case '>':
+        out += "&gt;";
+        break;
+      case '"':
+        out += "&quot;";
+        break;
+      case '\'':
+        out += "&#39;";
+        break;
+      default:
+        out += c;
+    }
+  }
+  return out;
+}
+
+void AppendRow(std::string& aHtml, std::string_view aLabel,
+               const std::string& aValue) {
+  if (aValue.empty()) {
+    return;
+  }
+  aHtml += "<tr><th>";
+  aHtml += aLabel;
+  aHtml += "</th><td><code>";
+  aHtml += EscapeHtml(aValue);
+  aHtml += "</code></td></tr>\n";
+}
+
+}  // namespace
+
+const char* FailureTitle(FailureKind aKind) {
+  switch (aKind) {
+    case FailureKind::HandleResolutionFailed:
+      return "Handle could not be resolved";
+    case FailureKind::HandleBindingFailed:
+      return "Handle does not match its DID";
+    case FailureKind::DidResolutionFailed:
+      return "DID could not be resolved";
+    case FailureKind::DidDocumentRejected:
+      return "DID document was rejected";
+    case FailureKind::PdsUnreachable:
+      return "Repository server could not be reached";
+    case FailureKind::RecordNotFound:
+      return "Record not found";
+    case FailureKind::RecordInvalid:
+      return "Record could not be read";
+    case FailureKind::UpstreamRejected:
+      return "Server rejected the request";
+    case FailureKind::RedirectRejected:
+      return "Redirect left the expected origin";
+    case FailureKind::NetworkError:
+      return "Network error";
+  }
+  return "Record could not be loaded";
+}
+
+const char* FailureExplanation(FailureKind aKind) {
+  switch (aKind) {
+    case FailureKind::HandleResolutionFailed:
+      return "The handle's HTTPS well-known endpoint did not return a valid "
+             "DID.";
+    case FailureKind::HandleBindingFailed:
+      return "The resolved DID document does not claim this handle, so the "
+             "binding was rejected.";
+    case FailureKind::DidResolutionFailed:
+      return "The DID document could not be fetched from its identity host.";
+    case FailureKind::DidDocumentRejected:
+      return "The DID document is malformed or names a repository endpoint "
+             "raindrop will not contact.";
+    case FailureKind::PdsUnreachable:
+      return "The repository server named by the DID document did not answer.";
+    case FailureKind::RecordNotFound:
+      return "The repository server reports that this record does not exist "
+             "at the requested collection and key.";
+    case FailureKind::RecordInvalid:
+      return "The repository server returned a response that could not be "
+             "parsed as a record.";
+    case FailureKind::UpstreamRejected:
+      return "An upstream server returned a failure status; no gateway was "
+             "tried.";
+    case FailureKind::RedirectRejected:
+      return "An upstream response redirected to a different host, which is "
+             "not followed for identity-sensitive requests.";
+    case FailureKind::NetworkError:
+      return "The request failed before a response could be read.";
+  }
+  return "The record could not be loaded.";
+}
+
+std::string RenderFailureHtml(const FailureInfo& aInfo) {
+  std::string html;
+  html.reserve(1024);
+  html += "<!doctype html><html><head><meta charset=\"utf-8\">\n";
+  html += "<title>Raindrop — ";
+  html += EscapeHtml(FailureTitle(aInfo.mKind));
+  html += "</title>\n<style>\n";
+  html += "body{font:16px/1.5 system-ui,sans-serif;max-width:46em;margin:3em "
+          "auto;padding:0 1em;color:#222}\n";
+  html += "h1{font-size:1.5em}table{border-collapse:collapse;margin:1em 0}\n";
+  html += "th,td{text-align:left;padding:.25em .75em;border:1px solid #ddd}\n";
+  html += "th{color:#555}code{word-break:break-all}\n";
+  html += ".hint{color:#555;font-size:.9em;margin-top:2em}\n";
+  html += "</style></head><body>\n";
+  html += "<h1>";
+  html += EscapeHtml(FailureTitle(aInfo.mKind));
+  html += "</h1>\n<p>";
+  html += EscapeHtml(FailureExplanation(aInfo.mKind));
+  html += "</p>\n";
+
+  html += "<table>\n";
+  AppendRow(html, "Requested", aInfo.mAuthority);
+  AppendRow(html, "Resolved DID", aInfo.mDid);
+  AppendRow(html, "Repository server", aInfo.mPds);
+  AppendRow(html, "Detail", aInfo.mDetail);
+  html += "</table>\n";
+
+  html += "<p class=\"hint\">Raindrop resolves records directly and does not "
+          "fall back to a gateway. Nothing was cached or sent to a third "
+          "party to repair this lookup.</p>\n";
+  html += "</body></html>\n";
+  return html;
+}
+
+}  // namespace mozilla::net::atproto

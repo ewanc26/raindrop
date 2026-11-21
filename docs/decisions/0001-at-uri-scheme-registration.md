@@ -46,8 +46,11 @@ treats a scheme as internally handled when
 [`browser/components/urlbar/UrlbarUtils.sys.mjs`](https://searchfox.org/firefox-main/source/browser/components/urlbar/UrlbarUtils.sys.mjs)
 maps that fixup result into URL (not search) behaviour. Registering a handler
 should therefore be enough to stop `at://did:plc:...` being treated as a search
-query, without touching front-end code. This must be confirmed with a Gecko
-runtime test.
+query, without touching front-end code. This is confirmed by the
+`at_uri_is_classified_as_a_url_not_a_search` xpcshell test in
+`netwerk/protocol/atproto/tests/test_at_protocol.js`, which calls
+`Services.uriFixup.getFixupURIInfo` with keyword lookup allowed for both DID and
+handle authorities and asserts a URL fixup with no `keywordAsSent`.
 
 The guiding constraint from the roadmap and ADR 0002 is to keep the rebase cost
 low: new files where possible, one logical patch per change, and no edits to
@@ -74,7 +77,9 @@ build.**
 4. Validate in Gecko tests that `Services.io.getProtocolHandler("at")` returns
    our handler, that `at://did:plc:abc.../app.bsky.feed.post/3l...` round-trips
    exactly through `nsIURI.spec`, and that typing it in the address bar is
-   classified as a URL.
+   classified as a URL. All three are covered by
+   `netwerk/protocol/atproto/tests/test_at_protocol.js` (`protocol_handler_is_registered`,
+   `did_authority_round_trips`, `at_uri_is_classified_as_a_url_not_a_search`).
 
 ## Patch surface
 
@@ -102,6 +107,25 @@ build.**
 | `netwerk/base/nsNetUtil.cpp`, `netwerk/base/nsStandardURL.cpp`, `netwerk/base/nsURLParsers.cpp` | Shared URI machinery; changing it affects every scheme and carries correctness and security risk |
 | `docshell/base/URIFixup.sys.mjs`, `browser/components/urlbar/UrlbarUtils.sys.mjs` | Handler registration already drives classification; UX changes are a separate decision |
 | `modules/libpref/init/StaticPrefList.yaml`, browser front-end files | Broadly patched by forks; high conflict probability for no benefit at this stage |
+
+## Protocol flags decision
+
+The initial manifest used `URI_DANGEROUS_TO_LOAD`. A runtime probe with
+`nsIScriptSecurityManager.checkLoadURIWithPrincipal` showed that this makes
+`CheckLoadURIFlags` deny **every** `at://` load originating from web content
+with `NS_ERROR_DOM_BAD_URI` ("Load of at://... from https://... denied"). That
+breaks the roadmap's link-handling requirement: an `at://` link on any website
+would not be followable in raindrop.
+
+`at://` is a navigable content scheme in the same class as `http`, `https` and
+`data`, all of which set `URI_LOADABLE_BY_ANYONE`. The manifest now uses
+`URI_LOADABLE_BY_ANYONE` (with `URI_NORELATIVE | URI_NOAUTH` retained) so web
+content can follow `at://` links and the scheme is persistable for bookmarks and
+history. This is safe because the handler renders escaped HTML with an opaque
+origin (no `URI_HAS_WEB_EXPOSED_ORIGIN`): a cross-origin page cannot script into
+the resulting document, and the DID authority is never treated as a host. The
+`at_uri_is_loadable_by_web_content` test pins both the flag class and the
+permitted navigation.
 
 ## Rebase risk assessment
 

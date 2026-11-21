@@ -13,8 +13,9 @@ at://did:plc:abc.../app.bsky.feed.post/3lz...
 ```
 
 1. **Scheme dispatch.** The address bar hands `at://` URLs to the `atproto/`
-   module instead of the HTTP stack. Handles (`at://ewancroft.uk`) are resolved
-   to DIDs first, since the authority in an `at://` URI must be a DID.
+   module instead of the HTTP stack. The authority is kept opaque during
+   parsing; it may be a DID or a handle. Handle authorities are resolved to a
+   DID before the repository fetch, but the URI itself is never rewritten.
 2. **DID resolution.** Method dispatch on the authority:
    - `did:plc` - look up the DID document at the PLC directory.
    - `did:web` - fetch `https://<domain>/.well-known/did.json`.
@@ -87,10 +88,14 @@ deliver `at://`-as-infrastructure.** raindrop wants the second one.
 - **Local-only caching.** Resolution caches live on the user's machine, honour
   private browsing, and expire.
 
+## Resolved design questions
+
+- Minimal patch surface vs. deeper Gecko changes: [ADR 0001](decisions/0001-at-uri-scheme-registration.md).
+- When handles resolve, caching and change detection:
+  [ADR 0003](decisions/0003-handle-authority-semantics.md).
+- `did:web` trust rules and onion PDS endpoints:
+  [ADR 0004](decisions/0004-did-web-and-onion-endpoints.md).
+
 ## Open questions
 
-- How much of this can live behind a small patch surface vs. needing deeper
-  gecko changes to `nsIURI` / scheme registration?
-- Should handle resolution go through DNS/handle conventions at startup, and how
-  is a handle change detected?
-- What is the right story for `did:web` and Tor/ onion PDS endpoints?
+- What minimum set of record lexicons gets a dedicated view in Phase 3?

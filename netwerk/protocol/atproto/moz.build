@@ -1,0 +1,35 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+UNIFIED_SOURCES += [
+    "AtProtocolHandler.cpp",
+    "AtRecordResolver.cpp",
+]
+
+# These parsers define same-named anonymous-namespace helpers (IsDigit, Split,
+# ...) that collide if unified into one translation unit.
+SOURCES += [
+    "AtURI.cpp",
+    "CidVerifier.cpp",
+    "DidResolver.cpp",
+    "ErrorView.cpp",
+    "HandleResolver.cpp",
+    "LexiconView.cpp",
+    "PdsClient.cpp",
+    "PrivacyFlags.cpp",
+    "RecordView.cpp",
+]
+
+LOCAL_INCLUDES += [
+    "/netwerk/base",
+    "/toolkit/components/jsoncpp/include",
+]
+
+XPCOM_MANIFESTS += ["components.conf"]
+
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell.toml"]
+
+TEST_DIRS += ["tests"]
+
+FINAL_LIBRARY = "xul"
