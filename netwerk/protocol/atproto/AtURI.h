@@ -29,15 +29,18 @@ struct AtURI final {
   std::string mCollection;
   std::string mRecordKey;
   std::string mCursor;
-  std::string mFragment;
   bool mHasCollection = false;
   bool mHasRecordKey = false;
   bool mHasCursor = false;
-  bool mHasFragment = false;
 };
 
 AtURIError ParseAtURI(std::string_view aSpec, AtURI& aResult);
 std::string NormalizeAtURI(std::string_view aSpec, AtURIError& aError);
+
+// Raindrop navigation URIs add a `/cursor/<token>` path segment for pagination.
+AtURIError ParseNavigationAtURI(std::string_view aSpec, AtURI& aResult);
+std::string NormalizeNavigationAtURI(std::string_view aSpec,
+                                     AtURIError& aError);
 
 bool IsValidHandle(std::string_view aHandle);
 bool IsValidDid(std::string_view aDid);

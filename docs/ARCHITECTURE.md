@@ -85,7 +85,7 @@ deliver `at://`-as-infrastructure.** raindrop wants the second one.
 
 | Module | Responsibility |
 | ------ | -------------- |
-| `at-uri` | Parse and normalise `at://` URIs (authority, collection, rkey, fragment). |
+| `at-uri` | Parse and normalise strict Lexicon `at://` URIs (authority, collection, rkey) and Raindrop's navigation-only cursor extension. |
 | `did-resolver` | DID method dispatch and DID-document validation. |
 | `pds-client` | Service-endpoint discovery and repo record fetches. |
 | `record-view` | Lexicon-dispatched rendering, generic JSON view. |
@@ -115,6 +115,8 @@ deliver `at://`-as-infrastructure.** raindrop wants the second one.
 ## Resolved design questions
 
 - Minimal patch surface vs. deeper Gecko changes: [ADR 0001](decisions/0001-at-uri-scheme-registration.md).
+- Strict Lexicon conformance vs. general AT URI syntax:
+  [ADR 0006](decisions/0006-strict-lexicon-at-uri-conformance.md).
 - When handles resolve, caching and change detection:
   [ADR 0003](decisions/0003-handle-authority-semantics.md).
 - Design sign-off on `plc.directory` as identity authority and the shipped
