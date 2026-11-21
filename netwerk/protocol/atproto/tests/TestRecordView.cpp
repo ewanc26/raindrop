@@ -89,6 +89,21 @@ TEST(RecordView, RendersProvenanceAndFields) {
   EXPECT_NE(html.find("Raw JSON"), std::string::npos);
 }
 
+TEST(RecordView, ShowsHandleDurabilityHintOnlyForHandles) {
+  RecordViewData data;
+  ASSERT_EQ(ParseRecordResponse(R"({"value":{"$type":"x.y.z"}})", data),
+            RecordViewError::None);
+
+  std::string handleHtml = RenderRecordHtml(
+      data, {"did:plc:abc", "alice.example", "https://pds", "x.y.z", "k"});
+  EXPECT_NE(handleHtml.find("may change"), std::string::npos);
+  EXPECT_NE(handleHtml.find("resolved to did:plc:abc"), std::string::npos);
+
+  std::string didHtml = RenderRecordHtml(
+      data, {"did:plc:abc", "", "https://pds", "x.y.z", "k"});
+  EXPECT_EQ(didHtml.find("may change"), std::string::npos);
+}
+
 TEST(RecordView, EscapesHtmlInRecordData) {
   const std::string response =
       R"({"cid":"x","value":{"$type":"x.y.z","text":"<script>alert('x')</script>&\""}})";
