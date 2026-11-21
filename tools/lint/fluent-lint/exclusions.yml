@@ -199,5 +199,4 @@ CO01:
         # browser/appmenu.ftl
         - appmenu-other-protection-header2
     files:
-        - browser/locales/en-US/browser/profile/default-bookmarks.ftl
         - toolkit/locales/en-US/toolkit/about/aboutMozilla.ftl

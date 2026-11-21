@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// check that the correct default bookmarks are imported with each build type
+// check that raindrop's first-party default bookmarks are imported
 // browser/base/content/default-bookmarks.html
 
 const PREF_RESTORE_DEFAULT_BOOKMARKS =
@@ -42,78 +42,21 @@ add_task(async function checkDefaultBookmarks() {
 
   Assert.ok(!Services.prefs.setBoolPref(PREF_RESTORE_DEFAULT_BOOKMARKS, false));
 
-  if (AppConstants.NIGHTLY_BUILD) {
-    Assert.deepEqual(await fetchMenuTree(), {
-      children: [
-        {
-          children: [
-            {
-              uri: "https://www.mozilla.org/contribute/?utm_medium=firefox-desktop&utm_source=bookmarks-toolbar&utm_campaign=new-users-nightly&utm_content=-global",
-            },
-            {
-              uri: "https://blog.nightly.mozilla.org/",
-            },
-            {
-              uri: "https://bugzilla.mozilla.org/",
-            },
-            {
-              uri: "https://developer.mozilla.org/",
-            },
-            {
-              uri: "https://addons.mozilla.org/firefox/addon/nightly-tester-tools/",
-            },
-            {
-              uri: "about:crashes",
-            },
-            {
-              uri: "https://planet.mozilla.org/",
-            },
-          ],
-        },
-      ],
-    });
-  } else if (AppConstants.EARLY_BETA_OR_EARLIER) {
-    Assert.deepEqual(await fetchMenuTree(), {
-      children: [
-        {
-          children: [
-            {
-              uri: "https://support.mozilla.org/products/firefox",
-            },
-            {
-              uri: "https://support.mozilla.org/kb/customize-firefox-controls-buttons-and-toolbars?utm_source=firefox-browser&utm_medium=default-bookmarks&utm_campaign=customize",
-            },
-            {
-              uri: "https://www.mozilla.org/contribute/?utm_medium=firefox-desktop&utm_source=bookmarks-toolbar&utm_campaign=new-users-beta&utm_content=-global",
-            },
-            {
-              uri: "https://www.mozilla.org/about/",
-            },
-          ],
-        },
-      ],
-    });
-  } else {
-    // Release
-    Assert.deepEqual(await fetchMenuTree(), {
-      children: [
-        {
-          children: [
-            {
-              uri: "https://support.mozilla.org/products/firefox",
-            },
-            {
-              uri: "https://support.mozilla.org/kb/customize-firefox-controls-buttons-and-toolbars?utm_source=firefox-browser&utm_medium=default-bookmarks&utm_campaign=customize",
-            },
-            {
-              uri: "https://www.mozilla.org/contribute/",
-            },
-            {
-              uri: "https://www.mozilla.org/about/",
-            },
-          ],
-        },
-      ],
-    });
-  }
+  Assert.deepEqual(await fetchMenuTree(), {
+    children: [
+      {
+        children: [
+          {
+            uri: "about:home",
+          },
+          {
+            uri: "about:preferences",
+          },
+          {
+            uri: "about:about",
+          },
+        ],
+      },
+    ],
+  });
 });
