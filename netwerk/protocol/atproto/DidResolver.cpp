@@ -501,6 +501,7 @@ PdsError ExtractPdsEndpoint(std::string_view aJson,
       return PdsError::InvalidEndpoint;
     }
     if (IsOnionEndpoint(endpoint.asString())) {
+      aResult.mEndpoint = endpoint.asString();
       return PdsError::OnionEndpoint;
     }
     if (!IsValidEndpoint(endpoint.asString())) {

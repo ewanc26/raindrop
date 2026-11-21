@@ -14,9 +14,10 @@ TEST(ErrorView, NamesEveryFailureKind) {
   const FailureKind kinds[] = {
       FailureKind::HandleResolutionFailed, FailureKind::HandleBindingFailed,
       FailureKind::DidResolutionFailed,    FailureKind::DidDocumentRejected,
-      FailureKind::PdsUnreachable,         FailureKind::RecordNotFound,
-      FailureKind::RecordInvalid,          FailureKind::UpstreamRejected,
-      FailureKind::RedirectRejected,       FailureKind::NetworkError,
+      FailureKind::OnionEndpointUnsupported, FailureKind::PdsUnreachable,
+      FailureKind::RecordNotFound,         FailureKind::RecordInvalid,
+      FailureKind::UpstreamRejected,       FailureKind::RedirectRejected,
+      FailureKind::NetworkError,
   };
   for (FailureKind kind : kinds) {
     EXPECT_NE(std::string(FailureTitle(kind)), "");

@@ -34,6 +34,22 @@ class AtRecordResolverTestAccess {
     aResolver.mBody.Assign(aBody.c_str());
   }
 
+  static void SetDidDocument(AtRecordResolver& aResolver, const std::string& aDid,
+                             const std::string& aBody) {
+    aResolver.mDid = aDid;
+    aResolver.mPhase = AtRecordResolver::Phase::DidDocument;
+    aResolver.mBody.Assign(aBody.c_str());
+  }
+
+  static const FailureInfo& Failure(const AtRecordResolver& aResolver) {
+    return aResolver.mFailure;
+  }
+
+  static nsresult DidDocumentStop(AtRecordResolver& aResolver,
+                                  nsIRequest* aRequest, nsresult aStatus) {
+    return aResolver.OnDidDocumentStop(aRequest, aStatus);
+  }
+
   static void SetTarget(AtRecordResolver& aResolver,
                         nsIStreamListener* aTarget, nsIRequest* aOuter) {
     aResolver.mTarget = aTarget;
@@ -230,6 +246,24 @@ TEST(AtRecordResolver, CanceledCompletionDoesNotDeliverRecord) {
   EXPECT_TRUE(listener->mData.IsEmpty());
   ASSERT_TRUE(listener->mStop);
   EXPECT_EQ(*listener->mStop, NS_OK);
+}
+
+TEST(AtRecordResolver, OnionEndpointKeepsProvenanceAndSpecificFailure) {
+  RefPtr<AtRecordResolver> resolver = MakeResolver("did:plc:abc");
+  const std::string json =
+      R"({"id":"did:plc:abc","service":[{"id":"#atproto_pds",)"
+      R"("serviceEndpoint":"https://abcdef123456.onion"}]})";
+  AtRecordResolverTestAccess::SetDidDocument(*resolver, "did:plc:abc", json);
+
+  nsresult rv =
+      AtRecordResolverTestAccess::DidDocumentStop(*resolver, nullptr, NS_OK);
+  EXPECT_EQ(rv, NS_ERROR_NOT_AVAILABLE);
+
+  const FailureInfo& failure = AtRecordResolverTestAccess::Failure(*resolver);
+  EXPECT_EQ(failure.mPds, "https://abcdef123456.onion");
+  std::string html = RenderFailureHtml(failure);
+  EXPECT_NE(html.find("onion"), std::string::npos);
+  EXPECT_NE(html.find("Tor"), std::string::npos);
 }
 
 TEST(AtRecordResolver, CompletionDeliversRecordWhenNotCanceled) {
