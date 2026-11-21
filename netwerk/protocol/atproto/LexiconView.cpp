@@ -52,6 +52,47 @@ void AppendString(std::string& aHtml, const Json::Value& aValue,
   aHtml += "</td></tr>\n";
 }
 
+void AppendBlob(std::string& aHtml, std::string_view aLabel,
+                const Json::Value& aBlob, const Json::Value& aAlt) {
+  if (!aBlob.isObject()) {
+    return;
+  }
+  aHtml += "<li><strong>";
+  aHtml += EscapeHtml(aLabel);
+  aHtml += "</strong>: ";
+  const Json::Value& mimeType = aBlob["mimeType"];
+  if (mimeType.isString() && !mimeType.asString().empty()) {
+    aHtml += EscapeHtml(mimeType.asString());
+  }
+  const Json::Value& size = aBlob["size"];
+  if (size.isUInt()) {
+    aHtml += " (" + std::to_string(size.asUInt()) + " bytes)";
+  }
+  if (aAlt.isString() && !aAlt.asString().empty()) {
+    aHtml += " — ";
+    aHtml += EscapeHtml(aAlt.asString());
+  }
+  aHtml += "</li>\n";
+}
+
+void AppendImages(std::string& aHtml, const Json::Value& aImages) {
+  if (!aImages.isArray() || aImages.empty()) {
+    return;
+  }
+  std::string items;
+  for (const Json::Value& image : aImages) {
+    if (image.isObject()) {
+      AppendBlob(items, "Image", image["image"], image["alt"]);
+    }
+  }
+  if (items.empty()) {
+    return;
+  }
+  aHtml += "<div class=\"blobs\">Attachments: <ul>\n";
+  aHtml += items;
+  aHtml += "</ul></div>\n";
+}
+
 std::string RenderPost(const Json::Value& aValue) {
   std::string html;
   html += "<section class=\"lexicon\">\n<table>\n";
@@ -74,6 +115,14 @@ std::string RenderPost(const Json::Value& aValue) {
     }
     html += "</p>\n";
   }
+  const Json::Value& embed = aValue["embed"];
+  if (embed.isObject()) {
+    AppendImages(html, embed["images"]);
+    const Json::Value& media = embed["media"];
+    if (media.isObject()) {
+      AppendImages(html, media["images"]);
+    }
+  }
   html += "</section>\n";
   return html;
 }
@@ -83,7 +132,16 @@ std::string RenderProfile(const Json::Value& aValue) {
   html += "<section class=\"lexicon\">\n<table>\n";
   AppendString(html, aValue, "displayName", "Name");
   AppendString(html, aValue, "description", "Description");
-  html += "</table>\n</section>\n";
+  html += "</table>\n";
+  std::string blobs;
+  AppendBlob(blobs, "Avatar", aValue["avatar"], Json::Value());
+  AppendBlob(blobs, "Banner", aValue["banner"], Json::Value());
+  if (!blobs.empty()) {
+    html += "<div class=\"blobs\">Images: <ul>\n";
+    html += blobs;
+    html += "</ul></div>\n";
+  }
+  html += "</section>\n";
   return html;
 }
 
@@ -91,7 +149,8 @@ std::string RenderProfile(const Json::Value& aValue) {
 
 std::string RenderLexiconSummary(std::string_view aLexicon,
                                  std::string_view aValueJson) {
-  if (aLexicon != "app.bsky.feed.post" && aLexicon != "app.bsky.actor.profile") {
+  if (aLexicon != "app.bsky.feed.post" &&
+      aLexicon != "app.bsky.actor.profile") {
     return {};
   }
 
@@ -106,7 +165,7 @@ std::string RenderLexiconSummary(std::string_view aLexicon,
   }
 
   return aLexicon == "app.bsky.feed.post" ? RenderPost(value)
-                                         : RenderProfile(value);
+                                          : RenderProfile(value);
 }
 
 }  // namespace mozilla::net::atproto
