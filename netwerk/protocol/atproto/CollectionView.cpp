@@ -8,6 +8,7 @@
 #include <utility>
 
 #include "AtURI.h"
+#include "PdsClient.h"
 #include "json/json.h"
 
 namespace mozilla::net::atproto {
@@ -107,7 +108,8 @@ std::string EscapeHtml(std::string_view aText) {
   return out;
 }
 
-void AppendMeta(std::string& aHtml, const char* aLabel, std::string_view aValue) {
+void AppendMeta(std::string& aHtml, const char* aLabel,
+                std::string_view aValue) {
   if (aValue.empty()) {
     return;
   }
@@ -120,9 +122,8 @@ void AppendMeta(std::string& aHtml, const char* aLabel, std::string_view aValue)
 
 }  // namespace
 
-std::string RenderCollectionHtml(
-    const CollectionViewData& aData,
-    const CollectionViewProvenance& aProvenance) {
+std::string RenderCollectionHtml(const CollectionViewData& aData,
+                                 const CollectionViewProvenance& aProvenance) {
   std::string html;
   html.reserve(4096);
 
@@ -173,11 +174,24 @@ std::string RenderCollectionHtml(
     html += "</ol>\n";
   }
 
+  std::string base = "at://";
+  base += aProvenance.mDid;
+  base += "/";
+  base += aProvenance.mCollection;
+
   if (!aData.mCursor.empty()) {
-    html +=
-        "<p class=\"hint\">More records are available; page navigation is not "
-        "implemented yet.</p>\n";
+    html += "<p><a href=\"";
+    html += EscapeHtml(base);
+    html += "/cursor/";
+    html += EscapeHtml(EncodeQueryValue(aData.mCursor));
+    html += "\">Next page</a></p>\n";
   }
+  if (!aProvenance.mCursor.empty()) {
+    html += "<p><a href=\"";
+    html += EscapeHtml(base);
+    html += "\">First page</a></p>\n";
+  }
+
   html +=
       "<p class=\"hint\">Raindrop listed this collection directly from its "
       "repository server. No gateway was contacted.</p>\n";

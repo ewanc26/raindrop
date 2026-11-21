@@ -59,6 +59,8 @@ const char* PdsUrlErrorName(PdsUrlError aError) {
       return "InvalidCollection";
     case PdsUrlError::InvalidRecordKey:
       return "InvalidRecordKey";
+    case PdsUrlError::InvalidCursor:
+      return "InvalidCursor";
     case PdsUrlError::InvalidCid:
       return "InvalidCid";
   }
@@ -123,7 +125,7 @@ PdsUrlError BuildDescribeRepoUrl(std::string_view aEndpoint,
 PdsUrlError BuildListRecordsUrl(std::string_view aEndpoint,
                                 std::string_view aRepo,
                                 std::string_view aCollection,
-                                std::string& aUrl) {
+                                std::string_view aCursor, std::string& aUrl) {
   aUrl.clear();
   if (!IsValidPdsEndpoint(aEndpoint)) {
     return PdsUrlError::InvalidEndpoint;
@@ -134,10 +136,17 @@ PdsUrlError BuildListRecordsUrl(std::string_view aEndpoint,
   if (!IsValidNsid(aCollection)) {
     return PdsUrlError::InvalidCollection;
   }
+  if (!aCursor.empty() && !IsValidCursorToken(aCursor)) {
+    return PdsUrlError::InvalidCursor;
+  }
 
   aUrl = std::string(TrimTrailingSlashes(aEndpoint)) +
          "/xrpc/com.atproto.repo.listRecords?repo=" + EncodeQueryValue(aRepo) +
          "&collection=" + EncodeQueryValue(aCollection) + "&limit=50";
+  if (!aCursor.empty()) {
+    aUrl += "&cursor=";
+    aUrl += aCursor;
+  }
   return PdsUrlError::None;
 }
 

@@ -14,6 +14,8 @@ const HANDLE_URI = "at://jay.bsky.social/app.bsky.feed.post/3k5nobkf2w72g";
 const REPO_URI = "at://ewancroft.uk";
 const COLLECTION_URI =
   "at://did:plc:vwzwgnygau7ed7b7wt5ux7y2/app.bsky.feed.post";
+const CURSOR_URI =
+  "at://did:plc:vwzwgnygau7ed7b7wt5ux7y2/app.bsky.feed.post/cursor/3n2tjsaiwrs24";
 
 add_task(async function protocol_handler_is_registered() {
   const handler = Services.io.getProtocolHandler("at");
@@ -122,6 +124,19 @@ add_task(async function collection_uri_creates_an_html_channel() {
   });
   Assert.equal(chan.URI.spec, COLLECTION_URI);
   Assert.equal(chan.contentType, "text/html");
+});
+
+add_task(async function cursor_uri_creates_an_html_channel() {
+  const chan = NetUtil.newChannel({
+    uri: CURSOR_URI,
+    loadUsingSystemPrincipal: true,
+  });
+  Assert.equal(chan.URI.spec, CURSOR_URI);
+  Assert.equal(chan.contentType, "text/html");
+
+  const encoded =
+    "at://did:plc:vwzwgnygau7ed7b7wt5ux7y2/app.bsky.feed.post/cursor/abc%3D";
+  Assert.equal(Services.io.newURI(encoded).spec, encoded);
 });
 
 add_task(async function enabled_pref_controls_channel_creation() {

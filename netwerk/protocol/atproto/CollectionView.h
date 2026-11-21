@@ -38,14 +38,14 @@ struct CollectionViewProvenance {
   std::string mHandle;
   std::string mPds;
   std::string mCollection;
+  std::string mCursor;
 };
 
 CollectionViewError ParseCollectionResponse(std::string_view aJson,
                                             CollectionViewData& aOut);
 
-std::string RenderCollectionHtml(
-    const CollectionViewData& aData,
-    const CollectionViewProvenance& aProvenance);
+std::string RenderCollectionHtml(const CollectionViewData& aData,
+                                 const CollectionViewProvenance& aProvenance);
 
 }  // namespace mozilla::net::atproto
 

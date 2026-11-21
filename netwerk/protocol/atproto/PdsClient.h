@@ -16,6 +16,7 @@ enum class PdsUrlError {
   InvalidRepo,
   InvalidCollection,
   InvalidRecordKey,
+  InvalidCursor,
   InvalidCid,
 };
 
@@ -34,10 +35,11 @@ PdsUrlError BuildDescribeRepoUrl(std::string_view aEndpoint,
                                  std::string_view aRepo, std::string& aUrl);
 
 // Build a com.atproto.repo.listRecords request URL for a collection listing.
+// aCursor is an already percent-encoded token from an at:// cursor segment.
 PdsUrlError BuildListRecordsUrl(std::string_view aEndpoint,
                                 std::string_view aRepo,
                                 std::string_view aCollection,
-                                std::string& aUrl);
+                                std::string_view aCursor, std::string& aUrl);
 
 // Build a com.atproto.sync.getBlob request URL for a record's blob reference.
 PdsUrlError BuildGetBlobUrl(std::string_view aEndpoint, std::string_view aRepo,
