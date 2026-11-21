@@ -188,3 +188,20 @@ raindrop branding and prefs. Hosted `unittest` and `package` checks were green
 on the merged PR. `stock-build` was skipped because `RAINDROP_BUILD_RUNNER` is
 unset, and `submit-gradle` failed with the known non-blocking infrastructure
 issue. Both deviations are recorded in the tag annotation and release notes.
+
+### v0.6.0-fx160.0.1
+
+Released 2026-11-21 from `main` at `594fe6f4ee`. The GitHub release
+(`https://github.com/ewanc26/raindrop/releases/tag/v0.6.0-fx160.0.1`) carries
+`raindrop-160.0.1.en-US.mac.dmg` and its `.sha256` sidecar. DMG SHA-256:
+`bcd6eddc33a5d2bbf1d39ca9df6d0077fdb869ce0d553316a8401b5863c96a8f`.
+
+Pre-tag verification: build exit 0 with 0 compiler warnings, setup verifier OK,
+125/125 GTests, 45 atproto and 22 browser-pref xpcshell checks, mochitests PASS,
+71 offline tests OK, `./mach package` exit 0, `./mach format` 0 problems and
+`git diff --check` clean. Workflow YAML parsed. The packaged DMG was inspected
+for raindrop branding. Hosted `Offline suite` and `Windows package check` were
+green on the merged PR. `stock-build` was skipped because
+`RAINDROP_BUILD_RUNNER` is unset, and `submit-gradle` failed with the known
+non-blocking infrastructure issue. Both deviations are recorded in the tag
+annotation and release notes.
