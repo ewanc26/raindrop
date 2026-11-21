@@ -62,18 +62,6 @@ branding so no Mozilla trademarked names or artwork appear in local builds.
 A root-level `.mozconfig` is gitignored upstream, which is why the tracked
 config lives under `build/` and is selected with `MOZCONFIG`.
 
-To build with raindrop's own names, icons and preferences instead of the
-unbranded local defaults:
-
-```sh
-export MOZCONFIG="$PWD/build/raindrop.mozconfig"
-./mach build
-./mach run
-```
-
-See [BRANDING.md](BRANDING.md) for the asset sources and the remaining
-trademark verification work.
-
 To produce a distributable archive rather than the development `.app` bundle:
 
 ```sh
