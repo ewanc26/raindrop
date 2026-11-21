@@ -202,7 +202,8 @@ def check_package(objdir, version_info_path, source_root, artifact_build=False):
         for name, expected in REQUIRED_PREFS.items():
             if prefs.get(name) != expected:
                 errors.append(f"packaged branding pref {name} is {prefs.get(name)!r}")
-        if _has_forbidden_mark(prefs_text):
+        functional_prefs = " ".join(f"{name} {value}" for name, value in prefs.items())
+        if _has_forbidden_mark(functional_prefs):
             errors.append("packaged branding prefs contain a Mozilla/Firefox mark")
 
     for key, source_name in SOURCE_COPIES.items():

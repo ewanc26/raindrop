@@ -18,6 +18,7 @@ WORKFLOW = REPO_ROOT / ".github/workflows/windows-package-check.yml"
 MOZCONFIG = REPO_ROOT / "build/raindrop-windows-artifact.mozconfig"
 CHECKER = REPO_ROOT / "tools/raindrop/check_windows_package.py"
 BRANDING = REPO_ROOT / "browser/branding/raindrop"
+BRANDING_PREFS_SOURCE = BRANDING / "pref/firefox-branding.js"
 APP_ID = "{d9d2bf3e-372c-49a3-b630-2b67ba5b196e}"
 
 APPLICATION_INI = """[App]
@@ -75,7 +76,10 @@ class WindowsPackageCheckTests(unittest.TestCase):
         include_upstream_font=False,
         staged_icon=None,
         version_brand="raindrop",
+        branding_prefs=None,
     ):
+        if branding_prefs is None:
+            branding_prefs = BRANDING_PREFS_SOURCE.read_bytes()
         temp = tempfile.TemporaryDirectory()
         self.addCleanup(temp.cleanup)
         root = Path(temp.name)
@@ -118,7 +122,7 @@ class WindowsPackageCheckTests(unittest.TestCase):
 
         omni = io.BytesIO()
         with zipfile.ZipFile(omni, "w") as archive:
-            archive.writestr("defaults/preferences/firefox-branding.js", BRANDING_PREFS)
+            archive.writestr("defaults/preferences/firefox-branding.js", branding_prefs)
         package_members["browser/omni.ja"] = omni.getvalue()
 
         with zipfile.ZipFile(dist / package_name, "w") as archive:
@@ -192,6 +196,18 @@ class WindowsPackageCheckTests(unittest.TestCase):
         objdir, version_path = self.make_tree(version_brand="Mozilla Firefox")
         errors = check_package(objdir, version_path, REPO_ROOT)
         self.assertTrue(any("version info contains" in error for error in errors))
+
+    def test_license_comments_do_not_fail_pref_mark_scan(self):
+        objdir, version_path = self.make_tree()
+        self.assertEqual(check_package(objdir, version_path, REPO_ROOT), [])
+
+    def test_functional_pref_mark_is_rejected(self):
+        prefs = (
+            BRANDING_PREFS + '\npref("raindrop.links.update", "https://mozilla.org");\n'
+        )
+        objdir, version_path = self.make_tree(branding_prefs=prefs.encode())
+        errors = check_package(objdir, version_path, REPO_ROOT)
+        self.assertTrue(any("branding prefs contain" in error for error in errors))
 
 
 class WindowsWorkflowWiringTests(unittest.TestCase):
