@@ -14,6 +14,7 @@
 #include "RecordView.h"
 #include "mozilla/Logging.h"
 #include "mozilla/OriginAttributes.h"
+#include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIChannel.h"
 #include "nsIDNSByTypeRecord.h"
 #include "nsIDNSService.h"
@@ -219,6 +220,7 @@ nsresult AtRecordResolver::StartDidDocumentFetch() {
 nsresult AtRecordResolver::StartFetch(const std::string& aUrl, Phase aPhase) {
   mPhase = aPhase;
   mBody.Truncate(0);
+  mRedirectRejected = false;
 
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_NewURI(getter_AddRefs(uri), nsCString(aUrl.c_str()));
@@ -241,7 +243,7 @@ nsresult AtRecordResolver::StartFetch(const std::string& aUrl, Phase aPhase) {
 
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannelInternal(getter_AddRefs(channel), uri, mLoadInfo, nullptr,
-                             nullptr, nullptr, nsIRequest::LOAD_NORMAL);
+                             nullptr, this, nsIRequest::LOAD_NORMAL);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsLoadFlags flags = nsIRequest::LOAD_NORMAL;
@@ -307,6 +309,13 @@ AtRecordResolver::OnDataAvailable(nsIRequest* aRequest,
 
 NS_IMETHODIMP
 AtRecordResolver::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
+  if (mCanceled) {
+    mCurrentRequest = nullptr;
+    mPhase = Phase::None;
+    ForwardStop(aStatus);
+    return NS_OK;
+  }
+
   if (mPhase != Phase::Handle && mPhase != Phase::DidDocument &&
       mPhase != Phase::Record) {
     return NS_OK;
@@ -338,6 +347,10 @@ AtRecordResolver::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
 
 nsresult AtRecordResolver::CheckResponse(nsIRequest* aRequest,
                                          nsresult aStatus) {
+  if (mRedirectRejected) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   if (NS_FAILED(aStatus)) {
     FailureKind kind = mPhase == Phase::Handle    ? FailureKind::HandleResolutionFailed
                        : mPhase == Phase::Record ? FailureKind::PdsUnreachable
@@ -537,8 +550,49 @@ AtRecordResolver::Cancel(nsresult aReason) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+AtRecordResolver::GetInterface(const nsIID& aIID, void** aResult) {
+  if (aIID.Equals(NS_GET_IID(nsIChannelEventSink))) {
+    nsCOMPtr<nsIChannelEventSink> self(this);
+    self.forget(aResult);
+    return NS_OK;
+  }
+  return NS_ERROR_NO_INTERFACE;
+}
+
+NS_IMETHODIMP
+AtRecordResolver::AsyncOnChannelRedirect(
+    nsIChannel* aOldChannel, nsIChannel* aNewChannel, uint32_t aFlags,
+    nsIAsyncVerifyRedirectCallback* aCallback) {
+  nsCOMPtr<nsIURI> newUri;
+  nsresult rv = aNewChannel->GetURI(getter_AddRefs(newUri));
+  if (NS_SUCCEEDED(rv)) {
+    nsAutoCString scheme;
+    nsAutoCString host;
+    int32_t port = -1;
+    rv = newUri->GetScheme(scheme);
+    if (NS_SUCCEEDED(rv)) {
+      rv = newUri->GetHost(host);
+    }
+    if (NS_SUCCEEDED(rv)) {
+      rv = newUri->GetPort(&port);
+    }
+    if (NS_SUCCEEDED(rv) &&
+        !IsSameOrigin(mExpectedScheme, mExpectedHost, mExpectedPort, scheme,
+                      host, port)) {
+      AT_LOG(("atproto: rejected cross-origin redirect hop\n"));
+      mRedirectRejected = true;
+      SetFailure(FailureKind::RedirectRejected, "upstream changed origin");
+      rv = NS_ERROR_NOT_AVAILABLE;
+    }
+  }
+  aCallback->OnRedirectVerifyCallback(rv);
+  return NS_OK;
+}
+
 NS_IMPL_ISUPPORTS(AtRecordResolver, nsIStreamListener, nsIRequestObserver,
-                  nsIDNSListener, nsICancelable)
+                  nsIDNSListener, nsICancelable, nsIInterfaceRequestor,
+                  nsIChannelEventSink)
 
 }  // namespace atproto
 }  // namespace net

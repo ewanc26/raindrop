@@ -9,9 +9,12 @@
 #include "ErrorView.h"
 #include "SimpleChannel.h"
 #include "nsCOMPtr.h"
+#include "nsIChannelEventSink.h"
 #include "nsICancelable.h"
 #include "nsIDNSListener.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIStreamListener.h"
+#include "nsISupportsImpl.h"
 #include "nsString.h"
 
 #include <cstdint>
@@ -24,6 +27,8 @@ class nsIRequest;
 namespace mozilla {
 namespace net {
 namespace atproto {
+
+class AtRecordResolverTestAccess;
 
 bool IsSameOrigin(std::string_view aSchemeA, std::string_view aHostA,
                   int32_t aPortA, std::string_view aSchemeB,
@@ -46,13 +51,17 @@ bool IsSameOrigin(std::string_view aSchemeA, std::string_view aHostA,
 // request. Intermediate responses are consumed internally and never exposed.
 class AtRecordResolver final : public nsIStreamListener,
                                public nsIDNSListener,
-                               public nsICancelable {
+                               public nsICancelable,
+                               public nsIInterfaceRequestor,
+                               public nsIChannelEventSink {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSIDNSLISTENER
   NS_DECL_NSICANCELABLE
+  NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSICHANNELEVENTSINK
 
   AtRecordResolver(const AtURI& aUri, nsILoadInfo* aLoadInfo);
 
@@ -64,6 +73,7 @@ class AtRecordResolver final : public nsIStreamListener,
 
  private:
   ~AtRecordResolver() = default;
+  friend class AtRecordResolverTestAccess;
 
   enum class Phase { None, Handle, DidDocument, Record };
 
@@ -103,6 +113,7 @@ class AtRecordResolver final : public nsIStreamListener,
   bool mDeliveredStart = false;
   bool mDeliveredStop = false;
   bool mCanceled = false;
+  bool mRedirectRejected = false;
 };
 
 }  // namespace atproto
