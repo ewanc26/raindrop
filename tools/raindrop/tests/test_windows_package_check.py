@@ -70,6 +70,8 @@ class WindowsPackageCheckTests(unittest.TestCase):
         app_name="raindrop",
         package_name="raindrop-160.0.1.en-US.win64.zip",
         include_manifest=True,
+        include_executable=True,
+        include_upstream_font=False,
         staged_icon=None,
         version_brand="raindrop",
     ):
@@ -99,10 +101,13 @@ class WindowsPackageCheckTests(unittest.TestCase):
             "browser/VisualElements/PrivateBrowsing_70.png": (
                 BRANDING / "PrivateBrowsing_70.png"
             ).read_bytes(),
-            "raindrop.exe": b"executable",
             "private_browsing.exe": b"private executable",
             "uninstall/helper.exe": b"helper",
         }
+        if include_executable:
+            package_members["raindrop.exe"] = b"executable"
+        if include_upstream_font:
+            package_members["fonts/TwemojiMozilla.ttf"] = b"font"
         if include_manifest:
             package_members["firefox.VisualElementsManifest.xml"] = (
                 BRANDING / "firefox.VisualElementsManifest.xml"
@@ -134,6 +139,23 @@ class WindowsPackageCheckTests(unittest.TestCase):
     def test_valid_packaged_tree_has_no_failures(self):
         objdir, version_path = self.make_tree()
         self.assertEqual(check_package(objdir, version_path, REPO_ROOT), [])
+
+    def test_artifact_build_tolerates_upstream_binary_paths(self):
+        objdir, version_path = self.make_tree(
+            include_executable=False, include_upstream_font=True
+        )
+        errors = check_package(objdir, version_path, REPO_ROOT, artifact_build=True)
+        self.assertEqual(errors, [])
+
+    def test_full_build_still_requires_raindrop_executable(self):
+        objdir, version_path = self.make_tree(include_executable=False)
+        errors = check_package(objdir, version_path, REPO_ROOT)
+        self.assertTrue(any("raindrop.exe" in error for error in errors))
+
+    def test_full_build_rejects_upstream_font_mark(self):
+        objdir, version_path = self.make_tree(include_upstream_font=True)
+        errors = check_package(objdir, version_path, REPO_ROOT)
+        self.assertTrue(any("TwemojiMozilla.ttf" in error for error in errors))
 
     def test_wrong_application_identity_is_rejected(self):
         objdir, version_path = self.make_tree(app_name="Firefox")

@@ -222,7 +222,8 @@ jobs:
           $ErrorActionPreference = "Stop"
           python tools/raindrop/check_windows_package.py `
             --objdir obj-raindrop-win-artifact `
-            --version-info obj-raindrop-win-artifact/dist/installer-version-info.json
+            --version-info obj-raindrop-win-artifact/dist/installer-version-info.json `
+            --artifact-build
 
       - name: Upload Windows packages
         if: always()
