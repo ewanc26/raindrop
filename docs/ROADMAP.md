@@ -33,8 +33,10 @@ used, even if it is small.
 - [x] Handle authorities resolve via `/.well-known/atproto-did` with reverse
       `alsoKnownAs` verification and no persistent cache ([ADR 0003](decisions/0003-handle-authority-semantics.md)).
       The DNS TXT resolution method and the durability-hint UI are follow-ups.
-- [ ] A generic, unstyled record view (lexicon, fields, CID, raw JSON) so *every*
-      `at://` URI is viewable from day one.
+- [x] A generic, unstyled record view (lexicon, fields, CID, raw JSON) so *every*
+      `at://` URI is viewable from day one. The resolver renders an escaped HTML
+      view of any record, with provenance and raw JSON, with no lexicon-specific
+      viewer required.
 
 ## Phase 2 - trust (M2)
 
