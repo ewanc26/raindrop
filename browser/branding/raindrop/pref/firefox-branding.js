@@ -23,4 +23,9 @@ pref("app.update.badgeWaitTime", 0);
 pref("toolkit.telemetry.enabled", false);
 pref("datareporting.healthreport.uploadEnabled", false);
 
+// Background services that transmit to Mozilla without user action.
+pref("app.normandy.enabled", false);
+pref("browser.topsites.contile.enabled", false);
+pref("security.certerrors.mitm.priming.enabled", false);
+
 pref("devtools.selfxss.count", 5);
