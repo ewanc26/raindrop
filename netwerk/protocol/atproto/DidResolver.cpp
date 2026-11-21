@@ -41,6 +41,38 @@ char ToLowerAscii(char aChar) {
   return aChar >= 'A' && aChar <= 'Z' ? aChar - 'A' + 'a' : aChar;
 }
 
+char ToUpperAscii(char aChar) {
+  return aChar >= 'a' && aChar <= 'z' ? aChar - 'a' + 'A' : aChar;
+}
+
+// DID percent escapes use case-insensitive hex digits; canonicalize them to
+// uppercase so a DID read from a handle's TXT/well-known response compares equal
+// to the canonical id in the DID document (RFC 3986 section 6.2.2.1).
+std::string CanonicalizeDid(std::string_view aDid) {
+  std::string result(aDid);
+  for (size_t i = 0; i + 2 < result.size(); ++i) {
+    if (result[i] == '%') {
+      result[i + 1] = ToUpperAscii(result[i + 1]);
+      result[i + 2] = ToUpperAscii(result[i + 2]);
+      i += 2;
+    }
+  }
+  return result;
+}
+
+bool EndsWithIgnoreCase(std::string_view aValue, std::string_view aSuffix) {
+  if (aValue.size() < aSuffix.size()) {
+    return false;
+  }
+  size_t start = aValue.size() - aSuffix.size();
+  for (size_t i = 0; i < aSuffix.size(); ++i) {
+    if (ToLowerAscii(aValue[start + i]) != ToLowerAscii(aSuffix[i])) {
+      return false;
+    }
+  }
+  return true;
+}
+
 std::vector<std::string_view> Split(std::string_view aValue, char aSeparator) {
   std::vector<std::string_view> parts;
   size_t start = 0;
@@ -199,8 +231,7 @@ bool IsOnionEndpoint(std::string_view aEndpoint) {
   std::string_view host =
       colon == std::string_view::npos ? authority : authority.substr(0, colon);
   constexpr std::string_view suffix = ".onion";
-  return host.size() > suffix.size() &&
-         host.substr(host.size() - suffix.size()) == suffix;
+  return host.size() > suffix.size() && EndsWithIgnoreCase(host, suffix);
 }
 
 }  // namespace
@@ -363,8 +394,8 @@ DidError ParseDid(std::string_view aDid, Did& aResult) {
     return DidError::UnsupportedMethod;
   }
 
-  aResult.mFull = std::string(aDid);
-  aResult.mId = std::string(id);
+  aResult.mFull = CanonicalizeDid(aDid);
+  aResult.mId = CanonicalizeDid(id);
   return DidError::None;
 }
 
@@ -426,7 +457,8 @@ PdsError ExtractPdsEndpoint(std::string_view aJson,
   if (!id.isString()) {
     return PdsError::MissingId;
   }
-  if (id.asString() != std::string(aExpectedDid)) {
+  std::string canonicalExpected = CanonicalizeDid(aExpectedDid);
+  if (CanonicalizeDid(id.asString()) != canonicalExpected) {
     return PdsError::IdMismatch;
   }
 
@@ -436,7 +468,7 @@ PdsError ExtractPdsEndpoint(std::string_view aJson,
   }
 
   const std::string fragment = "#atproto_pds";
-  const std::string fullId = std::string(aExpectedDid) + fragment;
+  const std::string fullId = canonicalExpected + fragment;
   for (const auto& service : services) {
     if (!service.isObject()) {
       continue;

@@ -127,3 +127,32 @@ TEST(DidResolver, OnionEndpointIsDistinctFailure) {
   EXPECT_EQ(ExtractPdsEndpoint(json, did, service), PdsError::OnionEndpoint);
   EXPECT_TRUE(service.mEndpoint.empty());
 }
+
+TEST(DidResolver, OnionSuffixIsCaseInsensitive) {
+  const std::string did = "did:plc:abc";
+  PdsService service;
+  const std::string json =
+      R"({"id":"did:plc:abc","service":[{"id":"#atproto_pds",
+           "serviceEndpoint":"https://ABCDEF123456.ONION"}]})";
+  EXPECT_EQ(ExtractPdsEndpoint(json, did, service), PdsError::OnionEndpoint);
+}
+
+TEST(DidResolver, ParseDidCanonicalizesPercentEscapeCase) {
+  Did did;
+  ASSERT_EQ(ParseDid("did:web:alice.example%3a8443", did), DidError::None);
+  EXPECT_EQ(did.mFull, "did:web:alice.example%3A8443");
+  EXPECT_EQ(did.mId, "alice.example%3A8443");
+}
+
+TEST(DidResolver, HandleResolutionMatchesCanonicalDocumentId) {
+  // A handle's TXT/well-known response can spell the hex escape in lowercase,
+  // while the DID document's id uses the canonical uppercase form.
+  Did did;
+  ASSERT_EQ(ParseDid("did:web:alice.example%3a8443", did), DidError::None);
+  const std::string json =
+      R"({"id":"did:web:alice.example%3A8443","service":[
+           {"id":"#atproto_pds","serviceEndpoint":"https://pds.example.com"}]})";
+  PdsService service;
+  EXPECT_EQ(ExtractPdsEndpoint(json, did.mFull, service), PdsError::None);
+  EXPECT_EQ(service.mEndpoint, "https://pds.example.com");
+}
