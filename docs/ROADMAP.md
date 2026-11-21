@@ -3,7 +3,7 @@
 raindrop is developed in phases. Each phase ends with something that can actually be
 used, even if it is small.
 
-## Phase 0 - planning (current)
+## Phase 0 - planning (complete)
 
 - [x] Feasibility & decisions record: which Firefox source to track
       (`mozilla-central` vs release channel), branch/tag strategy, release cadence
@@ -76,7 +76,7 @@ used, even if it is small.
       a browser-chrome test verifies the pane and each control.
 - [x] Fork maintenance automation: scripted rebases onto upstream Firefox releases
       and an upgrade CI job, so the fork never rots. `tools/raindrop/upstream.py`
-      detects a due upgrade against Mozilla's release channel (66 offline tests),
+      detects a due upgrade against Mozilla's release channel (71 offline tests),
       `.github/workflows/upgrade-check.yml` opens/refreshes a triage issue daily,
       and [docs/UPGRADING.md](UPGRADING.md) records the signed import + rebase
       procedure per ADR 0002. The signed 160.0.1 release was imported and tagged.

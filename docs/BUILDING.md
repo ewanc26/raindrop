@@ -91,6 +91,12 @@ export MOZCONFIG="$PWD/build/raindrop.mozconfig"
 See [BRANDING.md](BRANDING.md) for the asset sources and the remaining
 trademark verification work.
 
+After the first `./mach run`, follow
+[ATPROTO_SETUP.md](ATPROTO_SETUP.md) to verify that `at://` navigation, the
+identity resolver, the PDS fetcher and the settings pane are wired up. Start
+with `python3.12 tools/raindrop/verify_atproto_setup.py`, then run the AT test
+suites before treating the build as usable.
+
 To produce a distributable archive rather than the development `.app` bundle:
 
 ```sh

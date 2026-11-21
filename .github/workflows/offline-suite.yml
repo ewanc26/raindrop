@@ -31,5 +31,8 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Verify AT Protocol setup wiring
+        run: python3 tools/raindrop/verify_atproto_setup.py
+
       - name: Run offline tests
         run: python3 -m unittest discover -s tools/raindrop/tests

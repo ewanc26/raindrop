@@ -82,22 +82,22 @@ The pristine, signed Firefox 160.0.1 release source is imported on the `upstream
 branch and tagged `firefox-160.0.1`; raindrop's work is the patch queue on `main`.
 The `at://` scheme handler, DID and handle resolution, PDS record fetch, record
 views and honest failure pages are implemented in `netwerk/protocol/atproto/`.
-The tree builds locally and the module's GTests and xpcshell tests pass. The
-design and trademark sign-offs are recorded; the remaining gates to the first
-tagged release are the self-hosted build-bootstrap runner and packaged Windows
-branding inspection. See the [roadmap](docs/ROADMAP.md) and
-[releasing](docs/RELEASING.md).
+The tree builds locally, the module's GTests and xpcshell tests pass, and
+v0.5.0 has been released on Firefox 160.0.1. The design and trademark sign-offs
+are recorded. See the [roadmap](docs/ROADMAP.md) and
+[releasing](docs/RELEASING.md) for current gates.
 
 - [Roadmap](docs/ROADMAP.md) - phased milestones from scaffold to first release
 - [Architecture](docs/ARCHITECTURE.md) - how an `at://` request flows through the browser
 - [Building](docs/BUILDING.md) - upstream source provenance and local build setup
+- [AT Protocol setup](docs/ATPROTO_SETUP.md) - local `at://` verification and smoke test
 - [Branding](docs/BRANDING.md) - raindrop branding assets and trademark checklist
 - [Releasing](docs/RELEASING.md) - release gates, tag naming and provenance
 
 ## Contributing
 
-Issues and design feedback are very welcome while the project is at this stage; see
-[CONTRIBUTING.md](CONTRIBUTING.md) and [SUPPORT.md](SUPPORT.md).
+Issues and design feedback are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md)
+and [SUPPORT.md](SUPPORT.md).
 
 ## Support the project
 

@@ -37,6 +37,7 @@ Run with the tracked release mozconfig exported in the same shell:
 ```sh
 export MOZCONFIG="$PWD/build/raindrop.mozconfig"
 ./mach build
+python3.12 tools/raindrop/verify_atproto_setup.py
 python3.12 ./mach gtest 'AtURI.*:DidResolver.*:PdsClient.*:HandleResolver.*:RecordView.*:CidVerifier.*:ErrorView.*:PrivacyFlags.*:LexiconView.*:AtRecordResolver.*:RepoView.*:CollectionView.*'
 ./mach xpcshell-test netwerk/protocol/atproto/tests/test_at_protocol.js
 ./mach xpcshell-test browser/components/places/tests/unit/test_browserGlue_prefs.js
@@ -48,7 +49,7 @@ python3.12 ./mach package
 ```
 
 The expected counts are 125 GTests across 12 suites, 45 atproto xpcshell checks,
-22 browser-pref xpcshell checks and 66 offline tests. The second xpcshell test
+22 browser-pref xpcshell checks and 71 offline tests. The second xpcshell test
 catches `MOZ_APP_NAME` and `appdir` harness mismatches introduced by rebranding;
 the mochitests catch app-ID gates that stop browser actors from starting, and
 the preferences mochitest checks the AT Protocol settings pane and its prefs. The
