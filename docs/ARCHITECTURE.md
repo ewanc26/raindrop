@@ -119,5 +119,6 @@ deliver `at://`-as-infrastructure.** raindrop wants the second one.
 - `did:web` trust rules and onion PDS endpoints:
   [ADR 0004](decisions/0004-did-web-and-onion-endpoints.md).
 - Minimum set of record lexicons with a dedicated view: `app.bsky.feed.post`
-  and `app.bsky.actor.profile`, with the generic field table as fallback;
-  blob rendering is deferred.
+  and `app.bsky.actor.profile`, with the generic field table as fallback.
+  Blob references show their CID and link to the resolved PDS's `getBlob`
+  endpoint; bytes are fetched only when the user follows that link.
