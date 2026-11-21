@@ -6,6 +6,7 @@
 
 #include <memory>
 
+#include "PdsClient.h"
 #include "json/json.h"
 
 namespace mozilla::net::atproto {
@@ -53,7 +54,8 @@ void AppendString(std::string& aHtml, const Json::Value& aValue,
 }
 
 void AppendBlob(std::string& aHtml, std::string_view aLabel,
-                const Json::Value& aBlob, const Json::Value& aAlt) {
+                const Json::Value& aBlob, const Json::Value& aAlt,
+                const LexiconViewProvenance& aProvenance) {
   if (!aBlob.isObject()) {
     return;
   }
@@ -68,6 +70,21 @@ void AppendBlob(std::string& aHtml, std::string_view aLabel,
   if (size.isUInt()) {
     aHtml += " (" + std::to_string(size.asUInt()) + " bytes)";
   }
+  const Json::Value& ref = aBlob["ref"];
+  const Json::Value& link =
+      ref.isObject() && ref.isMember("$link") ? ref["$link"] : aBlob["cid"];
+  if (link.isString() && !link.asString().empty()) {
+    std::string url;
+    aHtml += " — CID <code>";
+    aHtml += EscapeHtml(link.asString());
+    aHtml += "</code>";
+    if (BuildGetBlobUrl(aProvenance.mPds, aProvenance.mDid, link.asString(),
+                        url) == PdsUrlError::None) {
+      aHtml += " <a href=\"";
+      aHtml += EscapeHtml(url);
+      aHtml += "\" rel=\"noreferrer\">Open</a>";
+    }
+  }
   if (aAlt.isString() && !aAlt.asString().empty()) {
     aHtml += " — ";
     aHtml += EscapeHtml(aAlt.asString());
@@ -75,14 +92,15 @@ void AppendBlob(std::string& aHtml, std::string_view aLabel,
   aHtml += "</li>\n";
 }
 
-void AppendImages(std::string& aHtml, const Json::Value& aImages) {
+void AppendImages(std::string& aHtml, const Json::Value& aImages,
+                  const LexiconViewProvenance& aProvenance) {
   if (!aImages.isArray() || aImages.empty()) {
     return;
   }
   std::string items;
   for (const Json::Value& image : aImages) {
     if (image.isObject()) {
-      AppendBlob(items, "Image", image["image"], image["alt"]);
+      AppendBlob(items, "Image", image["image"], image["alt"], aProvenance);
     }
   }
   if (items.empty()) {
@@ -93,7 +111,8 @@ void AppendImages(std::string& aHtml, const Json::Value& aImages) {
   aHtml += "</ul></div>\n";
 }
 
-std::string RenderPost(const Json::Value& aValue) {
+std::string RenderPost(const Json::Value& aValue,
+                       const LexiconViewProvenance& aProvenance) {
   std::string html;
   html += "<section class=\"lexicon\">\n<table>\n";
   AppendString(html, aValue, "text", "Text");
@@ -117,25 +136,26 @@ std::string RenderPost(const Json::Value& aValue) {
   }
   const Json::Value& embed = aValue["embed"];
   if (embed.isObject()) {
-    AppendImages(html, embed["images"]);
+    AppendImages(html, embed["images"], aProvenance);
     const Json::Value& media = embed["media"];
     if (media.isObject()) {
-      AppendImages(html, media["images"]);
+      AppendImages(html, media["images"], aProvenance);
     }
   }
   html += "</section>\n";
   return html;
 }
 
-std::string RenderProfile(const Json::Value& aValue) {
+std::string RenderProfile(const Json::Value& aValue,
+                          const LexiconViewProvenance& aProvenance) {
   std::string html;
   html += "<section class=\"lexicon\">\n<table>\n";
   AppendString(html, aValue, "displayName", "Name");
   AppendString(html, aValue, "description", "Description");
   html += "</table>\n";
   std::string blobs;
-  AppendBlob(blobs, "Avatar", aValue["avatar"], Json::Value());
-  AppendBlob(blobs, "Banner", aValue["banner"], Json::Value());
+  AppendBlob(blobs, "Avatar", aValue["avatar"], Json::Value(), aProvenance);
+  AppendBlob(blobs, "Banner", aValue["banner"], Json::Value(), aProvenance);
   if (!blobs.empty()) {
     html += "<div class=\"blobs\">Images: <ul>\n";
     html += blobs;
@@ -148,7 +168,8 @@ std::string RenderProfile(const Json::Value& aValue) {
 }  // namespace
 
 std::string RenderLexiconSummary(std::string_view aLexicon,
-                                 std::string_view aValueJson) {
+                                 std::string_view aValueJson,
+                                 const LexiconViewProvenance& aProvenance) {
   if (aLexicon != "app.bsky.feed.post" &&
       aLexicon != "app.bsky.actor.profile") {
     return {};
@@ -164,8 +185,8 @@ std::string RenderLexiconSummary(std::string_view aLexicon,
     return {};
   }
 
-  return aLexicon == "app.bsky.feed.post" ? RenderPost(value)
-                                          : RenderProfile(value);
+  return aLexicon == "app.bsky.feed.post" ? RenderPost(value, aProvenance)
+                                          : RenderProfile(value, aProvenance);
 }
 
 }  // namespace mozilla::net::atproto

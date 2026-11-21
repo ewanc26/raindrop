@@ -169,6 +169,24 @@ TEST(RecordView, ShowsHandleDurabilityHintOnlyForHandles)
   EXPECT_EQ(didHtml.find("may change"), std::string::npos);
 }
 
+TEST(RecordView, PassesProvenanceToBlobLinks)
+{
+  const std::string response =
+      R"({"value":{"$type":"app.bsky.feed.post","text":"photo",)"
+      R"("embed":{"$type":"app.bsky.embed.images","images":[)"
+      R"({"image":{"mimeType":"image/png",)"
+      R"("ref":{"$link":"bafyreivalidcid"}}}]}}})";
+  RecordViewData data;
+  ASSERT_EQ(ParseRecordResponse(response, data), RecordViewError::None);
+  RecordViewProvenance provenance{"did:plc:a", "", "https://pds.example",
+                                  "app.bsky.feed.post", "k"};
+
+  std::string html = RenderRecordHtml(data, provenance);
+  EXPECT_NE(html.find("bafyreivalidcid"), std::string::npos);
+  EXPECT_NE(html.find("https://pds.example/xrpc/com.atproto.sync.getBlob"),
+            std::string::npos);
+}
+
 TEST(RecordView, EscapesHtmlInRecordData)
 {
   const std::string response =
