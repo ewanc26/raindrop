@@ -9,6 +9,8 @@
 #include <string_view>
 #include <vector>
 
+#include "CidVerifier.h"
+
 namespace mozilla::net::atproto {
 
 enum class RecordViewError {
@@ -30,6 +32,7 @@ struct RecordField {
 
 struct RecordViewData {
   std::string mCid;
+  CidStatus mCidStatus = CidStatus::Absent;
   std::string mLexicon;
   std::string mRawJson;
   std::string mValueJson;
