@@ -35,6 +35,7 @@ The script has no third-party dependencies. Pass `--source path/to.json` to
 check against a saved product-details payload. Its logic is covered by
 `tools/raindrop/tests/test_upstream.py` (run with
 `python3 -m unittest discover -s tools/raindrop/tests -v`).
+`.github/workflows/offline-suite.yml` runs the same suite on every pull request.
 
 ## Importing a release
 
