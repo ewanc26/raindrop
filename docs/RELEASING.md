@@ -22,13 +22,13 @@ A tag is cut only when every gate below is satisfied:
 - [x] The stock-upstream build passes in CI on a registered self-hosted runner
       (`RAINDROP_BUILD_RUNNER` and `RAINDROP_UPSTREAM_TAG` set). Dispatch run
       `44912582850` succeeded, closing the CI half of issue #10.
-- [ ] Windows packaged-resource branding is inspected on a Windows runner.
+- [x] Windows packaged-resource branding is inspected on a Windows runner.
       The `Windows package check` workflow builds a raindrop-branded artifact
       package on `windows-latest` and verifies the packaged ZIP, NSIS-staged
-      installer resources, uninstaller and PE version information.
+      installer resources, uninstaller and PE version information. Dispatch run
+      `44921258664` succeeded, closing the Windows half of issue #11.
 
-The last two gates are infrastructure-only and are tracked in issues #10 and
-#11. They do not require further code changes.
+Both infrastructure-only gates are now closed (issues #10 and #11).
 
 ## Pre-tag verification
 
@@ -84,8 +84,9 @@ python3.12 tools/raindrop/check_windows_package.py \
 
 That checker confirms the ZIP name and its `application.ini`, packed branding
 prefs, Visual Elements manifests and tile artwork, the NSIS-staged icon and
-bitmap resources, and the installer/uninstaller version resources. A green run
-and the uploaded package artifacts close the Windows half of issue #11.
+bitmap resources, and the installer/uninstaller version resources. Dispatch run
+`44921258664` was green at `930c87a39a` and uploaded the `windows-package`
+artifact, closing the Windows half of issue #11.
 
 ## Tag naming and provenance
 
