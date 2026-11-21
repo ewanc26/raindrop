@@ -22,8 +22,7 @@ at://did:plc:abc.../app.bsky.feed.post/3lz...
 3. **PDS discovery.** Read the `#atproto_pds` service endpoint from the DID
    document. This is where the record lives.
 4. **Record fetch.** Call `com.atproto.repo.getRecord` on the PDS for the
-   collection and rkey. Blobs referenced by the record are fetched from the same
-   PDS.
+   collection and rkey. Blob rendering is deferred.
 5. **Rendering.** Dispatch on the record's lexicon:
    - Known lexicons (Phase 3) get a bundled native view.
    - Everything else gets the generic record view (Phase 1) with the option to
@@ -74,8 +73,8 @@ deliver `at://`-as-infrastructure.** raindrop wants the second one.
 | Module | Responsibility |
 | ------ | -------------- |
 | `at-uri` | Parse and normalise `at://` URIs (authority, collection, rkey, fragment). |
-| `did-resolver` | DID method dispatch, caching, and revocation semantics. |
-| `pds-client` | Service-endpoint discovery and repo record/blob fetches. |
+| `did-resolver` | DID method dispatch and DID-document validation. |
+| `pds-client` | Service-endpoint discovery and repo record fetches. |
 | `record-view` | Lexicon-dispatched rendering, generic JSON view. |
 
 ## Trust and failure model
