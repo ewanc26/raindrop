@@ -74,13 +74,16 @@ branch and tagged `firefox-160.0.1`; raindrop's work is the patch queue on `main
 The `at://` scheme handler, DID and handle resolution, PDS record fetch, record
 views and honest failure pages are implemented in `netwerk/protocol/atproto/`.
 The tree builds locally and the module's GTests and xpcshell tests pass. The
-self-hosted build-bootstrap runner and the trademark sign-off are still open; see
-the [roadmap](docs/ROADMAP.md).
+design and trademark sign-offs are recorded; the remaining gates to the first
+tagged release are the self-hosted build-bootstrap runner and packaged Windows
+branding inspection. See the [roadmap](docs/ROADMAP.md) and
+[releasing](docs/RELEASING.md).
 
 - [Roadmap](docs/ROADMAP.md) - phased milestones from scaffold to first release
 - [Architecture](docs/ARCHITECTURE.md) - how an `at://` request flows through the browser
-- [Building](docs/BUILDING.md) - upstream source provenance and local build setup (work in progress)
+- [Building](docs/BUILDING.md) - upstream source provenance and local build setup
 - [Branding](docs/BRANDING.md) - raindrop branding assets and trademark checklist
+- [Releasing](docs/RELEASING.md) - release gates, tag naming and provenance
 
 ## Contributing
 
