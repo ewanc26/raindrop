@@ -4,6 +4,7 @@
 
 #include <string>
 
+#include "AtDocumentPolicy.h"
 #include "RecordView.h"
 #include "gtest/gtest.h"
 
@@ -126,6 +127,8 @@ TEST(RecordView, RendersProvenanceAndFields)
   std::string html = RenderRecordHtml(data, provenance);
 
   EXPECT_NE(html.find("<!DOCTYPE html>"), std::string::npos);
+  EXPECT_NE(html.find(kAtDocumentCsp), std::string::npos);
+  EXPECT_NE(html.find("name=\"referrer\""), std::string::npos);
   EXPECT_NE(html.find("app.bsky.feed.post"), std::string::npos);
   EXPECT_NE(html.find("did:plc:abc"), std::string::npos);
   EXPECT_NE(html.find("alice.example"), std::string::npos);

@@ -1,0 +1,4 @@
+[DEFAULT]
+support-files = ["at_link.html"]
+
+["browser_at_protocol_navigation.js"]

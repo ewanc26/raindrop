@@ -16,6 +16,11 @@ const COLLECTION_URI =
   "at://did:plc:vwzwgnygau7ed7b7wt5ux7y2/app.bsky.feed.post";
 const CURSOR_URI =
   "at://did:plc:vwzwgnygau7ed7b7wt5ux7y2/app.bsky.feed.post/cursor/3n2tjsaiwrs24";
+const INVALID_URI = "at://foo.com/";
+const AT_CSP =
+  "default-src 'none'; script-src 'none'; style-src 'unsafe-inline'; " +
+  "img-src https:; object-src 'none'; base-uri 'none'; form-action 'none'; " +
+  "frame-ancestors 'none'";
 
 add_task(async function protocol_handler_is_registered() {
   const handler = Services.io.getProtocolHandler("at");
@@ -53,6 +58,29 @@ add_task(async function record_uri_creates_an_html_channel() {
   });
   Assert.equal(chan.URI.spec, DID_URI);
   Assert.equal(chan.contentType, "text/html");
+});
+
+add_task(async function generated_documents_set_security_headers() {
+  const chan = NetUtil.newChannel({
+    uri: DID_URI,
+    loadUsingSystemPrincipal: true,
+  });
+  const http = chan.QueryInterface(Ci.nsIHttpChannel);
+  Assert.equal(http.getResponseHeader("Content-Security-Policy"), AT_CSP);
+  Assert.equal(http.getResponseHeader("X-Content-Type-Options"), "nosniff");
+  Assert.equal(http.getResponseHeader("Referrer-Policy"), "no-referrer");
+  Assert.equal(http.getResponseHeader("X-Frame-Options"), "DENY");
+});
+
+add_task(async function malformed_uri_rejects_channel_creation() {
+  Assert.throws(
+    () =>
+      NetUtil.newChannel({
+        uri: INVALID_URI,
+        loadUsingSystemPrincipal: true,
+      }),
+    error => error.result === Cr.NS_ERROR_MALFORMED_URI
+  );
 });
 
 add_task(async function handle_uri_creates_an_html_channel() {

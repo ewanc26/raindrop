@@ -12,7 +12,8 @@ from pathlib import Path
 DEFAULT_ROOT = Path(__file__).resolve().parents[2]
 
 GTEST_FILTER = (
-    "AtURI.*:DidResolver.*:PdsClient.*:HandleResolver.*:RecordView.*:"
+    "AtDocumentPolicy.*:AtURI.*:DidResolver.*:PdsClient.*:HandleResolver.*:"
+    "RecordView.*:"
     "CidVerifier.*:ErrorView.*:PrivacyFlags.*:LexiconView.*:"
     "AtRecordResolver.*:RepoView.*:CollectionView.*"
 )
@@ -77,8 +78,25 @@ CHECKS = (
         ("at://",),
     ),
     FileCheck("netwerk/protocol/moz.build", ('"atproto"',)),
-    FileCheck("netwerk/protocol/atproto/tests/TestAtURI.cpp", ("OfficialAtUriSyntaxVectors",)),
-    FileCheck("netwerk/protocol/atproto/tests/test_at_protocol.js", ("checkLoadURIWithPrincipal",)),
+    FileCheck(
+        "netwerk/protocol/atproto/AtDocumentPolicy.h",
+        ("kAtDocumentCsp", "AppendDocumentSecurityMeta"),
+    ),
+    FileCheck(
+        "netwerk/protocol/atproto/AtProtocolHandler.cpp",
+        ("X-Content-Type-Options", "Referrer-Policy", "X-Frame-Options"),
+    ),
+    FileCheck(
+        "netwerk/protocol/atproto/tests/browser/browser.toml",
+        ("browser_at_protocol_navigation.js",),
+    ),
+    FileCheck(
+        "netwerk/protocol/atproto/tests/TestAtURI.cpp", ("OfficialAtUriSyntaxVectors",)
+    ),
+    FileCheck(
+        "netwerk/protocol/atproto/tests/test_at_protocol.js",
+        ("checkLoadURIWithPrincipal",),
+    ),
     FileCheck(
         "browser/components/preferences/tests/browser_at_protocol_pane.js",
         ("network.atprotocol.enabled",),

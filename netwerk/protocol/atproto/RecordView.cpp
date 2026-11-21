@@ -4,6 +4,7 @@
 
 #include "RecordView.h"
 
+#include "AtDocumentPolicy.h"
 #include "LexiconView.h"
 #include "json/json.h"
 
@@ -122,6 +123,7 @@ std::string RenderRecordHtml(const RecordViewData& aData,
   html.reserve(aData.mValueJson.size() + 2048);
 
   html += "<!DOCTYPE html>\n<html><head><meta charset=\"utf-8\">\n";
+  AppendDocumentSecurityMeta(html);
   html += "<title>";
   html += EscapeHtml(aData.mLexicon.empty() ? aProvenance.mCollection
                                             : aData.mLexicon);

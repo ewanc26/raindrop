@@ -4,13 +4,15 @@
 
 #include "AtProtocolHandler.h"
 
+#include "AtDocumentPolicy.h"
+#include "AtProtocolChannel.h"
 #include "AtRecordResolver.h"
 #include "AtURI.h"
-#include "SimpleChannel.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
 #include "nsIChannel.h"
+#include "nsIHttpChannel.h"
 #include "nsILoadInfo.h"
 
 namespace mozilla::net::atproto {
@@ -66,15 +68,23 @@ AtProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
 
   RefPtr<AtRecordResolver> resolver = new AtRecordResolver(parsed, aLoadInfo);
   nsCOMPtr<nsIChannel> channel =
-      NS_NewSimpleChannel(aURI, aLoadInfo, resolver.get(),
-                          [](nsIStreamListener* aListener, nsIChannel*,
-                             AtRecordResolver* aResolver) -> RequestOrReason {
-                            return aResolver->Start(aListener);
-                          });
+      NewAtProtocolChannel(aURI, aLoadInfo, resolver);
   NS_ENSURE_TRUE(channel, NS_ERROR_OUT_OF_MEMORY);
 
-  // The resolver renders record, repository and collection responses into HTML.
   rv = channel->SetContentType("text/html"_ns);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(channel);
+  NS_ENSURE_TRUE(http, NS_ERROR_UNEXPECTED);
+  rv = http->SetResponseHeader("Content-Security-Policy"_ns,
+                               nsCString(kAtDocumentCsp), false);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv =
+      http->SetResponseHeader("X-Content-Type-Options"_ns, "nosniff"_ns, false);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = http->SetResponseHeader("Referrer-Policy"_ns, "no-referrer"_ns, false);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = http->SetResponseHeader("X-Frame-Options"_ns, "DENY"_ns, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   channel.forget(aResult);

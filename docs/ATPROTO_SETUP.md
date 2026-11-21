@@ -35,17 +35,18 @@ Use one colon-separated GTest argument; separate invocations can hide failures:
 
 ```sh
 export MOZCONFIG="$PWD/build/raindrop.mozconfig"
-python3.12 ./mach gtest 'AtURI.*:DidResolver.*:PdsClient.*:HandleResolver.*:RecordView.*:CidVerifier.*:ErrorView.*:PrivacyFlags.*:LexiconView.*:AtRecordResolver.*:RepoView.*:CollectionView.*'
+python3.12 ./mach gtest 'AtDocumentPolicy.*:AtURI.*:DidResolver.*:PdsClient.*:HandleResolver.*:RecordView.*:CidVerifier.*:ErrorView.*:PrivacyFlags.*:LexiconView.*:AtRecordResolver.*:RepoView.*:CollectionView.*'
 python3.12 ./mach xpcshell-test netwerk/protocol/atproto/tests/test_at_protocol.js
 python3.12 ./mach xpcshell-test browser/components/places/tests/unit/test_browserGlue_prefs.js
 python3.12 ./mach mochitest browser/components/places/tests/browser/browser_bookmark_current_tabs.js --headless
 python3.12 ./mach mochitest browser/components/places/tests/browser/browser_bookmarks_checkDefaultBookmarks.js --headless
 python3.12 ./mach mochitest browser/components/preferences/tests/browser_at_protocol_pane.js --headless
+python3.12 ./mach mochitest netwerk/protocol/atproto/tests/browser/browser_at_protocol_navigation.js --headless
 python3.12 -m unittest discover -s tools/raindrop/tests
 ```
 
-The expected baseline is 125 GTests, 45 atproto xpcshell checks, 22
-browser-pref xpcshell checks and three mochitests. Exact counts are recorded in
+The expected baseline is 128 GTests, 49 atproto xpcshell checks, 22
+browser-pref xpcshell checks and four mochitests. Exact counts are recorded in
 [RELEASING.md](RELEASING.md).
 
 ## 4. Smoke test in the browser
