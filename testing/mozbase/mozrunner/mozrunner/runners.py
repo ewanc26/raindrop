@@ -141,4 +141,5 @@ runners = {
     "firefox": FirefoxRunner,
     "fennec": FennecEmulatorRunner,
     "thunderbird": ThunderbirdRunner,
+    "raindrop": FirefoxRunner,
 }
