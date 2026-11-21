@@ -86,10 +86,12 @@ Still to verify (tracked in
       macOS DMG builds (`PACKAGE_EXIT=0`) and its `.DS_Store` is byte-identical to
       raindrop's clean artwork. `CFBundleIconFile=firefox.icns` is a fixed
       build-system path whose contents are byte-identical to raindrop's own
-      artwork, so it is not a mark. The bundle still contains upstream-hardcoded
-      values: `CFBundleSignature=MOZB` (`PkgInfo` `APPLMOZB`), and
-      `org.mozilla.dmgInstallHelper`/`org.mozilla.updater` code-signing
-      requirements carrying Mozilla's Apple team ID. Windows resources need a
+      artwork, so it is not a mark. The updater/helper code-signing requirements
+      no longer carry Mozilla's Apple team ID: the official mozconfig enables
+      `--enable-mac-elevated-updates-with-generic-certs` on macOS, so the
+      packaged `SMAuthorizedClients`/`SMPrivilegedExecutables` strings use
+      `anchor apple generic` only. The bundle still has upstream-hardcoded
+      `CFBundleSignature=MOZB` (`PkgInfo` `APPLMOZB`). Windows resources need a
       Windows build runner.
 - [ ] No Firefox-branded chrome or defaults survive outside this directory.
       First-run default bookmarks still ship a "Mozilla Firefox" folder with
