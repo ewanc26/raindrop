@@ -48,8 +48,10 @@ RecordViewError ParseRecordResponse(std::string_view aJson,
   aOut.mRawJson.assign(aJson.data(), aJson.size());
 
   const Json::Value& cid = root["cid"];
+  aOut.mCidStatus = CidStatus::Absent;
   if (cid.isString()) {
     aOut.mCid = cid.asString();
+    aOut.mCidStatus = VerifyRecordCid(aOut.mCid, value);
   }
 
   const Json::Value& type = value["$type"];
@@ -145,6 +147,7 @@ std::string RenderRecordHtml(const RecordViewData& aData,
   }
   AppendMeta(html, "PDS", aProvenance.mPds);
   AppendMeta(html, "CID", aData.mCid);
+  AppendMeta(html, "CID verification", CidStatusName(aData.mCidStatus));
   html += "</table>\n";
 
   if (!aProvenance.mHandle.empty()) {

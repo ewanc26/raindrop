@@ -11,6 +11,7 @@ UNIFIED_SOURCES += [
 # ...) that collide if unified into one translation unit.
 SOURCES += [
     "AtURI.cpp",
+    "CidVerifier.cpp",
     "DidResolver.cpp",
     "HandleResolver.cpp",
     "PdsClient.cpp",
