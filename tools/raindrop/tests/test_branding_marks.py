@@ -15,6 +15,8 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
+RELEASE_MOZCONFIG = REPO_ROOT / "build/raindrop.mozconfig"
+STOCK_MOZCONFIG = REPO_ROOT / "build/raindrop-unofficial.mozconfig"
 MOZ_BUILD = REPO_ROOT / "browser/app/moz.build"
 INFO_PLIST = REPO_ROOT / "browser/app/macbuild/Contents/Info.plist.in"
 DEFAULT_BOOKMARKS = REPO_ROOT / "browser/base/content/default-bookmarks.html"
@@ -28,6 +30,20 @@ BROWSER_BOOKMARK_TEST = (
 UNIT_BOOKMARK_TEST = (
     REPO_ROOT / "browser/components/places/tests/unit/test_browserGlue_prefs.js"
 )
+
+
+class BrandingSelectionTests(unittest.TestCase):
+    def test_release_config_selects_raindrop_branding(self):
+        self.assertIn(
+            "--with-branding=browser/branding/raindrop",
+            RELEASE_MOZCONFIG.read_text(),
+        )
+
+    def test_stock_config_selects_upstream_unofficial_branding(self):
+        self.assertIn(
+            "--with-branding=browser/branding/unofficial",
+            STOCK_MOZCONFIG.read_text(),
+        )
 
 
 class BundleSignatureTests(unittest.TestCase):

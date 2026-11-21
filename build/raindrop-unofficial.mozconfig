@@ -1,5 +1,5 @@
-# Stock Firefox build for the raindrop fork bootstrap.
-# No raindrop patches are applied when this config is used.
+# Stock-upstream bootstrap build. CI pairs this config with the signed
+# upstream tag, so no raindrop source patches are present there.
 #
 # Usage: export MOZCONFIG=$PWD/build/raindrop-unofficial.mozconfig
 # (A root-level .mozconfig is gitignored by upstream, so keep this tracked one.)
