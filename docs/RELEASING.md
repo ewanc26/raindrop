@@ -49,14 +49,14 @@ python3.12 -m unittest discover -s tools/raindrop/tests
 python3.12 ./mach package
 ```
 
-The expected counts are 128 GTests across 13 suites, 49 atproto xpcshell checks,
-22 browser-pref xpcshell checks and 71 offline tests. The second xpcshell test
-catches `MOZ_APP_NAME` and `appdir` harness mismatches introduced by rebranding;
-the mochitests catch app-ID gates that stop browser actors from starting, and
-the preferences mochitest checks the AT Protocol settings pane and its prefs. The
-offline suite also guards the app-ID gates for automation, downloads and reader
-mode that a rebase can silently restore, and runs on every pull request through
-`.github/workflows/offline-suite.yml`.
+The expected counts are 129 GTests across 13 suites, 50 atproto xpcshell
+subtests, 21 browser-pref xpcshell subtests and 71 offline tests. The second
+xpcshell test catches `MOZ_APP_NAME` and `appdir` harness mismatches introduced
+by rebranding; the mochitests catch app-ID gates that stop browser actors from
+starting, and the preferences mochitest checks the AT Protocol settings pane and
+its prefs. The offline suite also guards the app-ID gates for automation,
+downloads and reader mode that a rebase can silently restore, and runs on every
+pull request through `.github/workflows/offline-suite.yml`.
 GTest suites must be passed as one colon-separated argument; separate
 invocations can report a false green. Confirm `./mach format` and
 `git diff --check` are clean.
