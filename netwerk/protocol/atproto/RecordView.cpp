@@ -127,6 +127,7 @@ std::string RenderRecordHtml(const RecordViewData& aData,
          "vertical-align:top}\n";
   html += "th{background:#f4f4f4;white-space:nowrap}\n";
   html += "pre{white-space:pre-wrap;word-break:break-word}\n";
+  html += ".hint{color:#555;font-size:.9em}\n";
   html += "</style></head><body>\n";
 
   html += "<h1>";
@@ -145,6 +146,12 @@ std::string RenderRecordHtml(const RecordViewData& aData,
   AppendMeta(html, "PDS", aProvenance.mPds);
   AppendMeta(html, "CID", aData.mCid);
   html += "</table>\n";
+
+  if (!aProvenance.mHandle.empty()) {
+    html += "<p class=\"hint\">Handle — may change; resolved to ";
+    html += EscapeHtml(aProvenance.mDid);
+    html += ".</p>\n";
+  }
 
   html += "<h2>Fields</h2>\n";
   if (aData.mFields.empty()) {
