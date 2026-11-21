@@ -205,23 +205,6 @@ std::string_view EndpointAuthority(std::string_view aEndpoint) {
   return slash == std::string_view::npos ? rest : rest.substr(0, slash);
 }
 
-// Require an absolute https URL with a host and no credentials. The trust
-// model does not permit gateway fallbacks, so plain http is rejected here.
-bool IsValidEndpoint(std::string_view aEndpoint) {
-  if (aEndpoint.empty() || aEndpoint.size() > kMaxEndpointLength) {
-    return false;
-  }
-  constexpr std::string_view scheme = "https://";
-  if (aEndpoint.substr(0, scheme.size()) != scheme) {
-    return false;
-  }
-  std::string_view authority = EndpointAuthority(aEndpoint);
-  if (authority.empty() || authority.find('@') != std::string_view::npos) {
-    return false;
-  }
-  return true;
-}
-
 // Onion-only PDS endpoints are a distinct failure state (ADR 0004): the load
 // must report that native Tor support is unavailable rather than treating the
 // endpoint as a generic malformed URL or proxying it through a gateway.
@@ -235,6 +218,23 @@ bool IsOnionEndpoint(std::string_view aEndpoint) {
 }
 
 }  // namespace
+
+bool IsValidPdsEndpoint(std::string_view aEndpoint) {
+  if (aEndpoint.empty() || aEndpoint.size() > kMaxEndpointLength) {
+    return false;
+  }
+  constexpr std::string_view scheme = "https://";
+  if (aEndpoint.substr(0, scheme.size()) != scheme) {
+    return false;
+  }
+  std::string_view rest = aEndpoint.substr(scheme.size());
+  if (rest.empty() || rest.find('@') != std::string_view::npos ||
+      rest.find('?') != std::string_view::npos ||
+      rest.find('#') != std::string_view::npos) {
+    return false;
+  }
+  return !EndpointAuthority(aEndpoint).empty();
+}
 
 const char* DidMethodName(DidMethod aMethod) {
   switch (aMethod) {
@@ -504,7 +504,7 @@ PdsError ExtractPdsEndpoint(std::string_view aJson,
       aResult.mEndpoint = endpoint.asString();
       return PdsError::OnionEndpoint;
     }
-    if (!IsValidEndpoint(endpoint.asString())) {
+    if (!IsValidPdsEndpoint(endpoint.asString())) {
       return PdsError::InvalidEndpoint;
     }
     aResult.mEndpoint = endpoint.asString();

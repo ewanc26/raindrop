@@ -67,6 +67,9 @@ enum class PdsError {
 
 const char* PdsErrorName(PdsError aError);
 
+// Shared PDS serviceEndpoint validation, used at discovery and request time.
+bool IsValidPdsEndpoint(std::string_view aEndpoint);
+
 // Maximum DID document size accepted from a resolver endpoint (1 MiB). Larger
 // documents are rejected before parsing to bound memory use on untrusted input.
 constexpr size_t kMaxDidDocumentLength = 1024 * 1024;
