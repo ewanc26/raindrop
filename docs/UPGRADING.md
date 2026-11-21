@@ -106,7 +106,8 @@ check against a saved product-details payload. Its logic is covered by
    The second xpcshell test catches test-harness regressions caused by the
    rebranded `MOZ_APP_NAME`; the mochitest catches app-ID gates that prevent
    browser startup. The offline suite guards branding, harness aliases and
-   application identity that a rebase can silently restore to Firefox values.
+   application identity, including automation, downloads and reader mode, that
+   a rebase can silently restore to Firefox values.
 
 5. **Record and publish.** Update the version table and hash in
    `docs/BUILDING.md`, then push `upstream`, `main`, the new `firefox-$V` tag,

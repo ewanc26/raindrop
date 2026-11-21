@@ -32,6 +32,14 @@ UNIT_BOOKMARK_TEST = (
 )
 BROWSER_CONFIGURE = REPO_ROOT / "browser/moz.configure"
 BROWSER_COMPONENTS = REPO_ROOT / "browser/components/BrowserComponents.manifest"
+APP_INFO = REPO_ROOT / "remote/shared/AppInfo.sys.mjs"
+DOWNLOAD_INTEGRATION = (
+    REPO_ROOT / "toolkit/components/downloads/DownloadIntegration.sys.mjs"
+)
+READER_MODE = REPO_ROOT / "toolkit/components/reader/ReaderMode.sys.mjs"
+MARIONETTE_GECKOINSTANCE = (
+    REPO_ROOT / "testing/marionette/client/marionette_driver/geckoinstance.py"
+)
 BRANDING_DIR = REPO_ROOT / "browser/branding/raindrop"
 WINDOWS_NSI = BRANDING_DIR / "branding.nsi"
 WINDOWS_MANIFESTS = (
@@ -71,6 +79,46 @@ class ApplicationStartupTests(unittest.TestCase):
             if "app-startup nsBrowserGlue" in line
         )
         self.assertIn(f"application={app_id}", line)
+
+
+class ApplicationIdentityTests(unittest.TestCase):
+    @staticmethod
+    def app_id():
+        configure = BROWSER_CONFIGURE.read_text()
+        match = re.search(r'imply_option\("MOZ_APP_ID", "(\{[^}]+\})"\)', configure)
+        assert match, "raindrop app ID is not configured"
+        return match.group(1)
+
+    def test_remote_app_info_treats_raindrop_as_firefox_desktop(self):
+        app_id = self.app_id()
+        text = APP_INFO.read_text()
+        self.assertIn(f'ID_RAINDROP = "{app_id}"', text)
+        marker = 'ChromeUtils.defineLazyGetter(AppInfo, "isFirefox"'
+        self.assertIn(marker, text)
+        block = text[text.index(marker) : text.index(marker) + 400]
+        self.assertIn("ID_RAINDROP", block)
+
+    def test_download_integration_keeps_blocked_data_for_raindrop(self):
+        app_id = self.app_id()
+        text = DOWNLOAD_INTEGRATION.read_text()
+        marker = "shouldKeepBlockedData()"
+        self.assertIn(marker, text)
+        block = text[text.index(marker) : text.index(marker) + 400]
+        self.assertIn(app_id, block)
+
+    def test_reader_mode_enables_language_detection_for_raindrop(self):
+        app_id = self.app_id()
+        text = READER_MODE.read_text()
+        self.assertIn(f'ID_RAINDROP = "{app_id}"', text)
+        marker = "const gIsFirefoxDesktop"
+        self.assertIn(marker, text)
+        block = text[text.index(marker) : text.index(marker) + 300]
+        self.assertIn("ID_RAINDROP", block)
+
+    def test_marionette_client_maps_raindrop_app_id(self):
+        app_id = self.app_id()
+        text = MARIONETTE_GECKOINSTANCE.read_text()
+        self.assertIn(f'"{app_id}": "fxdesktop",', text)
 
 
 class BundleSignatureTests(unittest.TestCase):
