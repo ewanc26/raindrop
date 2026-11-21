@@ -97,6 +97,14 @@ of RAM. A cold build without `ccache` is substantially slower. These numbers
 are observations on one machine, not a guarantee; CI runners with less disk
 need a larger volume mounted before building.
 
+## Upstream upgrades
+
+When Mozilla ships a new Firefox release, follow [docs/UPGRADING.md](UPGRADING.md).
+The daily `Firefox upgrade check` workflow detects a due upgrade against the
+release channel and opens a triage issue; the signed import and rebase remain
+reviewed manual steps. The version table above is the pinned source of truth
+the check reads.
+
 ## Status
 
 The tracked mozconfig's options were verified with a fresh `mach configure` in
