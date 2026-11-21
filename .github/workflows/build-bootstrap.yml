@@ -1,0 +1,93 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# Issue #10: prove the pristine upstream source still builds before raindrop
+# patches are applied. The fork mozconfig is read from this branch; the tree
+# that is compiled comes from the `upstream` branch. A full Firefox build needs
+# 30 GB+ of disk. Set the RAINDROP_BUILD_RUNNER repository variable to a
+# self-hosted runner with that much free space and the toolchain installed by
+# `mach bootstrap`; without it the job is skipped rather than failing on a
+# hosted runner that cannot fit the build.
+#
+# pull_request_target is deliberate: this job never checks out PR code (only
+# the signed upstream tag and the default branch's mozconfig), so the workflow
+# definition always comes from the trusted base branch. A plain pull_request
+# trigger would let a fork edit this file and run code on the self-hosted runner.
+
+name: Build bootstrap
+
+on:
+  push:
+    branches: [main]
+  pull_request_target:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # pull_request_target exposes the base ref as github.ref, so key PR runs by
+  # number to avoid unrelated PRs cancelling each other's builds.
+  group: build-bootstrap-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  stock-build:
+    # No full Firefox build fits on a hosted runner's disk. Until a
+    # self-hosted runner is registered, report a neutral skip rather than a
+    # failing check on every pull request.
+    if: vars.RAINDROP_BUILD_RUNNER != ''
+    runs-on: ${{ vars.RAINDROP_BUILD_RUNNER }}
+    steps:
+      - name: Check out pristine upstream source
+        uses: actions/checkout@v4
+        with:
+          # ADR 0002: CI builds the imported, signed release tag, not a
+          # floating branch. Override when the pin moves to a new release.
+          ref: ${{ vars.RAINDROP_UPSTREAM_TAG || 'firefox-160.0.1' }}
+          path: src
+          fetch-depth: 1
+
+      - name: Check out trusted fork mozconfig
+        uses: actions/checkout@v4
+        with:
+          # mozconfig is shell-sourced, so never take it from the PR head:
+          # a fork could otherwise run arbitrary commands on the runner.
+          ref: ${{ github.event.repository.default_branch }}
+          path: fork
+          fetch-depth: 1
+
+      - name: Verify build disk budget
+        run: |
+          set -euo pipefail
+          available=$(df -Pk "$RUNNER_TEMP" | awk 'NR==2 {print $4}')
+          echo "Available disk: $((available / 1024 / 1024)) GiB"
+          if [ "$available" -lt 31457280 ]; then
+            echo "::error::A full Firefox build needs at least 30 GiB of free disk. Set RAINDROP_BUILD_RUNNER to a self-hosted runner with a larger volume."
+            exit 1
+          fi
+
+      - name: Build pristine Firefox with unofficial branding
+        working-directory: src
+        env:
+          MOZCONFIG: ${{ github.workspace }}/fork/build/raindrop-unofficial.mozconfig
+        run: |
+          set -euo pipefail
+          start=$(date +%s)
+          echo "BUILD_START=$start" >> "$GITHUB_ENV"
+          time ./mach build
+
+      - name: Record build cost
+        if: always()
+        working-directory: src
+        run: |
+          set -euo pipefail
+          echo "Build elapsed: $(( $(date +%s) - ${BUILD_START:-$(date +%s)} ))s"
+          du -sh obj-raindrop-unofficial 2>/dev/null || true
+          df -h .
+
+      - name: Remove object directory
+        if: always()
+        working-directory: src
+        run: rm -rf obj-raindrop-unofficial
