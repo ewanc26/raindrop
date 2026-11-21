@@ -58,8 +58,8 @@ AtProtocolHandler::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
   NS_ENSURE_SUCCESS(rv, rv);
 
   AtURI parsed;
-  AtURIError error =
-      ParseAtURI(std::string_view(spec.BeginReading(), spec.Length()), parsed);
+  AtURIError error = ParseNavigationAtURI(
+      std::string_view(spec.BeginReading(), spec.Length()), parsed);
   if (error != AtURIError::None) {
     return NS_ERROR_MALFORMED_URI;
   }
