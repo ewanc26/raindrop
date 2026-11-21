@@ -3262,6 +3262,7 @@ pref("network.lna.etp.enabled", true);
 pref("network.atprotocol.enabled", true);
 pref("network.atprotocol.record.showProvenance", true);
 pref("network.atprotocol.record.showRawJson", true);
+pref("network.atprotocol.record.showImages", true);
 
 // The canonical endpoint answers with an empty 204 when there is no captive
 // portal, so no content is expected. These two prefs must always be changed
