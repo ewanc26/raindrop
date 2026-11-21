@@ -196,6 +196,16 @@ class WindowsWorkflowWiringTests(unittest.TestCase):
         text = MOZCONFIG.read_text()
         self.assertIn("--with-branding=browser/branding/raindrop", text)
         self.assertIn("--enable-artifact-builds", text)
+        self.assertIn("--enable-bootstrap=no-update", text)
+
+    def test_workflow_installs_mozilla_signed_nsis(self):
+        text = WORKFLOW.read_text()
+        self.assertIn("nsis-3.07-signed.zip", text)
+        self.assertIn(
+            "5856cd49b52870caa41814d71ce30c4304d5001b80c04f4eb7028ffedd91df7e",
+            text,
+        )
+        self.assertIn(".mozbuild\\nsis", text)
 
 
 if __name__ == "__main__":

@@ -57,6 +57,31 @@ jobs:
             throw "MozillaBuild did not install to C:\mozilla-build"
           }
 
+      - name: Install Mozilla's signed NSIS package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $ProgressPreference = "SilentlyContinue"
+          $url = "https://github.com/mozilla-releng/adhoc-signing-blobs/raw/nsis/nsis-3.07-signed.zip"
+          $archive = Join-Path $env:RUNNER_TEMP "nsis-3.07-signed.zip"
+          Invoke-WebRequest -Uri $url -OutFile $archive
+          $hash = (Get-FileHash -Algorithm SHA256 -Path $archive).Hash.ToLowerInvariant()
+          $expected = "5856cd49b52870caa41814d71ce30c4304d5001b80c04f4eb7028ffedd91df7e"
+          if ($hash -ne $expected) {
+            throw "NSIS SHA-256 mismatch: $hash"
+          }
+          $extract = Join-Path $env:RUNNER_TEMP "nsis-extract"
+          if (Test-Path $extract) {
+            Remove-Item -Recurse -Force $extract
+          }
+          Expand-Archive -Path $archive -DestinationPath $extract
+          $destination = Join-Path $env:USERPROFILE ".mozbuild\nsis"
+          New-Item -ItemType Directory -Force -Path $destination | Out-Null
+          Copy-Item -Path (Join-Path $extract "nsis-3.07\*") -Destination $destination -Recurse -Force
+          if (-not (Test-Path (Join-Path $destination "bin\makensis.exe"))) {
+            throw "Pinned NSIS package did not provide makensis.exe"
+          }
+
       - name: Derive pinned artifact revision
         shell: pwsh
         run: |
