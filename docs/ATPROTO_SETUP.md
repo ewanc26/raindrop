@@ -45,8 +45,8 @@ python3.12 ./mach mochitest netwerk/protocol/atproto/tests/browser/browser_at_pr
 python3.12 -m unittest discover -s tools/raindrop/tests
 ```
 
-The expected baseline is 128 GTests, 49 atproto xpcshell checks, 22
-browser-pref xpcshell checks and four mochitests. Exact counts are recorded in
+The expected baseline is 129 GTests, 50 atproto xpcshell subtests, 21
+browser-pref xpcshell subtests and four mochitests. Exact counts are recorded in
 [RELEASING.md](RELEASING.md).
 
 ## 4. Smoke test in the browser
@@ -67,6 +67,9 @@ browser-pref xpcshell checks and four mochitests. Exact counts are recorded in
 6. Right-click an `at://` link and confirm Copy Link Address and Save Link As
    use the raw `at://` spec. Reader mode is not offered; Raindrop renders its
    own views.
+7. Open a post with an image. With `network.atprotocol.record.showImages` off,
+   no image request is made; the CID and a PDS `getBlob` link are shown. Turn
+   the pref on and reload to see the image load inline.
 
 No load should contact an HTTP gateway for content. `plc.directory` and DNS are
 identity-resolution authorities, not content gateways.
@@ -77,9 +80,14 @@ identity-resolution authorities, not content gateways.
   context. Identity UI must not claim a verified web domain.
 - Web pages can follow `at://` links, but scripted `fetch("at://...")` access is
   not part of the navigation contract.
-- Record CID verification covers integrity, not authorship. See issue #89 for
-  the blob and authenticity policy work.
-- Generated-document hardening and referrer leakage are tracked in issue #88.
+- Record CID verification covers integrity and consistency with the PDS
+  response, not authorship or repository-commit authenticity. The view states
+  that no signed commit proof is checked.
+- Inline image loading is off by default. Blob refs show a CID and a link to
+  the record's PDS. Enabling `network.atprotocol.record.showImages` fetches
+  images directly from that PDS without checking the bytes against the CID.
+- Generated documents carry hardening headers and matching meta tags, and
+  internal DID/PDS fetches omit cookies and referrers.
 
 ## Troubleshooting
 

@@ -273,7 +273,7 @@ at-protocol-show-raw-json =
 
 at-protocol-show-images =
   .label = Show images inline
-  .description = Load image blobs from the record's PDS when the page opens. Turn this off to keep the CID link but avoid automatic image requests.
+  .description = Off by default. When enabled, image blobs load directly from the record's PDS and the CID is not checked against the downloaded bytes. The CID and a link stay available either way.
   .accesskey = I
 
 tabs-group-header2 =
