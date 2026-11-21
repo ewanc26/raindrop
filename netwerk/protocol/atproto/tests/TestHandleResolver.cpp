@@ -82,9 +82,37 @@ TEST(HandleResolver, VerifiesReverseBinding) {
     "alsoKnownAs": ["at://alice.example", "at://other.example"]
   })";
   ExpectBinding(json, "alice.example", HandleBindingError::None);
-  ExpectBinding(json, "other.example", HandleBindingError::None);
+  ExpectBinding(json, "other.example", HandleBindingError::HandleNotClaimed);
   ExpectBinding(json, "mallory.example",
                 HandleBindingError::HandleNotClaimed);
+}
+
+TEST(HandleResolver, OnlyFirstValidHandleIsClaimed) {
+  const std::string json = R"({
+    "alsoKnownAs": ["at://first.example", "at://second.example"]
+  })";
+  ExpectBinding(json, "first.example", HandleBindingError::None);
+  ExpectBinding(json, "second.example", HandleBindingError::HandleNotClaimed);
+}
+
+TEST(HandleResolver, SkipsInvalidEntriesBeforeClaimedHandle) {
+  const std::string json = R"({
+    "alsoKnownAs": [
+      "https://example.com/alice",
+      "at://singlelabel",
+      "at://user:pass@example.com",
+      "at://alice.example",
+      "at://later.example"
+    ]
+  })";
+  ExpectBinding(json, "alice.example", HandleBindingError::None);
+  ExpectBinding(json, "later.example",
+                HandleBindingError::HandleNotClaimed);
+}
+
+TEST(HandleResolver, RejectsHandleWithUriPartsInClaim) {
+  const std::string json = R"({"alsoKnownAs":["at://alice.example/path"]})";
+  ExpectBinding(json, "alice.example", HandleBindingError::HandleNotClaimed);
 }
 
 TEST(HandleResolver, BindingComparisonIsCaseInsensitive) {

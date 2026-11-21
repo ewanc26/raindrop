@@ -337,24 +337,39 @@ HandleBindingError VerifyHandleBinding(std::string_view aJson,
     return HandleBindingError::MissingAlsoKnownAs;
   }
 
-  const std::string expected = "at://" + std::string(aHandle);
+  constexpr std::string_view kAtPrefix = "at://";
   for (const auto& entry : alsoKnownAs) {
     if (!entry.isString()) {
       continue;
     }
     const std::string candidate = entry.asString();
-    if (candidate.size() == expected.size()) {
-      bool equal = true;
-      for (size_t i = 0; i < expected.size(); ++i) {
-        if (ToLowerAscii(candidate[i]) != ToLowerAscii(expected[i])) {
-          equal = false;
-          break;
-        }
-      }
-      if (equal) {
-        return HandleBindingError::None;
+    if (candidate.size() < kAtPrefix.size()) {
+      continue;
+    }
+    bool hasPrefix = true;
+    for (size_t i = 0; i < kAtPrefix.size(); ++i) {
+      if (ToLowerAscii(candidate[i]) != kAtPrefix[i]) {
+        hasPrefix = false;
+        break;
       }
     }
+    if (!hasPrefix) {
+      continue;
+    }
+    std::string_view claimed(candidate.data() + kAtPrefix.size(),
+                             candidate.size() - kAtPrefix.size());
+    if (!IsValidHandle(claimed)) {
+      continue;
+    }
+    if (claimed.size() != aHandle.size()) {
+      return HandleBindingError::HandleNotClaimed;
+    }
+    for (size_t i = 0; i < claimed.size(); ++i) {
+      if (ToLowerAscii(claimed[i]) != ToLowerAscii(aHandle[i])) {
+        return HandleBindingError::HandleNotClaimed;
+      }
+    }
+    return HandleBindingError::None;
   }
   return HandleBindingError::HandleNotClaimed;
 }

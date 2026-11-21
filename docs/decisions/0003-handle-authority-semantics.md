@@ -36,10 +36,12 @@ durability warning. Never persist the mapping.**
    conventions: a DNS TXT record at `_atproto.<handle>` of the form
    `did=<did>`, or an HTTPS GET to `https://<handle>/.well-known/atproto-did`
    returning the DID as plain text. Then **verify the reverse binding**: fetch
-   the resolved DID document and require its `alsoKnownAs` array to contain
-   `at://<handle>`. A handle that resolves to a DID whose document does not
-   claim it is a failed resolution, not a warning. This blocks a stale or
-   hostile handle record from redirecting the viewer to an unrelated repo.
+   the resolved DID document and require its first syntactically valid
+   `at://` entry in `alsoKnownAs` to be `at://<handle>`. Per the atproto DID
+   spec, later entries are not handle claims and are ignored. A handle that
+   resolves to a DID whose document does not claim it is a failed resolution,
+   not a warning. This blocks a stale or hostile handle record from redirecting
+   the viewer to an unrelated repo.
 3. **Caching.** Keep handle→DID results in a process-local, in-memory cache for
    the current session only. Nothing is written to disk, nothing survives a
    restart, and private browsing uses a cache that is discarded with the
