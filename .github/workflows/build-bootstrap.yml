@@ -61,10 +61,13 @@ jobs:
       - name: Verify build disk budget
         run: |
           set -euo pipefail
-          available=$(df -Pk "$RUNNER_TEMP" | awk 'NR==2 {print $4}')
-          echo "Available disk: $((available / 1024 / 1024)) GiB"
+          # The object directory is created under the checkout, not in
+          # RUNNER_TEMP. On a self-hosted runner these can be separate mounts,
+          # so measure the volume that will actually hold the build.
+          available=$(df -Pk "$GITHUB_WORKSPACE/src" | awk 'NR==2 {print $4}')
+          echo "Available disk on build volume: $((available / 1024 / 1024)) GiB"
           if [ "$available" -lt 31457280 ]; then
-            echo "::error::A full Firefox build needs at least 30 GiB of free disk. Set RAINDROP_BUILD_RUNNER to a self-hosted runner with a larger volume."
+            echo "::error::A full Firefox build needs at least 30 GiB of free disk on the checkout volume. Set RAINDROP_BUILD_RUNNER to a self-hosted runner with a larger volume."
             exit 1
           fi
 
