@@ -120,9 +120,12 @@ the check reads.
 ## Status
 
 The tracked mozconfig's options were verified with a fresh `mach configure` in
-an empty object directory. `main` carries no source-code changes relative to `upstream`
-(only docs, branding configuration and repository metadata), so the tree built
-by these commands is the pristine Firefox 160.0.1 source. The remaining gap under
+an empty object directory. The `upstream` branch is the pristine signed Firefox
+160.0.1 import, and that is the source the CI job compiles. `main` is the raindrop
+patch queue on top of it: the `netwerk/protocol/atproto/` module and its browser
+integration, plus branding, build tooling, docs and repository metadata. A local
+`./mach build` on `main` therefore builds the patched tree, not pristine Firefox.
+The remaining gap under
 [issue #10](https://github.com/ewanc26/raindrop/issues/10) is CI: the
 `Build bootstrap` workflow builds the `upstream` branch on every push and pull
 request, but a full Firefox build needs 30 GB+ of disk, so the job is gated on
