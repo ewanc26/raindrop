@@ -1,0 +1,77 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# ADR 0002 automation: once a day, compare the tracked Firefox version in
+# docs/BUILDING.md against Mozilla's release channel. On a new train or a dot
+# release, open (or refresh) a single issue so the fork never rots. The import
+# itself stays a reviewed, signed manual step — see docs/UPGRADING.md.
+
+name: Firefox upgrade check
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compare tracked version to release channel
+        id: check
+        run: |
+          set -euo pipefail
+          python3 tools/raindrop/upstream.py --json > result.json
+          cat result.json
+          for key in upgrade_due release_kind action latest_version rebase_deadline; do
+            value=$(python3 -c "import json,sys; print(json.load(open('result.json'))[sys.argv[1]])" "$key")
+            echo "$key=$value" >> "$GITHUB_OUTPUT"
+          done
+
+      - name: Open or refresh upgrade issue
+        if: steps.check.outputs.upgrade_due == 'True'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          KIND: ${{ steps.check.outputs.release_kind }}
+          ACTION: ${{ steps.check.outputs.action }}
+          VERSION: ${{ steps.check.outputs.latest_version }}
+          DEADLINE: ${{ steps.check.outputs.rebase_deadline }}
+        run: |
+          set -euo pipefail
+          title="Firefox $VERSION upgrade ($KIND) — $ACTION"
+          body=$(cat <<EOF
+          Mozilla's release channel now reports **Firefox $VERSION**; this fork tracks an older version in \`docs/BUILDING.md\`.
+
+          - **Release kind:** \`$KIND\`
+          - **Required action:** \`$ACTION\` (ADR 0002)
+          - **Rebase deadline:** $DEADLINE (five working days from release)
+
+          $(if [ "$ACTION" = "triage" ]; then
+            echo "Dot release: import only if it contains a security fix or a fix to code raindrop ships. Check the [Firefox release notes](https://www.mozilla.org/en-US/firefox/releases/) and record the decision here."
+          else
+            echo "New train: import the signed tarball and rebase the patch queue per [docs/UPGRADING.md](../blob/main/docs/UPGRADING.md)."
+          fi)
+
+          This issue is maintained automatically by \`.github/workflows/upgrade-check.yml\`. Close it once \`docs/BUILDING.md\`, the \`upstream\` tag and \`main\` are updated.
+          EOF
+          )
+          gh label create upstream --description "Firefox upstream tracking" --color "1d76db" 2>/dev/null || true
+          existing=$(gh issue list --state open --search "$title in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue edit "$existing" --title "$title" --body "$body"
+            echo "Refreshed issue #$existing"
+          else
+            gh issue create --title "$title" --body "$body" --label "upstream"
+            echo "Opened upgrade issue"
+          fi

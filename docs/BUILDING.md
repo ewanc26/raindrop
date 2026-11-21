@@ -68,6 +68,14 @@ To produce a distributable archive rather than the development `.app` bundle:
 ./mach package
 ```
 
+## Upstream upgrades
+
+When Mozilla ships a new Firefox release, follow [docs/UPGRADING.md](UPGRADING.md).
+The daily `Firefox upgrade check` workflow detects a due upgrade against the
+release channel and opens a triage issue; the signed import and rebase remain
+reviewed manual steps. The version table above is the pinned source of truth
+the check reads.
+
 ## Status
 
 The stock build and CI job are still to be completed under

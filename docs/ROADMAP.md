@@ -38,6 +38,10 @@ used, even if it is small.
 
 - [ ] Bundled views for common lexicons (posts, profiles, blobs) rendered natively.
 - [ ] Browser integration polish: `at://` in bookmarks, history, and link handling.
-- [ ] Fork maintenance automation: scripted rebases onto upstream Firefox releases
-      and an upgrade CI job, so the fork never rots.
+- [x] Fork maintenance automation: scripted rebases onto upstream Firefox releases
+      and an upgrade CI job, so the fork never rots. `tools/raindrop/upstream.py`
+      detects a due upgrade against Mozilla's release channel (20 offline tests),
+      `.github/workflows/upgrade-check.yml` opens/refreshes a triage issue daily,
+      and [docs/UPGRADING.md](UPGRADING.md) records the signed import + rebase
+      procedure per ADR 0002.
 - [ ] First tagged release.
