@@ -8,6 +8,7 @@
 
 #include "DidResolver.h"
 #include "HandleResolver.h"
+#include "PrivacyFlags.h"
 #include "PdsClient.h"
 #include "RecordView.h"
 #include "mozilla/Logging.h"
@@ -97,6 +98,12 @@ nsresult AtRecordResolver::StartFetch(const std::string& aUrl, Phase aPhase) {
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannelInternal(getter_AddRefs(channel), uri, mLoadInfo, nullptr,
                              nullptr, nullptr, nsIRequest::LOAD_NORMAL);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsLoadFlags flags = nsIRequest::LOAD_NORMAL;
+  rv = channel->GetLoadFlags(&flags);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = channel->SetLoadFlags(ResolutionLoadFlags(flags));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(channel);
