@@ -12,6 +12,7 @@
 #include "PdsClient.h"
 #include "PrivacyFlags.h"
 #include "RecordView.h"
+#include "RepoView.h"
 #include "mozilla/Logging.h"
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/Preferences.h"
@@ -285,7 +286,7 @@ AtRecordResolver::OnDataAvailable(nsIRequest* aRequest,
   }
 
   if (mPhase != Phase::Handle && mPhase != Phase::DidDocument &&
-      mPhase != Phase::Record) {
+      mPhase != Phase::Record && mPhase != Phase::Repo) {
     return NS_OK;
   }
 
@@ -295,6 +296,7 @@ AtRecordResolver::OnDataAvailable(nsIRequest* aRequest,
 
   size_t cap = mPhase == Phase::Handle   ? kMaxHandleResponseLength
                : mPhase == Phase::Record ? kMaxRecordResponseLength
+               : mPhase == Phase::Repo   ? kMaxRepoResponseLength
                                          : kMaxDidDocumentLength;
   // Keep one byte past the cap: the parsers reject bodies larger than the cap,
   // so truncating exactly at the cap would turn an oversized response into a
@@ -318,7 +320,7 @@ AtRecordResolver::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   }
 
   if (mPhase != Phase::Handle && mPhase != Phase::DidDocument &&
-      mPhase != Phase::Record) {
+      mPhase != Phase::Record && mPhase != Phase::Repo) {
     return NS_OK;
   }
 
@@ -336,6 +338,9 @@ AtRecordResolver::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
       break;
     case Phase::Record:
       rv = OnRecordStop(aRequest, aStatus);
+      break;
+    case Phase::Repo:
+      rv = OnRepoStop(aRequest, aStatus);
       break;
     default:
       return NS_OK;
@@ -356,6 +361,7 @@ nsresult AtRecordResolver::CheckResponse(nsIRequest* aRequest,
     FailureKind kind =
         mPhase == Phase::Handle   ? FailureKind::HandleResolutionFailed
         : mPhase == Phase::Record ? FailureKind::PdsUnreachable
+        : mPhase == Phase::Repo   ? FailureKind::PdsUnreachable
                                   : FailureKind::DidResolutionFailed;
     SetFailure(kind, "network request failed");
     return aStatus;
@@ -369,6 +375,8 @@ nsresult AtRecordResolver::CheckResponse(nsIRequest* aRequest,
       AT_LOG(("atproto: HTTP status %u\n", responseStatus));
       FailureKind kind = mPhase == Phase::Record && responseStatus == 404
                              ? FailureKind::RecordNotFound
+                         : mPhase == Phase::Repo && responseStatus == 404
+                             ? FailureKind::RepoNotFound
                              : FailureKind::UpstreamRejected;
       SetFailure(kind, "HTTP " + std::to_string(responseStatus));
       return NS_ERROR_NOT_AVAILABLE;
@@ -450,6 +458,18 @@ nsresult AtRecordResolver::OnDidDocumentStop(nsIRequest* aRequest,
 
   mPds = service.mEndpoint;
 
+  if (!mUri.mHasCollection || !mUri.mHasRecordKey) {
+    std::string url;
+    PdsUrlError uerr = BuildDescribeRepoUrl(service.mEndpoint, mDid, url);
+    if (uerr != PdsUrlError::None) {
+      AT_LOG(
+          ("atproto: describeRepo URL failed (%s)\n", PdsUrlErrorName(uerr)));
+      SetFailure(FailureKind::DidDocumentRejected, PdsUrlErrorName(uerr));
+      return NS_ERROR_FAILURE;
+    }
+    return StartFetch(url, Phase::Repo);
+  }
+
   std::string url;
   PdsUrlError uerr = BuildGetRecordUrl(service.mEndpoint, mDid,
                                        mUri.mCollection, mUri.mRecordKey, url);
@@ -481,16 +501,35 @@ nsresult AtRecordResolver::OnRecordStop(nsIRequest* aRequest,
   RecordViewOptions options{
       Preferences::GetBool("network.atprotocol.record.showProvenance", true),
       Preferences::GetBool("network.atprotocol.record.showRawJson", true)};
-  std::string html = RenderRecordHtml(data, provenance, options);
+  return DeliverHtml(RenderRecordHtml(data, provenance, options));
+}
 
+nsresult AtRecordResolver::OnRepoStop(nsIRequest* aRequest, nsresult aStatus) {
+  nsresult rv = CheckResponse(aRequest, aStatus);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  RepoViewData data;
+  RepoViewError verr = ParseRepoResponse(
+      std::string_view(mBody.BeginReading(), mBody.Length()), data);
+  if (verr != RepoViewError::None) {
+    AT_LOG(("atproto: repo view failed (%s)\n", RepoViewErrorName(verr)));
+    SetFailure(FailureKind::RepoInvalid, RepoViewErrorName(verr));
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return DeliverHtml(
+      RenderRepoHtml(data, RepoViewProvenance{mDid, mHandle, mPds}));
+}
+
+nsresult AtRecordResolver::DeliverHtml(std::string_view aHtml) {
   nsCOMPtr<nsIInputStream> stream;
-  rv = NS_NewCStringInputStream(getter_AddRefs(stream),
-                                nsCString(html.data(), html.size()));
+  nsresult rv = NS_NewCStringInputStream(getter_AddRefs(stream),
+                                         nsCString(aHtml.data(), aHtml.size()));
   NS_ENSURE_SUCCESS(rv, rv);
 
   ForwardStart();
   if (mTarget && !mDeliveredStop) {
-    rv = mTarget->OnDataAvailable(mOuterRequest, stream, 0, html.size());
+    rv = mTarget->OnDataAvailable(mOuterRequest, stream, 0, aHtml.size());
   }
   ForwardStop(NS_OK);
   return rv;
@@ -533,16 +572,7 @@ void AtRecordResolver::DeliverFailure(nsresult aStatus) {
     mFailure.mDid = mDid;
     mFailure.mPds = mPds;
   }
-  std::string html = RenderFailureHtml(mFailure);
-  nsCOMPtr<nsIInputStream> stream;
-  nsresult rv = NS_NewCStringInputStream(getter_AddRefs(stream),
-                                         nsCString(html.data(), html.size()));
-  if (NS_SUCCEEDED(rv)) {
-    ForwardStart();
-    if (mTarget && !mDeliveredStop) {
-      rv = mTarget->OnDataAvailable(mOuterRequest, stream, 0, html.size());
-    }
-  }
+  DeliverHtml(RenderFailureHtml(mFailure));
   // Deliver the explanation as content rather than a bare status code so the
   // browser shows an honest, step-specific page instead of a generic error.
   ForwardStop(NS_OK);

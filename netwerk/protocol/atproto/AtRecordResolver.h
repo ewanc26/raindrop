@@ -5,20 +5,20 @@
 #ifndef netwerk_protocol_atproto_AtRecordResolver_h
 #define netwerk_protocol_atproto_AtRecordResolver_h
 
+#include <cstdint>
+#include <string_view>
+
 #include "AtURI.h"
 #include "ErrorView.h"
 #include "SimpleChannel.h"
 #include "nsCOMPtr.h"
-#include "nsIChannelEventSink.h"
 #include "nsICancelable.h"
+#include "nsIChannelEventSink.h"
 #include "nsIDNSListener.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIStreamListener.h"
 #include "nsISupportsImpl.h"
 #include "nsString.h"
-
-#include <cstdint>
-#include <string_view>
 
 class nsIInputStream;
 class nsILoadInfo;
@@ -75,7 +75,7 @@ class AtRecordResolver final : public nsIStreamListener,
   ~AtRecordResolver() = default;
   friend class AtRecordResolverTestAccess;
 
-  enum class Phase { None, Handle, DidDocument, Record };
+  enum class Phase { None, Handle, DidDocument, Record, Repo };
 
   nsresult StartResolution();
   nsresult StartHandleDnsLookup();
@@ -86,8 +86,10 @@ class AtRecordResolver final : public nsIStreamListener,
   nsresult OnHandleStop(nsIRequest* aRequest, nsresult aStatus);
   nsresult OnDidDocumentStop(nsIRequest* aRequest, nsresult aStatus);
   nsresult OnRecordStop(nsIRequest* aRequest, nsresult aStatus);
+  nsresult OnRepoStop(nsIRequest* aRequest, nsresult aStatus);
 
   void SetFailure(FailureKind aKind, std::string_view aDetail);
+  nsresult DeliverHtml(std::string_view aHtml);
   void DeliverFailure(nsresult aStatus);
   void ForwardStart();
   void ForwardStop(nsresult aStatus);

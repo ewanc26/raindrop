@@ -21,9 +21,12 @@ at://did:plc:abc.../app.bsky.feed.post/3lz...
    - `did:web` - fetch `https://<domain>/.well-known/did.json`.
 3. **PDS discovery.** Read the `#atproto_pds` service endpoint from the DID
    document. This is where the record lives.
-4. **Record fetch.** Call `com.atproto.repo.getRecord` on the PDS for the
-   collection and rkey. Blob rendering is deferred.
-5. **Rendering.** Dispatch on the record's lexicon:
+4. **Fetch.** A full record URI calls `com.atproto.repo.getRecord` on the PDS
+   for the collection and rkey. An authority-only URI calls
+   `com.atproto.repo.describeRepo` to describe the repository. Blob rendering
+   is deferred.
+5. **Rendering.** A repository description renders a summary with its handle,
+   DID, PDS and advertised collections. Record responses dispatch on lexicon:
    - Known lexicons (Phase 3) get a bundled native view.
    - Everything else gets the generic record view (Phase 1) with the option to
    inspect raw JSON.

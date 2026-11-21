@@ -67,8 +67,7 @@ std::string EncodeQueryValue(std::string_view aValue) {
 PdsUrlError BuildGetRecordUrl(std::string_view aEndpoint,
                               std::string_view aRepo,
                               std::string_view aCollection,
-                              std::string_view aRecordKey,
-                              std::string& aUrl) {
+                              std::string_view aRecordKey, std::string& aUrl) {
   aUrl.clear();
   if (!IsValidPdsEndpoint(aEndpoint)) {
     return PdsUrlError::InvalidEndpoint;
@@ -87,6 +86,21 @@ PdsUrlError BuildGetRecordUrl(std::string_view aEndpoint,
          "/xrpc/com.atproto.repo.getRecord?repo=" + EncodeQueryValue(aRepo) +
          "&collection=" + EncodeQueryValue(aCollection) +
          "&rkey=" + EncodeQueryValue(aRecordKey);
+  return PdsUrlError::None;
+}
+
+PdsUrlError BuildDescribeRepoUrl(std::string_view aEndpoint,
+                                 std::string_view aRepo, std::string& aUrl) {
+  aUrl.clear();
+  if (!IsValidPdsEndpoint(aEndpoint)) {
+    return PdsUrlError::InvalidEndpoint;
+  }
+  if (!IsValidDid(aRepo)) {
+    return PdsUrlError::InvalidRepo;
+  }
+
+  aUrl = std::string(TrimTrailingSlashes(aEndpoint)) +
+         "/xrpc/com.atproto.repo.describeRepo?repo=" + EncodeQueryValue(aRepo);
   return PdsUrlError::None;
 }
 

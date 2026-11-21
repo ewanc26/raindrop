@@ -69,6 +69,10 @@ const char* FailureTitle(FailureKind aKind) {
       return "Record not found";
     case FailureKind::RecordInvalid:
       return "Record could not be read";
+    case FailureKind::RepoNotFound:
+      return "Repository not found";
+    case FailureKind::RepoInvalid:
+      return "Repository description could not be read";
     case FailureKind::UpstreamRejected:
       return "Server rejected the request";
     case FailureKind::RedirectRejected:
@@ -104,6 +108,12 @@ const char* FailureExplanation(FailureKind aKind) {
     case FailureKind::RecordInvalid:
       return "The repository server returned a response that could not be "
              "parsed as a record.";
+    case FailureKind::RepoNotFound:
+      return "The repository server reports that no repository exists for "
+             "this DID.";
+    case FailureKind::RepoInvalid:
+      return "The repository server returned a response that could not be "
+             "parsed as a repository description.";
     case FailureKind::UpstreamRejected:
       return "An upstream server returned a failure status; no gateway was "
              "tried.";
@@ -124,8 +134,9 @@ std::string RenderFailureHtml(const FailureInfo& aInfo) {
   html += "<title>Raindrop — ";
   html += EscapeHtml(FailureTitle(aInfo.mKind));
   html += "</title>\n<style>\n";
-  html += "body{font:16px/1.5 system-ui,sans-serif;max-width:46em;margin:3em "
-          "auto;padding:0 1em;color:#222}\n";
+  html +=
+      "body{font:16px/1.5 system-ui,sans-serif;max-width:46em;margin:3em "
+      "auto;padding:0 1em;color:#222}\n";
   html += "h1{font-size:1.5em}table{border-collapse:collapse;margin:1em 0}\n";
   html += "th,td{text-align:left;padding:.25em .75em;border:1px solid #ddd}\n";
   html += "th{color:#555}code{word-break:break-all}\n";
@@ -144,9 +155,10 @@ std::string RenderFailureHtml(const FailureInfo& aInfo) {
   AppendRow(html, "Detail", aInfo.mDetail);
   html += "</table>\n";
 
-  html += "<p class=\"hint\">Raindrop resolves records directly and does not "
-          "fall back to a gateway. Nothing was cached or sent to a third "
-          "party to repair this lookup.</p>\n";
+  html +=
+      "<p class=\"hint\">Raindrop resolves records directly and does not "
+      "fall back to a gateway. Nothing was cached or sent to a third "
+      "party to repair this lookup.</p>\n";
   html += "</body></html>\n";
   return html;
 }

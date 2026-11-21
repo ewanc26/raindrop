@@ -18,6 +18,8 @@ enum class FailureKind {
   PdsUnreachable,
   RecordNotFound,
   RecordInvalid,
+  RepoNotFound,
+  RepoInvalid,
   UpstreamRejected,
   RedirectRejected,
   NetworkError,
