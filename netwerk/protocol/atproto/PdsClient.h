@@ -33,6 +33,12 @@ PdsUrlError BuildGetRecordUrl(std::string_view aEndpoint,
 PdsUrlError BuildDescribeRepoUrl(std::string_view aEndpoint,
                                  std::string_view aRepo, std::string& aUrl);
 
+// Build a com.atproto.repo.listRecords request URL for a collection listing.
+PdsUrlError BuildListRecordsUrl(std::string_view aEndpoint,
+                                std::string_view aRepo,
+                                std::string_view aCollection,
+                                std::string& aUrl);
+
 // Build a com.atproto.sync.getBlob request URL for a record's blob reference.
 PdsUrlError BuildGetBlobUrl(std::string_view aEndpoint, std::string_view aRepo,
                             std::string_view aCid, std::string& aUrl);
