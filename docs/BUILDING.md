@@ -113,6 +113,15 @@ of RAM. A cold build without `ccache` is substantially slower. These numbers
 are observations on one machine, not a guarantee; CI runners with less disk
 need a larger volume mounted before building.
 
+The pristine `upstream` source (`0ab0e4d32a`, tag `firefox-160.0.1`) was also
+built from scratch with this tracked config: `./mach build` exited 0 and
+produced `obj-raindrop-unofficial/dist/bin/firefox`, with a 17 GB object
+directory. That run was interrupted by a harness timeout after about 10 minutes
+and then resumed incrementally, so its total wall time is not a clean
+single-pass figure; the 17 GB disk cost is the reliable observation. This is the
+local proof that untouched upstream still builds — CI reproduction is the
+remaining gap noted below.
+
 ## Upstream upgrades
 
 When Mozilla ships a new Firefox release, follow [docs/UPGRADING.md](UPGRADING.md).
