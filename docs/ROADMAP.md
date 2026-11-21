@@ -17,9 +17,11 @@ used, even if it is small.
       hosted runner with 14 GB of disk, so this stays open until one is
       registered.
 - [x] Design review of [ARCHITECTURE.md](ARCHITECTURE.md), especially the trust and
-      failure models. Handle authorities ([ADR 0003](decisions/0003-handle-authority-semantics.md))
-      and `did:web`/onion endpoints ([ADR 0004](decisions/0004-did-web-and-onion-endpoints.md))
-      are recorded; remaining open questions are tracked in the document.
+      failure models. Handle authorities ([ADR 0003](decisions/0003-handle-authority-semantics.md)),
+      `did:web`/onion endpoints ([ADR 0004](decisions/0004-did-web-and-onion-endpoints.md))
+      and the signed-off identity/freshness model
+      ([ADR 0005](decisions/0005-identity-authority-and-freshness-signoff.md))
+      are recorded; no design questions remain open.
 - [x] Decide the minimal patch surface: keep changes in an isolated `atproto/`
       module so rebases onto upstream are as small as possible
       ([ADR 0001](decisions/0001-at-uri-scheme-registration.md)).
