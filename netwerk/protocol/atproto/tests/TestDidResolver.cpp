@@ -114,6 +114,16 @@ TEST(DidResolver, RejectsBadDocuments) {
           R"({"id":"did:plc:abc","service":[{"id":"#atproto_pds","serviceEndpoint":"https://user@pds.example.com"}]})",
           did, service),
       PdsError::InvalidEndpoint);
+  EXPECT_EQ(
+      ExtractPdsEndpoint(
+          R"({"id":"did:plc:abc","service":[{"id":"#atproto_pds","serviceEndpoint":"https://pds.example.com/?x=1"}]})",
+          did, service),
+      PdsError::InvalidEndpoint);
+  EXPECT_EQ(
+      ExtractPdsEndpoint(
+          R"({"id":"did:plc:abc","service":[{"id":"#atproto_pds","serviceEndpoint":"https://pds.example.com#frag"}]})",
+          did, service),
+      PdsError::InvalidEndpoint);
   std::string tooLarge(kMaxDidDocumentLength + 1, ' ');
   EXPECT_EQ(ExtractPdsEndpoint(tooLarge, did, service), PdsError::TooLarge);
 }
