@@ -1,0 +1,238 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this file,
+# You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+# Issue #11: prove that a packaged Windows build actually ships raindrop's
+# branding resources. This is an artifact build, so compiled C++ comes from the
+# signed Firefox release revision in sourcestamp.txt; the UI resources,
+# preferences and installer resources under test are built from this tree.
+#
+# Unlike the self-hosted stock build in build-bootstrap.yml, this runs on an
+# ephemeral hosted runner and may use `pull_request`: it needs no secrets and
+# executes the PR's own workflow so the gate can be verified before merge.
+
+name: Windows package check
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-package-check-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package:
+    runs-on: windows-latest
+    steps:
+      - name: Check out raindrop source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install MozillaBuild
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $ProgressPreference = "SilentlyContinue"
+          $url = "https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-4.2.1.exe"
+          $installer = Join-Path $env:RUNNER_TEMP "MozillaBuildSetup-4.2.1.exe"
+          Invoke-WebRequest -Uri $url -OutFile $installer
+          $hash = (Get-FileHash -Algorithm SHA256 -Path $installer).Hash.ToLowerInvariant()
+          $expected = "8ef5b3d2087e4867dc75bf19f5e62f12e917f518239415723cc70896b6f1e3d8"
+          if ($hash -ne $expected) {
+            throw "MozillaBuild SHA-256 mismatch: $hash"
+          }
+          $process = Start-Process -FilePath $installer -ArgumentList "/S" -Wait -PassThru
+          if ($process.ExitCode -ne 0) {
+            throw "MozillaBuild installer exited with $($process.ExitCode)"
+          }
+          if (-not (Test-Path "C:\mozilla-build\msys2\msys2_shell.cmd")) {
+            throw "MozillaBuild did not install to C:\mozilla-build"
+          }
+
+      - name: Install Mozilla's signed NSIS package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $ProgressPreference = "SilentlyContinue"
+          $url = "https://github.com/mozilla-releng/adhoc-signing-blobs/raw/nsis/nsis-3.07-signed.zip"
+          $archive = Join-Path $env:RUNNER_TEMP "nsis-3.07-signed.zip"
+          Invoke-WebRequest -Uri $url -OutFile $archive
+          $hash = (Get-FileHash -Algorithm SHA256 -Path $archive).Hash.ToLowerInvariant()
+          $expected = "5856cd49b52870caa41814d71ce30c4304d5001b80c04f4eb7028ffedd91df7e"
+          if ($hash -ne $expected) {
+            throw "NSIS SHA-256 mismatch: $hash"
+          }
+          $extract = Join-Path $env:RUNNER_TEMP "nsis-extract"
+          if (Test-Path $extract) {
+            Remove-Item -Recurse -Force $extract
+          }
+          Expand-Archive -Path $archive -DestinationPath $extract
+          $destination = Join-Path $env:USERPROFILE ".mozbuild\nsis"
+          New-Item -ItemType Directory -Force -Path $destination | Out-Null
+          Copy-Item -Path (Join-Path $extract "nsis-3.07\*") -Destination $destination -Recurse -Force
+          if (-not (Test-Path (Join-Path $destination "bin\makensis.exe"))) {
+            throw "Pinned NSIS package did not provide makensis.exe"
+          }
+
+      - name: Install pinned Node.js
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $ProgressPreference = "SilentlyContinue"
+          $url = "https://nodejs.org/dist/v24.21.0/node-v24.21.0-win-x64.zip"
+          $archive = Join-Path $env:RUNNER_TEMP "node-v24.21.0-win-x64.zip"
+          Invoke-WebRequest -Uri $url -OutFile $archive
+          $hash = (Get-FileHash -Algorithm SHA256 -Path $archive).Hash.ToLowerInvariant()
+          $expected = "158f7685b44de51f6c0df1d153526cbcd3e1bc739a8dfc607721cef75de9e541"
+          if ($hash -ne $expected) {
+            throw "Node.js SHA-256 mismatch: $hash"
+          }
+          $extract = Join-Path $env:RUNNER_TEMP "node-extract"
+          if (Test-Path $extract) {
+            Remove-Item -Recurse -Force $extract
+          }
+          Expand-Archive -Path $archive -DestinationPath $extract
+          $destination = Join-Path $env:USERPROFILE ".mozbuild\node"
+          New-Item -ItemType Directory -Force -Path $destination | Out-Null
+          Copy-Item -Path (Join-Path $extract "node-v24.21.0-win-x64\*") -Destination $destination -Recurse -Force
+          if (-not (Test-Path (Join-Path $destination "node.exe"))) {
+            throw "Pinned Node.js package did not provide node.exe"
+          }
+
+      - name: Install pinned mozmake
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $ProgressPreference = "SilentlyContinue"
+          $url = "https://firefox-ci-tc.services.mozilla.com/api/queue/v1/task/R-T5euokQVyqBQMApzKOUA/artifacts/public/build/mozmake.tar.zst"
+          $archive = Join-Path $env:RUNNER_TEMP "mozmake.tar.zst"
+          Invoke-WebRequest -Uri $url -OutFile $archive
+          $hash = (Get-FileHash -Algorithm SHA256 -Path $archive).Hash.ToLowerInvariant()
+          $expected = "8a7dbefcfdb35cc7e96acc8c10fc91064ad1cadb9a808e9df8b1a708e9aeafe0"
+          if ($hash -ne $expected) {
+            throw "mozmake SHA-256 mismatch: $hash"
+          }
+          $extract = Join-Path $env:RUNNER_TEMP "mozmake-extract"
+          if (Test-Path $extract) {
+            Remove-Item -Recurse -Force $extract
+          }
+          New-Item -ItemType Directory -Force -Path $extract | Out-Null
+          tar -xf $archive -C $extract
+          $destination = Join-Path $env:USERPROFILE ".mozbuild\mozmake"
+          New-Item -ItemType Directory -Force -Path $destination | Out-Null
+          Copy-Item -Path (Join-Path $extract "mozmake\*") -Destination $destination -Recurse -Force
+          if (-not (Test-Path (Join-Path $destination "mozmake.exe"))) {
+            throw "Pinned mozmake package did not provide mozmake.exe"
+          }
+
+      - name: Install pinned 7-Zip
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $ProgressPreference = "SilentlyContinue"
+          $url = "https://firefox-ci-tc.services.mozilla.com/api/queue/v1/task/A7IAGKf8RLeiuUd6D8AWtg/artifacts/public/build/7zz.tar.zst"
+          $archive = Join-Path $env:RUNNER_TEMP "7zz.tar.zst"
+          Invoke-WebRequest -Uri $url -OutFile $archive
+          $hash = (Get-FileHash -Algorithm SHA256 -Path $archive).Hash.ToLowerInvariant()
+          $expected = "b34ecc2cc20babe4ebc18b54f53843ebc19797f8eca53ff5cb79dc33136e2563"
+          if ($hash -ne $expected) {
+            throw "7-Zip SHA-256 mismatch: $hash"
+          }
+          $extract = Join-Path $env:RUNNER_TEMP "7zz-extract"
+          if (Test-Path $extract) {
+            Remove-Item -Recurse -Force $extract
+          }
+          New-Item -ItemType Directory -Force -Path $extract | Out-Null
+          tar -xf $archive -C $extract
+          $destination = Join-Path $env:USERPROFILE ".mozbuild\7zz"
+          New-Item -ItemType Directory -Force -Path $destination | Out-Null
+          Copy-Item -Path (Join-Path $extract "7zz\*") -Destination $destination -Recurse -Force
+          if (-not (Test-Path (Join-Path $destination "7zz.exe"))) {
+            throw "Pinned 7-Zip package did not provide 7zz.exe"
+          }
+
+      - name: Derive pinned artifact revision
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $sourceLine = (Get-Content sourcestamp.txt -TotalCount 2)[1]
+          $revision = ($sourceLine -split '/')[-1].Trim()
+          if ($revision -notmatch '^[0-9a-f]{40}$') {
+            throw "sourcestamp.txt does not contain a 40-hex release revision: $sourceLine"
+          }
+          "MOZ_ARTIFACT_REVISION=$revision" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          Write-Host "Using Firefox artifacts from $revision"
+
+      - name: Build and package raindrop
+        shell: pwsh
+        env:
+          MOZCONFIG: ${{ github.workspace }}/build/raindrop-windows-artifact.mozconfig
+        run: |
+          $ErrorActionPreference = "Stop"
+          $env:PATH = "C:\mozilla-build\bin;$env:PATH"
+          $env:GMAKE = Join-Path $env:USERPROFILE ".mozbuild\mozmake\mozmake.exe"
+          $env:NODEJS = Join-Path $env:USERPROFILE ".mozbuild\node\node.exe"
+          $env:MAKENSISU = Join-Path $env:USERPROFILE ".mozbuild\nsis\bin\makensis.exe"
+          ${env:7Z} = Join-Path $env:USERPROFILE ".mozbuild\7zz\7zz.exe"
+          python .\mach build
+          python .\mach package
+
+      - name: Capture installer version resources
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $dist = Join-Path $env:GITHUB_WORKSPACE "obj-raindrop-win-artifact\dist"
+          $installer = Join-Path $env:GITHUB_WORKSPACE "obj-raindrop-win-artifact\browser\installer\windows\instgen\setup.exe"
+          if (-not (Test-Path $installer)) {
+            throw "No Windows installer executable was produced"
+          }
+          $helper = Join-Path $dist "bin\uninstall\helper.exe"
+          if (-not (Test-Path $helper)) {
+            throw "No uninstaller helper was produced"
+          }
+          function Get-VersionInfo([string] $Path) {
+            $info = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($Path)
+            return [ordered]@{
+              ProductName      = $info.ProductName
+              ProductVersion   = $info.ProductVersion
+              FileDescription  = $info.FileDescription
+              CompanyName      = $info.CompanyName
+              LegalCopyright   = $info.LegalCopyright
+              OriginalFilename = $info.OriginalFilename
+            }
+          }
+          $result = [ordered]@{
+            installer = Get-VersionInfo $installer
+            helper    = Get-VersionInfo $helper
+          }
+          $result | ConvertTo-Json -Depth 4 | Set-Content `
+            -Path (Join-Path $dist "installer-version-info.json") -Encoding UTF8
+
+      - name: Inspect packaged resources
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          python tools/raindrop/check_windows_package.py `
+            --objdir obj-raindrop-win-artifact `
+            --version-info obj-raindrop-win-artifact/dist/installer-version-info.json `
+            --artifact-build
+
+      - name: Upload Windows packages
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-package
+          path: |
+            obj-raindrop-win-artifact/dist/*.zip
+            obj-raindrop-win-artifact/dist/*.installer.exe
+            obj-raindrop-win-artifact/dist/installer-version-info.json
+            obj-raindrop-win-artifact/browser/installer/windows/instgen/defines.nsi
+          if-no-files-found: ignore
