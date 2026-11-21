@@ -56,7 +56,9 @@ The fork's approach:
   (`-brand-short-name = raindrop`, and so on) so no Mozilla mark survives in
   the UI. Community tooling can generate a full drop-in branding directory from
   SVG sources when the project reaches that stage (see the
-  FirefoxUX/firefox-brand generator).
+  FirefoxUX/firefox-brand generator). raindrop did not use that generator: its
+  `browser/branding/raindrop/` directory is drawn from scratch and documented
+  in [BRANDING.md](BRANDING.md).
 
 ### Practical checklist when the fork builds
 
@@ -65,11 +67,23 @@ The fork's approach:
 - [ ] `brand.ftl` brand strings set to raindrop names in all branding dirs
 - [ ] Update checks and any Mozilla-default endpoints disabled or pointed at
       raindrop targets, so the build never phones home as "Firefox"
-- [ ] This file and NOTICE kept in sync with the guidelines if Mozilla updates
-      them
+- [x] This file and NOTICE checked against the current guidelines on
+      2026-11-20 (see the review log below). Repeat immediately before the first
+      public release.
 
 If in doubt, write to trademark-permissions@mozilla.org; *before* any first
 public release is the cheapest time to check.
+
+### Guideline review log
+
+- **2026-11-20:** re-read Mozilla's
+  [distribution policy](https://www.mozilla.org/en-US/foundation/trademarks/distribution-policy/)
+  and [trademark policy](https://www.mozilla.org/en-US/foundation/trademarks/policy/).
+  Both confirm that the MPL grants no trademark rights and that modified builds
+  must not carry Mozilla marks. raindrop's distinct name, from-scratch artwork,
+  raindrop-only application identity and non-affiliation notice in
+  [NOTICE](../NOTICE) remain consistent with the guidance; no change needed.
+  Re-check when a release date is set.
 
 ## AT Protocol, atproto, and the Bluesky marks (Bluesky Social PBC)
 

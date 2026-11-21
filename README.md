@@ -70,12 +70,14 @@ fuller design reasoning is in
 
 The pristine Firefox 160.0 release source is imported on the `upstream` branch
 and tagged `firefox-160.0`; raindrop's work is the patch queue on `main`.
-There are no raindrop product patches yet: the first milestone is the build
-bootstrap and the remaining design decisions before touching Gecko code.
+There are no Gecko patches yet. The first product patch is a raindrop branding
+directory with original artwork; the build bootstrap and remaining design
+decisions come before touching Gecko code.
 
 - [Roadmap](docs/ROADMAP.md) - phased milestones from scaffold to first release
 - [Architecture](docs/ARCHITECTURE.md) - how an `at://` request flows through the browser
 - [Building](docs/BUILDING.md) - upstream source provenance and local build setup (work in progress)
+- [Branding](docs/BRANDING.md) - raindrop branding assets and trademark checklist
 
 ## Contributing
 

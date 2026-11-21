@@ -6,9 +6,13 @@
 
 mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-raindrop-unofficial
 
+# Release-tarball checkout: fetch pinned toolchains (clang, WASI sysroot) on
+# first build.
+ac_add_options --enable-bootstrap
+
 # Unbranded build: no Mozilla names, logos or trade dress. This is the
-# correct branding for local developer builds; release builds will select
-# browser/branding/raindrop instead (issue #11).
+# correct branding for local developer builds; use build/raindrop.mozconfig
+# to select the raindrop branding directory instead.
 ac_add_options --with-branding=browser/branding/unofficial
 
 # Uncomment for faster local iteration once the bootstrap build is proven:
