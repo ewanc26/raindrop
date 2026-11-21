@@ -47,7 +47,7 @@ python3.12 -m unittest discover -s tools/raindrop/tests
 python3.12 ./mach package
 ```
 
-The expected counts are 117 GTests across 12 suites, 45 atproto xpcshell checks,
+The expected counts are 122 GTests across 12 suites, 45 atproto xpcshell checks,
 22 browser-pref xpcshell checks and 66 offline tests. The second xpcshell test
 catches `MOZ_APP_NAME` and `appdir` harness mismatches introduced by rebranding;
 the mochitests catch app-ID gates that stop browser actors from starting, and

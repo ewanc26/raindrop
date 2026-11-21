@@ -62,6 +62,8 @@ fuller design reasoning is in
   parents, roots and quoted records become navigable `at://` links. Image blobs
   can be shown inline from the resolved PDS, with
   `network.atprotocol.record.showImages` to disable automatic image loads.
+  Like, repost and follow records get compact views whose subjects become
+  validated `at://` links (DID links for follows).
 - Verifiable content: records are fetched from their PDS and checked against their
   CID, which proves the record is intact and self-consistent with the CID the PDS
   returned. This is integrity, not a repository signature or proof of authorship.

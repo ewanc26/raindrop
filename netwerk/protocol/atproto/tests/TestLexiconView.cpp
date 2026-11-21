@@ -258,3 +258,59 @@ TEST(LexiconView, RendersProfileAvatarLink)
             std::string::npos);
   EXPECT_NE(html.find("&amp;cid=bafyreivalidcid"), std::string::npos);
 }
+
+TEST(LexiconView, RendersLikeSubjectLink)
+{
+  const std::string value =
+      R"({"createdAt":"2026-01-01T00:00:00Z",)"
+      R"("subject":{"uri":"at://did:plc:b/app.bsky.feed.post/k"}})";
+  std::string html = RenderLexiconSummary("app.bsky.feed.like", value);
+  EXPECT_FALSE(html.empty());
+  EXPECT_NE(html.find("2026-01-01T00:00:00Z"), std::string::npos);
+  EXPECT_NE(html.find("Liked"), std::string::npos);
+  EXPECT_NE(html.find("href=\"at://did:plc:b/app.bsky.feed.post/k\""),
+            std::string::npos);
+}
+
+TEST(LexiconView, RendersRepostSubjectLink)
+{
+  const std::string value =
+      R"({"subject":{"uri":"at://did:plc:c/app.bsky.feed.post/r"}})";
+  std::string html = RenderLexiconSummary("app.bsky.feed.repost", value);
+  EXPECT_FALSE(html.empty());
+  EXPECT_NE(html.find("Reposted"), std::string::npos);
+  EXPECT_NE(html.find("href=\"at://did:plc:c/app.bsky.feed.post/r\""),
+            std::string::npos);
+}
+
+TEST(LexiconView, RendersFollowSubjectLink)
+{
+  const std::string value = R"({"subject":"did:plc:d"})";
+  std::string html = RenderLexiconSummary("app.bsky.graph.follow", value);
+  EXPECT_FALSE(html.empty());
+  EXPECT_NE(html.find("Follows"), std::string::npos);
+  EXPECT_NE(html.find("href=\"at://did:plc:d\""), std::string::npos);
+}
+
+TEST(LexiconView, IgnoresInvalidSocialSubjects)
+{
+  const std::string like = R"({"subject":{"uri":"https://example.com/post"}})";
+  const std::string repost = R"({"subject":{"uri":"at://did:plc:x/bad key"}})";
+  const std::string follow = R"({"subject":"not-a-did"})";
+  EXPECT_EQ(RenderLexiconSummary("app.bsky.feed.like", like).find("<a href="),
+            std::string::npos);
+  EXPECT_EQ(
+      RenderLexiconSummary("app.bsky.feed.repost", repost).find("<a href="),
+      std::string::npos);
+  EXPECT_EQ(
+      RenderLexiconSummary("app.bsky.graph.follow", follow).find("<a href="),
+      std::string::npos);
+}
+
+TEST(LexiconView, EscapesSocialActionValues)
+{
+  const std::string value = R"({"createdAt":"<script>alert('x')</script>"})";
+  std::string html = RenderLexiconSummary("app.bsky.feed.like", value);
+  EXPECT_EQ(html.find("<script>"), std::string::npos);
+  EXPECT_NE(html.find("&lt;script&gt;"), std::string::npos);
+}
