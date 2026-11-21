@@ -35,7 +35,9 @@ at://did:plc:abc.../app.bsky.feed.post/3lz...
    PDS returned. Record responses dispatch on lexicon:
    - Known lexicons (Phase 3) get a bundled native view. Reply parents, roots
      and quoted records are validated with `ParseAtURI` and rendered as
-     normalized `at://` links.
+     normalized `at://` links. Like and repost subjects get the same treatment;
+     follow subjects are validated with `IsValidDid` and rendered as
+     authority-only `at://` links.
    - Everything else gets the generic record view (Phase 1) with the option to
    inspect raw JSON.
 6. **Verification (Phase 2).** The fetched bytes can be checked against the
@@ -120,8 +122,9 @@ deliver `at://`-as-infrastructure.** raindrop wants the second one.
   [ADR 0005](decisions/0005-identity-authority-and-freshness-signoff.md).
 - `did:web` trust rules and onion PDS endpoints:
   [ADR 0004](decisions/0004-did-web-and-onion-endpoints.md).
-- Minimum set of record lexicons with a dedicated view: `app.bsky.feed.post`
-  and `app.bsky.actor.profile`, with the generic field table as fallback.
+- Minimum set of record lexicons with a dedicated view: `app.bsky.feed.post`,
+  `app.bsky.actor.profile`, `app.bsky.feed.like`, `app.bsky.feed.repost` and
+  `app.bsky.graph.follow`, with the generic field table as fallback.
   Blob references show their CID and link to the resolved PDS's `getBlob`
   endpoint. Image blobs are also embedded lazily from that endpoint when
   `network.atprotocol.record.showImages` is enabled; the CID link remains
