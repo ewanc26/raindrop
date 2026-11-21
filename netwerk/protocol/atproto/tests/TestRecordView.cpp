@@ -61,6 +61,8 @@ TEST(RecordView, ReportsCidVerificationStatus) {
   std::string html = RenderRecordHtml(data, provenance);
   EXPECT_NE(html.find("CID verification"), std::string::npos);
   EXPECT_NE(html.find("Verified"), std::string::npos);
+  EXPECT_NE(html.find("integrity only, not a repository signature"),
+            std::string::npos);
 
   RecordViewData tampered;
   const std::string tamperedResponse =
@@ -91,6 +93,11 @@ TEST(RecordView, OptionalFields) {
             RecordViewError::None);
   EXPECT_TRUE(data.mCid.empty());
   EXPECT_TRUE(data.mLexicon.empty());
+
+  std::string html = RenderRecordHtml(
+      data, {"did:plc:a", "", "https://pds", "x.y.z", "k"});
+  EXPECT_EQ(html.find("integrity only, not a repository signature"),
+            std::string::npos);
 }
 
 TEST(RecordView, RendersProvenanceAndFields) {
