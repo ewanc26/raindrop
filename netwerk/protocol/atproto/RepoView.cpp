@@ -89,7 +89,8 @@ std::string EscapeHtml(std::string_view aText) {
   return out;
 }
 
-void AppendMeta(std::string& aHtml, const char* aLabel, std::string_view aValue) {
+void AppendMeta(std::string& aHtml, const char* aLabel,
+                std::string_view aValue) {
   if (aValue.empty()) {
     return;
   }
@@ -135,9 +136,14 @@ std::string RenderRepoHtml(const RepoViewData& aData,
   } else {
     html += "<ul>\n";
     for (const std::string& collection : aData.mCollections) {
-      html += "<li><code>";
+      html += "<li><a href=\"at://";
+      html +=
+          EscapeHtml(aProvenance.mDid.empty() ? aData.mDid : aProvenance.mDid);
+      html += "/";
       html += EscapeHtml(collection);
-      html += "</code></li>\n";
+      html += "\"><code>";
+      html += EscapeHtml(collection);
+      html += "</code></a></li>\n";
     }
     html += "</ul>\n";
   }

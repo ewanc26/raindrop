@@ -56,7 +56,7 @@ fuller design reasoning is in
 - Built-in DID resolution (`did:plc`, `did:web`) and PDS record fetching, with no
   gateway in the middle.
 - Repository summaries for authority-only addresses such as `at://ewancroft.uk`,
-  read directly from the PDS.
+  and collection listings for `at://did/collection`, read directly from the PDS.
 - Verifiable content: records are fetched from their PDS and checked against their
   CID, which proves the record is intact and self-consistent with the CID the PDS
   returned. This is integrity, not a repository signature or proof of authorship.

@@ -12,6 +12,7 @@ UNIFIED_SOURCES += [
 SOURCES += [
     "AtURI.cpp",
     "CidVerifier.cpp",
+    "CollectionView.cpp",
     "DidResolver.cpp",
     "ErrorView.cpp",
     "HandleResolver.cpp",

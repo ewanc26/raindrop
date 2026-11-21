@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <vector>
 
+#include "CollectionView.h"
 #include "DidResolver.h"
 #include "HandleResolver.h"
 #include "PdsClient.h"
@@ -286,7 +287,8 @@ AtRecordResolver::OnDataAvailable(nsIRequest* aRequest,
   }
 
   if (mPhase != Phase::Handle && mPhase != Phase::DidDocument &&
-      mPhase != Phase::Record && mPhase != Phase::Repo) {
+      mPhase != Phase::Record && mPhase != Phase::Repo &&
+      mPhase != Phase::Collection) {
     return NS_OK;
   }
 
@@ -294,10 +296,11 @@ AtRecordResolver::OnDataAvailable(nsIRequest* aRequest,
   nsresult rv = NS_ConsumeStream(aInputStream, aCount, chunk);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  size_t cap = mPhase == Phase::Handle   ? kMaxHandleResponseLength
-               : mPhase == Phase::Record ? kMaxRecordResponseLength
-               : mPhase == Phase::Repo   ? kMaxRepoResponseLength
-                                         : kMaxDidDocumentLength;
+  size_t cap = mPhase == Phase::Handle       ? kMaxHandleResponseLength
+               : mPhase == Phase::Record     ? kMaxRecordResponseLength
+               : mPhase == Phase::Repo       ? kMaxRepoResponseLength
+               : mPhase == Phase::Collection ? kMaxCollectionResponseLength
+                                             : kMaxDidDocumentLength;
   // Keep one byte past the cap: the parsers reject bodies larger than the cap,
   // so truncating exactly at the cap would turn an oversized response into a
   // valid-looking one.
@@ -320,7 +323,8 @@ AtRecordResolver::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
   }
 
   if (mPhase != Phase::Handle && mPhase != Phase::DidDocument &&
-      mPhase != Phase::Record && mPhase != Phase::Repo) {
+      mPhase != Phase::Record && mPhase != Phase::Repo &&
+      mPhase != Phase::Collection) {
     return NS_OK;
   }
 
@@ -342,6 +346,9 @@ AtRecordResolver::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
     case Phase::Repo:
       rv = OnRepoStop(aRequest, aStatus);
       break;
+    case Phase::Collection:
+      rv = OnCollectionStop(aRequest, aStatus);
+      break;
     default:
       return NS_OK;
   }
@@ -359,10 +366,11 @@ nsresult AtRecordResolver::CheckResponse(nsIRequest* aRequest,
 
   if (NS_FAILED(aStatus)) {
     FailureKind kind =
-        mPhase == Phase::Handle   ? FailureKind::HandleResolutionFailed
-        : mPhase == Phase::Record ? FailureKind::PdsUnreachable
-        : mPhase == Phase::Repo   ? FailureKind::PdsUnreachable
-                                  : FailureKind::DidResolutionFailed;
+        mPhase == Phase::Handle       ? FailureKind::HandleResolutionFailed
+        : mPhase == Phase::Record     ? FailureKind::PdsUnreachable
+        : mPhase == Phase::Repo       ? FailureKind::PdsUnreachable
+        : mPhase == Phase::Collection ? FailureKind::PdsUnreachable
+                                      : FailureKind::DidResolutionFailed;
     SetFailure(kind, "network request failed");
     return aStatus;
   }
@@ -377,6 +385,8 @@ nsresult AtRecordResolver::CheckResponse(nsIRequest* aRequest,
                              ? FailureKind::RecordNotFound
                          : mPhase == Phase::Repo && responseStatus == 404
                              ? FailureKind::RepoNotFound
+                         : mPhase == Phase::Collection && responseStatus == 404
+                             ? FailureKind::CollectionNotFound
                              : FailureKind::UpstreamRejected;
       SetFailure(kind, "HTTP " + std::to_string(responseStatus));
       return NS_ERROR_NOT_AVAILABLE;
@@ -458,7 +468,7 @@ nsresult AtRecordResolver::OnDidDocumentStop(nsIRequest* aRequest,
 
   mPds = service.mEndpoint;
 
-  if (!mUri.mHasCollection || !mUri.mHasRecordKey) {
+  if (!mUri.mHasCollection) {
     std::string url;
     PdsUrlError uerr = BuildDescribeRepoUrl(service.mEndpoint, mDid, url);
     if (uerr != PdsUrlError::None) {
@@ -468,6 +478,18 @@ nsresult AtRecordResolver::OnDidDocumentStop(nsIRequest* aRequest,
       return NS_ERROR_FAILURE;
     }
     return StartFetch(url, Phase::Repo);
+  }
+
+  if (!mUri.mHasRecordKey) {
+    std::string url;
+    PdsUrlError uerr =
+        BuildListRecordsUrl(service.mEndpoint, mDid, mUri.mCollection, url);
+    if (uerr != PdsUrlError::None) {
+      AT_LOG(("atproto: listRecords URL failed (%s)\n", PdsUrlErrorName(uerr)));
+      SetFailure(FailureKind::DidDocumentRejected, PdsUrlErrorName(uerr));
+      return NS_ERROR_FAILURE;
+    }
+    return StartFetch(url, Phase::Collection);
   }
 
   std::string url;
@@ -519,6 +541,25 @@ nsresult AtRecordResolver::OnRepoStop(nsIRequest* aRequest, nsresult aStatus) {
 
   return DeliverHtml(
       RenderRepoHtml(data, RepoViewProvenance{mDid, mHandle, mPds}));
+}
+
+nsresult AtRecordResolver::OnCollectionStop(nsIRequest* aRequest,
+                                            nsresult aStatus) {
+  nsresult rv = CheckResponse(aRequest, aStatus);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  CollectionViewData data;
+  CollectionViewError verr = ParseCollectionResponse(
+      std::string_view(mBody.BeginReading(), mBody.Length()), data);
+  if (verr != CollectionViewError::None) {
+    AT_LOG(("atproto: collection view failed (%s)\n",
+            CollectionViewErrorName(verr)));
+    SetFailure(FailureKind::CollectionInvalid, CollectionViewErrorName(verr));
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return DeliverHtml(RenderCollectionHtml(
+      data, CollectionViewProvenance{mDid, mHandle, mPds, mUri.mCollection}));
 }
 
 nsresult AtRecordResolver::DeliverHtml(std::string_view aHtml) {
