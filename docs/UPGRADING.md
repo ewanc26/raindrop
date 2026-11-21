@@ -98,7 +98,13 @@ check against a saved product-details payload. Its logic is covered by
      ./mach gtest "$suite.*" || exit 1
    done
    ./mach xpcshell-test netwerk/protocol/atproto/tests/test_at_protocol.js
+   ./mach xpcshell-test browser/components/places/tests/unit/test_browserGlue_prefs.js
+   python3.12 -m unittest discover -s tools/raindrop/tests
    ```
+
+   The second xpcshell test catches test-harness regressions caused by the
+   rebranded `MOZ_APP_NAME`; the offline suite guards branding and harness
+   aliases that a rebase can silently restore to Firefox values.
 
 5. **Record and publish.** Update the version table and hash in
    `docs/BUILDING.md`, then push `upstream`, `main`, the new `firefox-$V` tag,

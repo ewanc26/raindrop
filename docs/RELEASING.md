@@ -35,14 +35,17 @@ export MOZCONFIG="$PWD/build/raindrop.mozconfig"
 ./mach build
 python3.12 ./mach gtest 'AtURI.*:DidResolver.*:PdsClient.*:HandleResolver.*:RecordView.*:CidVerifier.*:ErrorView.*:PrivacyFlags.*:LexiconView.*:AtRecordResolver.*'
 ./mach xpcshell-test netwerk/protocol/atproto/tests/test_at_protocol.js
+./mach xpcshell-test browser/components/places/tests/unit/test_browserGlue_prefs.js
 python3.12 -m unittest discover -s tools/raindrop/tests
 python3.12 ./mach package
 ```
 
-The expected counts are 73 GTests across 10 suites, 27 xpcshell checks and the
-full offline suite. GTest suites must be passed as one colon-separated
-argument; separate invocations can report a false green. Confirm `./mach
-format` and `git diff --check` are clean.
+The expected counts are 73 GTests across 10 suites, 27 atproto xpcshell checks,
+22 browser-pref xpcshell checks and 39 offline tests. The second xpcshell test
+catches `MOZ_APP_NAME` and `appdir` harness mismatches introduced by rebranding.
+GTest suites must be passed as one colon-separated argument; separate
+invocations can report a false green. Confirm `./mach format` and
+`git diff --check` are clean.
 
 Inspect the produced DMG before tagging: the app bundle must carry raindrop's
 vendor, name and remoting name, disabled update/telemetry prefs, the `RDRO`
