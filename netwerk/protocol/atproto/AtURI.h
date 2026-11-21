@@ -18,6 +18,7 @@ enum class AtURIError {
   InvalidAuthority,
   InvalidCollection,
   InvalidRecordKey,
+  InvalidCursor,
   InvalidPath,
 };
 
@@ -27,9 +28,11 @@ struct AtURI final {
   std::string mAuthority;
   std::string mCollection;
   std::string mRecordKey;
+  std::string mCursor;
   std::string mFragment;
   bool mHasCollection = false;
   bool mHasRecordKey = false;
+  bool mHasCursor = false;
   bool mHasFragment = false;
 };
 
@@ -40,6 +43,7 @@ bool IsValidHandle(std::string_view aHandle);
 bool IsValidDid(std::string_view aDid);
 bool IsValidNsid(std::string_view aNsid);
 bool IsValidRecordKey(std::string_view aRecordKey);
+bool IsValidCursorToken(std::string_view aToken);
 
 }  // namespace mozilla::net::atproto
 
