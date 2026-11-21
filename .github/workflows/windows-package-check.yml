@@ -82,6 +82,31 @@ jobs:
             throw "Pinned NSIS package did not provide makensis.exe"
           }
 
+      - name: Install pinned Node.js
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $ProgressPreference = "SilentlyContinue"
+          $url = "https://nodejs.org/dist/v24.21.0/node-v24.21.0-win-x64.zip"
+          $archive = Join-Path $env:RUNNER_TEMP "node-v24.21.0-win-x64.zip"
+          Invoke-WebRequest -Uri $url -OutFile $archive
+          $hash = (Get-FileHash -Algorithm SHA256 -Path $archive).Hash.ToLowerInvariant()
+          $expected = "158f7685b44de51f6c0df1d153526cbcd3e1bc739a8dfc607721cef75de9e541"
+          if ($hash -ne $expected) {
+            throw "Node.js SHA-256 mismatch: $hash"
+          }
+          $extract = Join-Path $env:RUNNER_TEMP "node-extract"
+          if (Test-Path $extract) {
+            Remove-Item -Recurse -Force $extract
+          }
+          Expand-Archive -Path $archive -DestinationPath $extract
+          $destination = Join-Path $env:USERPROFILE ".mozbuild\node"
+          New-Item -ItemType Directory -Force -Path $destination | Out-Null
+          Copy-Item -Path (Join-Path $extract "node-v24.21.0-win-x64\*") -Destination $destination -Recurse -Force
+          if (-not (Test-Path (Join-Path $destination "node.exe"))) {
+            throw "Pinned Node.js package did not provide node.exe"
+          }
+
       - name: Derive pinned artifact revision
         shell: pwsh
         run: |

@@ -207,6 +207,15 @@ class WindowsWorkflowWiringTests(unittest.TestCase):
         )
         self.assertIn(".mozbuild\\nsis", text)
 
+    def test_workflow_installs_pinned_node(self):
+        text = WORKFLOW.read_text()
+        self.assertIn("node-v24.21.0-win-x64.zip", text)
+        self.assertIn(
+            "158f7685b44de51f6c0df1d153526cbcd3e1bc739a8dfc607721cef75de9e541",
+            text,
+        )
+        self.assertIn(".mozbuild\\node", text)
+
 
 if __name__ == "__main__":
     unittest.main()
