@@ -49,6 +49,28 @@ TEST(RecordView, ParsesEnvelope) {
   EXPECT_EQ(data.mRawJson, kResponse);
 }
 
+TEST(RecordView, ReportsCidVerificationStatus) {
+  RecordViewData data;
+  const std::string response =
+      R"({"cid":"bafyreiba432alns2ilh32ovfgepvret2oys27j3dzxxuko3wmddnh5x5ga",)"
+      R"("value":{"$type":"app.bsky.feed.post","text":"hello","replyCount":3}})";
+  ASSERT_EQ(ParseRecordResponse(response, data), RecordViewError::None);
+  EXPECT_EQ(data.mCidStatus, CidStatus::Verified);
+
+  RecordViewProvenance provenance{"did:plc:a", "", "https://pds", "x.y.z", "k"};
+  std::string html = RenderRecordHtml(data, provenance);
+  EXPECT_NE(html.find("CID verification"), std::string::npos);
+  EXPECT_NE(html.find("Verified"), std::string::npos);
+
+  RecordViewData tampered;
+  const std::string tamperedResponse =
+      R"({"cid":"bafyreiba432alns2ilh32ovfgepvret2oys27j3dzxxuko3wmddnh5x5ga",)"
+      R"("value":{"text":"tampered","replyCount":3}})";
+  ASSERT_EQ(ParseRecordResponse(tamperedResponse, tampered),
+            RecordViewError::None);
+  EXPECT_EQ(tampered.mCidStatus, CidStatus::Mismatch);
+}
+
 TEST(RecordView, RejectsBadEnvelopes) {
   RecordViewData data;
   EXPECT_EQ(ParseRecordResponse("not json", data),
