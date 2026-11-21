@@ -66,16 +66,20 @@ The fork's approach:
 
 ### Practical checklist when the fork builds
 
-- [ ] Binary, installer, and packaged app names contain no Mozilla mark
-- [ ] Icons and about screens use raindrop-brand assets only
-- [ ] `brand.ftl` brand strings set to raindrop names in all branding dirs
-- [ ] Update checks and any Mozilla-default endpoints disabled or pointed at
-      raindrop targets, so the build never phones home as "Firefox"
+- [ ] Binary, installer, and packaged app names contain no Mozilla mark.
+      Verified for the macOS package; Windows resources still need inspection
+      on a Windows runner.
+- [ ] Icons and about screens use raindrop-brand assets only.
+- [ ] `brand.ftl` brand strings set to raindrop names in all branding dirs.
+      The release path uses `browser/branding/raindrop`; upstream's `unofficial`
+      fallback remains local-development-only.
+- [x] Update checks and any Mozilla-default endpoints disabled or pointed at
+      raindrop targets, so the build never phones home as "Firefox".
 - [x] This file and NOTICE checked against the current guidelines on
-      2026-11-20 (see the review log below). Repeat immediately before the first
-      public release.
+      2026-11-20 and re-checked on 2026-11-21 (see the review log below).
+      Human sign-off is still required before the first public release.
 
-If in doubt, write to trademark-permissions@mozilla.org; *before* any first
+If in doubt, write to trademark-permissions@mozilla.com; *before* any first
 public release is the cheapest time to check.
 
 ### Guideline review log
@@ -88,6 +92,14 @@ public release is the cheapest time to check.
   raindrop-only application identity and non-affiliation notice in
   [NOTICE](../NOTICE) remain consistent with the guidance; no change needed.
   Re-check when a release date is set.
+- **2026-11-21:** re-read the same two pages before the first release. The
+  operative statements are unchanged: MPL section 2.1 grants rights "under
+  intellectual property rights (other than patent or trademark)", and the
+  distribution policy says a modified product may not be redistributed "using
+  any Mozilla trademark" without prior written consent. The pages give
+  `trademark-permissions@mozilla.com`, so the contact address earlier in this
+  file was corrected from `@mozilla.org`. No branding change is required;
+  human sign-off remains outstanding.
 
 ## AT Protocol, atproto, and the Bluesky marks (Bluesky Social PBC)
 
