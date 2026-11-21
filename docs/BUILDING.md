@@ -6,12 +6,12 @@ raindrop tracks signed Firefox release source. The current import is:
 
 | Item | Value |
 | --- | --- |
-| Upstream version | Firefox 160.0 |
-| Tarball | https://archive.mozilla.org/pub/firefox/releases/160.0/source/firefox-160.0.source.tar.xz |
-| SHA-256 | `2b23d2bf6716ea16b45c10aa5c275c78a1d7ff50ad53150809ab27424c58fd81` |
+| Upstream version | Firefox 160.0.1 |
+| Tarball | https://archive.mozilla.org/pub/firefox/releases/160.0.1/source/firefox-160.0.1.source.tar.xz |
+| SHA-256 | `7b9d95ddf24f7bbf5d0d05698bc02a66dac1eca438f80e093c5c76af7648b06d` |
 | Signature | Good signature from Mozilla Software Releases `<release@mozilla.com>` |
 | Signing subkey | `827E 6586 0867 9618 CD34 9F93 678E 455D 7676 7AA3` |
-| Git import | `upstream` branch, tag `firefox-160.0` |
+| Git import | `upstream` branch, tag `firefox-160.0.1` |
 
 `upstream` contains only pristine imports; raindrop changes are the patch queue
 on `main`. To verify a tarball yourself:
@@ -19,9 +19,9 @@ on `main`. To verify a tarball yourself:
 ```sh
 curl -fsSL https://packages.mozilla.org/rpm/firefox/signing-key.gpg -o mozilla-signing-key.gpg
 gpg --dearmor < mozilla-signing-key.gpg > mozilla-keyring.gpg
-curl -fsSLO https://archive.mozilla.org/pub/firefox/releases/160.0/source/firefox-160.0.source.tar.xz{,.asc}
-gpgv --keyring mozilla-keyring.gpg firefox-160.0.source.tar.xz.asc firefox-160.0.source.tar.xz
-shasum -a 256 firefox-160.0.source.tar.xz
+curl -fsSLO https://archive.mozilla.org/pub/firefox/releases/160.0.1/source/firefox-160.0.1.source.tar.xz{,.asc}
+gpgv --keyring ./mozilla-keyring.gpg firefox-160.0.1.source.tar.xz.asc firefox-160.0.1.source.tar.xz
+shasum -a 256 firefox-160.0.1.source.tar.xz
 ```
 
 Check the key fingerprints against Mozilla's published values before trusting
@@ -60,13 +60,42 @@ export MOZCONFIG="$PWD/build/raindrop-unofficial.mozconfig"
 `build/raindrop-unofficial.mozconfig` deliberately selects `unofficial`
 branding so no Mozilla trademarked names or artwork appear in local builds.
 A root-level `.mozconfig` is gitignored upstream, which is why the tracked
-config lives under `build/` and is selected with `MOZCONFIG`.
+config lives under `build/` and is selected with `MOZCONFIG`. Its exact
+contents are:
+
+```sh
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-raindrop-unofficial
+
+# Unbranded build: no Mozilla names, logos or trade dress. This is the
+# correct branding for local developer builds; release builds will select
+# browser/branding/raindrop instead (issue #11).
+ac_add_options --with-branding=browser/branding/unofficial
+```
+
+(`browser/config/mozconfig` is sourced by the tree itself and supplies
+`--enable-project=browser`; the fork config does not need to repeat it.)
 
 To produce a distributable archive rather than the development `.app` bundle:
 
 ```sh
 ./mach package
 ```
+
+## Observed build cost
+
+Measured on macOS with Apple silicon, 10 cores / 24 GB RAM, `ccache` warm and
+the `obj-raindrop` object directory:
+
+| Build | Wall time | Object directory |
+| --- | --- | --- |
+| First full build | 23 min 41 s | 23 GB |
+| Later full rebuild | 16 min 40 s | 23 GB |
+| Incremental rebuild (a few C++ files) | 16–29 s | 23 GB |
+
+Budget at least 30 GB of free disk for the object directory alone, and 8 GB+
+of RAM. A cold build without `ccache` is substantially slower. These numbers
+are observations on one machine, not a guarantee; CI runners with less disk
+need a larger volume mounted before building.
 
 ## Upstream upgrades
 
@@ -78,6 +107,15 @@ the check reads.
 
 ## Status
 
-The stock build and CI job are still to be completed under
-[issue #10](https://github.com/ewanc26/raindrop/issues/10). Observed build
-times and disk usage will be recorded here once that bootstrap has been timed.
+The tracked mozconfig's options were verified with a fresh `mach configure` in
+an empty object directory. `main` carries no source-code changes relative to `upstream`
+(only docs, branding configuration and repository metadata), so the tree built
+by these commands is the pristine Firefox 160.0.1 source. The remaining gap under
+[issue #10](https://github.com/ewanc26/raindrop/issues/10) is CI: the
+`Build bootstrap` workflow builds the `upstream` branch on every push and pull
+request, but a full Firefox build needs 30 GB+ of disk, so the job is gated on
+a self-hosted runner selected by the `RAINDROP_BUILD_RUNNER` repository
+variable. Without that variable the job is skipped rather than failing on a
+hosted runner that cannot fit the build. The source revision itself comes from
+the signed `firefox-160.0.1` tag (overridable with `RAINDROP_UPSTREAM_TAG`), as
+required by [ADR 0002](decisions/0002-upstream-tracking.md).
