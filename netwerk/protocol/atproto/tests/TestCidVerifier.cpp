@@ -63,6 +63,17 @@ TEST(CidVerifier, RejectsInvalidCids) {
             CidStatus::InvalidCid);
 }
 
+TEST(CidVerifier, RejectsNonCanonicalTrailingZeroDigit) {
+  Json::Value value = ParseJson(
+      R"({"$type":"app.bsky.feed.post","text":"hello","replyCount":3})");
+  const std::string cid =
+      "bafyreiba432alns2ilh32ovfgepvret2oys27j3dzxxuko3wmddnh5x5ga";
+  EXPECT_EQ(cid.size(), size_t(59));
+  EXPECT_EQ(VerifyRecordCid(cid, value), CidStatus::Verified);
+  EXPECT_EQ(VerifyRecordCid(cid + "a", value), CidStatus::InvalidCid);
+  EXPECT_EQ(VerifyRecordCid(cid + "aa", value), CidStatus::InvalidCid);
+}
+
 TEST(CidVerifier, RejectsUnsupportedFloats) {
   Json::Value value = ParseJson(R"({"n":1.5})");
   const std::string cid =
