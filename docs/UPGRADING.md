@@ -94,7 +94,7 @@ check against a saved product-details payload. Its logic is covered by
 
    ```sh
    MOZCONFIG=build/raindrop-unofficial.mozconfig ./mach build
-   for suite in AtURI DidResolver PdsClient HandleResolver RecordView CidVerifier ErrorView PrivacyFlags LexiconView; do
+   for suite in AtURI DidResolver PdsClient HandleResolver RecordView CidVerifier ErrorView PrivacyFlags LexiconView AtRecordResolver; do
      ./mach gtest "$suite.*" || exit 1
    done
    ./mach xpcshell-test netwerk/protocol/atproto/tests/test_at_protocol.js
