@@ -49,9 +49,13 @@ The fork's approach:
 - raindrop owns a `browser/branding/raindrop/` directory (icons, product
   names, prefs) selected in the mozconfig via
   `ac_add_options --with-branding=browser/branding/raindrop`.
-- Local developer builds intentionally fall back to `unofficial` branding,
-  which already strips trademarked names and artwork — the correct behaviour
-  for unbranded local builds of the fork.
+- With no `--with-branding` option, `browser/confvars.sh` falls back to
+  upstream's `browser/branding/unofficial`, and the stock-build mozconfig
+  selects it explicitly. That directory is upstream's developer branding and
+  still contains Nightly/Firefox/Mozilla brand strings, so it is suitable only
+  for local development, not for distributing raindrop. raindrop's
+  `browser/moz.configure` forces the raindrop vendor/id for all browser builds,
+  but release builds must still select `build/raindrop.mozconfig` explicitly.
 - `brand.ftl` style brand strings must be filled with raindrop's own names
   (`-brand-short-name = raindrop`, and so on) so no Mozilla mark survives in
   the UI. Community tooling can generate a full drop-in branding directory from
