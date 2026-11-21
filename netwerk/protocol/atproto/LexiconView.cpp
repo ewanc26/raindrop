@@ -174,6 +174,46 @@ void AppendReferences(std::string& aHtml, const Json::Value& aValue) {
   aHtml += "</ul></div>\n";
 }
 
+void AppendDidLink(std::string& aHtml, std::string_view aLabel,
+                   const Json::Value& aDid) {
+  if (!aDid.isString() || !IsValidDid(aDid.asString())) {
+    return;
+  }
+  std::string uri = "at://" + aDid.asString();
+  aHtml += "<li><strong>";
+  aHtml += EscapeHtml(aLabel);
+  aHtml += "</strong>: <a href=\"";
+  aHtml += EscapeHtml(uri);
+  aHtml += "\">";
+  aHtml += EscapeHtml(uri);
+  aHtml += "</a></li>\n";
+}
+
+std::string RenderSocialAction(const Json::Value& aValue,
+                               std::string_view aLexicon) {
+  const char* label = aLexicon == "app.bsky.feed.like"     ? "Liked"
+                      : aLexicon == "app.bsky.feed.repost" ? "Reposted"
+                                                           : "Follows";
+  std::string html;
+  html += "<section class=\"lexicon\">\n<table>\n";
+  AppendString(html, aValue, "createdAt", "Date");
+  html += "</table>\n";
+
+  std::string items;
+  if (aLexicon == "app.bsky.graph.follow") {
+    AppendDidLink(items, label, aValue["subject"]);
+  } else {
+    AppendReference(items, label, aValue["subject"]);
+  }
+  if (!items.empty()) {
+    html += "<div class=\"refs\"><ul>\n";
+    html += items;
+    html += "</ul></div>\n";
+  }
+  html += "</section>\n";
+  return html;
+}
+
 std::string RenderPost(const Json::Value& aValue,
                        const LexiconViewProvenance& aProvenance) {
   std::string html;
@@ -235,7 +275,9 @@ std::string RenderLexiconSummary(std::string_view aLexicon,
                                  std::string_view aValueJson,
                                  const LexiconViewProvenance& aProvenance) {
   if (aLexicon != "app.bsky.feed.post" &&
-      aLexicon != "app.bsky.actor.profile") {
+      aLexicon != "app.bsky.actor.profile" &&
+      aLexicon != "app.bsky.feed.like" && aLexicon != "app.bsky.feed.repost" &&
+      aLexicon != "app.bsky.graph.follow") {
     return {};
   }
 
@@ -249,8 +291,13 @@ std::string RenderLexiconSummary(std::string_view aLexicon,
     return {};
   }
 
-  return aLexicon == "app.bsky.feed.post" ? RenderPost(value, aProvenance)
-                                          : RenderProfile(value, aProvenance);
+  if (aLexicon == "app.bsky.feed.post") {
+    return RenderPost(value, aProvenance);
+  }
+  if (aLexicon == "app.bsky.actor.profile") {
+    return RenderProfile(value, aProvenance);
+  }
+  return RenderSocialAction(value, aLexicon);
 }
 
 }  // namespace mozilla::net::atproto
