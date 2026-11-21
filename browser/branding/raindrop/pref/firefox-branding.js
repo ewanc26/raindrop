@@ -28,4 +28,9 @@ pref("app.normandy.enabled", false);
 pref("browser.topsites.contile.enabled", false);
 pref("security.certerrors.mitm.priming.enabled", false);
 
+// New-tab ads (MARS) would reach ads.mozilla.org on a normal new tab.
+pref("browser.newtabpage.activity-stream.unifiedAds.spocs.enabled", false);
+pref("browser.newtabpage.activity-stream.unifiedAds.tiles.enabled", false);
+pref("browser.newtabpage.activity-stream.unifiedAds.endpoint", "");
+
 pref("devtools.selfxss.count", 5);
