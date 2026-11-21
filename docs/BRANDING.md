@@ -7,10 +7,12 @@ selected with:
 export MOZCONFIG="$PWD/build/raindrop.mozconfig"
 ```
 
-`build/raindrop-unofficial.mozconfig` remains the default for local developer
-builds: with no `--with-branding` option Firefox falls back to
-`browser/branding/unofficial`, which is intentional (see
-[TRADEMARKS.md](TRADEMARKS.md)).
+`build/raindrop-unofficial.mozconfig` is for stock-source bootstrap builds: it
+selects upstream's `browser/branding/unofficial` explicitly, and with no
+`--with-branding` option `browser/confvars.sh` falls back to the same directory.
+Upstream's `unofficial` branding is a local-development fallback and still
+contains Nightly/Firefox/Mozilla brand strings; it is not for distributing
+raindrop. Release builds use `build/raindrop.mozconfig`.
 
 ## Artwork provenance
 
