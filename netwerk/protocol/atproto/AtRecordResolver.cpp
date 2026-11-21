@@ -482,8 +482,8 @@ nsresult AtRecordResolver::OnDidDocumentStop(nsIRequest* aRequest,
 
   if (!mUri.mHasRecordKey) {
     std::string url;
-    PdsUrlError uerr =
-        BuildListRecordsUrl(service.mEndpoint, mDid, mUri.mCollection, url);
+    PdsUrlError uerr = BuildListRecordsUrl(service.mEndpoint, mDid,
+                                           mUri.mCollection, mUri.mCursor, url);
     if (uerr != PdsUrlError::None) {
       AT_LOG(("atproto: listRecords URL failed (%s)\n", PdsUrlErrorName(uerr)));
       SetFailure(FailureKind::DidDocumentRejected, PdsUrlErrorName(uerr));
@@ -559,7 +559,8 @@ nsresult AtRecordResolver::OnCollectionStop(nsIRequest* aRequest,
   }
 
   return DeliverHtml(RenderCollectionHtml(
-      data, CollectionViewProvenance{mDid, mHandle, mPds, mUri.mCollection}));
+      data, CollectionViewProvenance{mDid, mHandle, mPds, mUri.mCollection,
+                                     mUri.mCursor}));
 }
 
 nsresult AtRecordResolver::DeliverHtml(std::string_view aHtml) {

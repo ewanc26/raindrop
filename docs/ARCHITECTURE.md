@@ -24,7 +24,11 @@ at://did:plc:abc.../app.bsky.feed.post/3lz...
 4. **Fetch.** A full record URI calls `com.atproto.repo.getRecord` on the PDS
    for the collection and rkey. An authority-only URI calls
    `com.atproto.repo.describeRepo` to describe the repository, and a
-   collection URI calls `com.atproto.repo.listRecords`.
+   collection URI calls `com.atproto.repo.listRecords`. A page token from a
+   PDS cursor is carried as an explicit `at://did/collection/cursor/<token>`
+   segment; query parameters are not part of the AT-URI grammar, and a
+   fragment-only change would be treated as a same-document navigation instead
+   of a new fetch.
 5. **Rendering.** A repository description renders a summary whose advertised
    collections link to collection listings. A collection listing renders
    escaped record links built from the resolved DID, never from the URI the
