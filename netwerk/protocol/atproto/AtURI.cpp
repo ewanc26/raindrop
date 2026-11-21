@@ -49,18 +49,6 @@ bool StartsWith(std::string_view aValue, std::string_view aPrefix) {
   return aValue.substr(0, aPrefix.size()) == aPrefix;
 }
 
-bool StartsWithIgnoreCase(std::string_view aValue, std::string_view aPrefix) {
-  if (aValue.size() < aPrefix.size()) {
-    return false;
-  }
-  for (size_t i = 0; i < aPrefix.size(); ++i) {
-    if (ToLowerAscii(aValue[i]) != ToLowerAscii(aPrefix[i])) {
-      return false;
-    }
-  }
-  return true;
-}
-
 std::string LowerAscii(std::string_view aValue) {
   std::string result(aValue);
   for (char& c : result) {
@@ -83,50 +71,30 @@ std::vector<std::string_view> Split(std::string_view aValue, char aSeparator) {
   }
 }
 
-bool DecodeUnreserved(std::string_view aInput, std::string& aOutput) {
-  aOutput.clear();
-  for (size_t i = 0; i < aInput.size(); ++i) {
-    char c = aInput[i];
-    if (c != '%') {
-      aOutput.push_back(c);
+bool HasDuplicateHexEncoding(std::string_view aIdentifier) {
+  for (size_t i = 0; i + 4 < aIdentifier.size(); ++i) {
+    if (aIdentifier[i] != '%' || ToUpperAscii(aIdentifier[i + 1]) != '2' ||
+        ToUpperAscii(aIdentifier[i + 2]) != '5') {
       continue;
     }
-    if (i + 2 >= aInput.size() || !IsHexDigit(aInput[i + 1]) ||
-        !IsHexDigit(aInput[i + 2])) {
-      return false;
-    }
-    char decoded = static_cast<char>(
-        (IsDigit(aInput[i + 1]) ? aInput[i + 1] - '0'
-                                : ToUpperAscii(aInput[i + 1]) - 'A' + 10) *
-            16 +
-        (IsDigit(aInput[i + 2]) ? aInput[i + 2] - '0'
-                                : ToUpperAscii(aInput[i + 2]) - 'A' + 10));
-    if (IsUnreserved(decoded)) {
-      aOutput.push_back(decoded);
-    } else {
-      aOutput.push_back('%');
-      aOutput.push_back(ToUpperAscii(aInput[i + 1]));
-      aOutput.push_back(ToUpperAscii(aInput[i + 2]));
-    }
-    i += 2;
-  }
-  return true;
-}
-
-bool HasUppercaseHexTriplets(std::string_view aValue) {
-  for (size_t i = 0; i + 2 < aValue.size(); ++i) {
-    if (aValue[i] == '%') {
-      if (!IsHexDigit(aValue[i + 1]) || !IsHexDigit(aValue[i + 2])) {
-        return false;
-      }
-      i += 2;
+    if (IsHexDigit(aIdentifier[i + 3]) && IsHexDigit(aIdentifier[i + 4])) {
+      return true;
     }
   }
-  return true;
+  return false;
 }
 
 std::string NormalizeDid(std::string_view aDid) {
   std::string result(aDid);
+  if (StartsWith(result, "did:web:")) {
+    for (size_t i = 8; i < result.size(); ++i) {
+      if (result[i] == '%' && i + 2 < result.size()) {
+        i += 2;
+        continue;
+      }
+      result[i] = ToLowerAscii(result[i]);
+    }
+  }
   for (size_t i = 0; i + 2 < result.size(); ++i) {
     if (result[i] == '%') {
       result[i + 1] = ToUpperAscii(result[i + 1]);
@@ -222,6 +190,9 @@ bool IsValidDid(std::string_view aDid) {
   }
   auto method = remainder.substr(0, separator);
   auto identifier = remainder.substr(separator + 1);
+  if (HasDuplicateHexEncoding(identifier)) {
+    return false;
+  }
   for (char c : method) {
     if (c < 'a' || c > 'z') {
       return false;
@@ -319,25 +290,20 @@ bool IsValidCursorToken(std::string_view aToken) {
   return true;
 }
 
-AtURIError ParseAtURI(std::string_view aSpec, AtURI& aResult) {
+AtURIError ParseAtURIInternal(std::string_view aSpec, bool aAllowCursor,
+                              AtURI& aResult) {
   aResult = AtURI{};
   if (aSpec.size() > kMaxURILength) {
     return AtURIError::TooLong;
   }
-  if (!StartsWithIgnoreCase(aSpec, "at://")) {
+  if (!StartsWith(aSpec, "at://")) {
     return AtURIError::InvalidScheme;
   }
 
   std::string_view rest = aSpec.substr(5);
-  if (rest.find('?') != std::string_view::npos) {
+  if (rest.find('?') != std::string_view::npos ||
+      rest.find('#') != std::string_view::npos) {
     return AtURIError::InvalidPath;
-  }
-
-  std::string_view fragment;
-  auto hash = rest.find('#');
-  if (hash != std::string_view::npos) {
-    fragment = rest.substr(hash + 1);
-    rest = rest.substr(0, hash);
   }
 
   auto slash = rest.find('/');
@@ -370,7 +336,7 @@ AtURIError ParseAtURI(std::string_view aSpec, AtURI& aResult) {
     }
     auto segments = Split(path, '/');
     if (segments.size() > 2 &&
-        (segments.size() != 3 || segments[1] != "cursor")) {
+        (!aAllowCursor || segments.size() != 3 || segments[1] != "cursor")) {
       return AtURIError::InvalidPath;
     }
     for (auto segment : segments) {
@@ -379,21 +345,17 @@ AtURIError ParseAtURI(std::string_view aSpec, AtURI& aResult) {
       }
     }
 
-    std::string collection;
-    if (!DecodeUnreserved(segments[0], collection) ||
-        !IsValidNsid(collection)) {
+    if (!IsValidNsid(segments[0])) {
       return AtURIError::InvalidCollection;
     }
-    aResult.mCollection = NormalizeNsid(collection);
+    aResult.mCollection = NormalizeNsid(segments[0]);
     aResult.mHasCollection = true;
 
     if (segments.size() == 2) {
-      std::string recordKey;
-      if (!DecodeUnreserved(segments[1], recordKey) ||
-          !IsValidRecordKey(recordKey)) {
+      if (!IsValidRecordKey(segments[1])) {
         return AtURIError::InvalidRecordKey;
       }
-      aResult.mRecordKey = recordKey;
+      aResult.mRecordKey.assign(segments[1]);
       aResult.mHasRecordKey = true;
     } else if (segments.size() == 3) {
       if (!IsValidCursorToken(segments[2])) {
@@ -404,22 +366,29 @@ AtURIError ParseAtURI(std::string_view aSpec, AtURI& aResult) {
     }
   }
 
-  if (hash != std::string_view::npos) {
-    std::string decoded;
-    if (!DecodeUnreserved(fragment, decoded) ||
-        !HasUppercaseHexTriplets(decoded)) {
-      return AtURIError::InvalidPath;
-    }
-    for (char c : decoded) {
-      if (c < 0x21 || c > 0x7e || c == '#') {
-        return AtURIError::InvalidPath;
-      }
-    }
-    aResult.mFragment = decoded;
-    aResult.mHasFragment = true;
-  }
-
   return AtURIError::None;
+}
+
+std::string SerializeAtURI(const AtURI& aUri) {
+  std::string result = "at://" + aUri.mAuthority;
+  if (aUri.mHasCollection) {
+    result += "/" + aUri.mCollection;
+  }
+  if (aUri.mHasRecordKey) {
+    result += "/" + aUri.mRecordKey;
+  }
+  if (aUri.mHasCursor) {
+    result += "/cursor/" + aUri.mCursor;
+  }
+  return result;
+}
+
+AtURIError ParseAtURI(std::string_view aSpec, AtURI& aResult) {
+  return ParseAtURIInternal(aSpec, false, aResult);
+}
+
+AtURIError ParseNavigationAtURI(std::string_view aSpec, AtURI& aResult) {
+  return ParseAtURIInternal(aSpec, true, aResult);
 }
 
 std::string NormalizeAtURI(std::string_view aSpec, AtURIError& aError) {
@@ -428,20 +397,17 @@ std::string NormalizeAtURI(std::string_view aSpec, AtURIError& aError) {
   if (aError != AtURIError::None) {
     return {};
   }
-  std::string result = "at://" + uri.mAuthority;
-  if (uri.mHasCollection) {
-    result += "/" + uri.mCollection;
+  return SerializeAtURI(uri);
+}
+
+std::string NormalizeNavigationAtURI(std::string_view aSpec,
+                                     AtURIError& aError) {
+  AtURI uri;
+  aError = ParseNavigationAtURI(aSpec, uri);
+  if (aError != AtURIError::None) {
+    return {};
   }
-  if (uri.mHasRecordKey) {
-    result += "/" + uri.mRecordKey;
-  }
-  if (uri.mHasCursor) {
-    result += "/cursor/" + uri.mCursor;
-  }
-  if (uri.mHasFragment) {
-    result += "#" + uri.mFragment;
-  }
-  return result;
+  return SerializeAtURI(uri);
 }
 
 }  // namespace mozilla::net::atproto

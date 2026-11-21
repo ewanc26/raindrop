@@ -169,7 +169,7 @@ TEST(LexiconView, IgnoresInvalidReferenceUris)
   EXPECT_EQ(html.find("References:"), std::string::npos);
 }
 
-TEST(LexiconView, NormalizesReferenceUri)
+TEST(LexiconView, RejectsFragmentedReferenceUri)
 {
   const std::string value = R"({
     "reply": {"parent": {
@@ -177,8 +177,7 @@ TEST(LexiconView, NormalizesReferenceUri)
     }}
   })";
   std::string html = RenderLexiconSummary("app.bsky.feed.post", value);
-  EXPECT_NE(html.find("href=\"at://did:plc:a/app.bsky.feed.post/self#/%FF\""),
-            std::string::npos);
+  EXPECT_EQ(html.find("<a href="), std::string::npos);
 }
 
 TEST(LexiconView, RendersRecordWithMediaReference)
