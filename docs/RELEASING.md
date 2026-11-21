@@ -140,3 +140,19 @@ self-hosted runner is registered (`RAINDROP_BUILD_RUNNER` is unset). The signed
 upstream revision and its earlier green build proof (run `44912582850`) are
 unchanged; no source from upstream was modified for this release. This is
 recorded in the tag annotation and release notes rather than silently waived.
+
+### v0.3.0-fx160.0.1
+
+Released 2026-11-21 from `main` at `d164309f2d`. The GitHub release
+(`https://github.com/ewanc26/raindrop/releases/tag/v0.3.0-fx160.0.1`) carries
+`raindrop-160.0.1.en-US.mac.dmg` and its `.sha256` sidecar. DMG SHA-256:
+`18048991951147bdffffad2c862c32fa84e138b8c20e794250c156865573d8a3`.
+
+Pre-tag verification: build exit 0 with 0 compiler warnings, 117/117 GTests,
+45 atproto and 22 browser-pref xpcshell checks, three mochitests PASS (AT
+Protocol pane 20 checks), 66 offline tests OK, `./mach package` exit 0,
+`./mach format` and `git diff --check` clean. The packaged DMG was inspected for
+raindrop branding and prefs, including the new `showImages` pref. Hosted
+`unittest`, `package` and Windows package checks were green on the merged PR.
+The same `stock-build` deviation as v0.2.0 applies and is recorded in the tag
+annotation and release notes.
