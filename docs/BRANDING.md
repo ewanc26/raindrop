@@ -81,10 +81,16 @@ brand strings, update/telemetry prefs, mozconfig wiring, branded bundle id.
 Still to verify (tracked in
 [issue #11](https://github.com/ewanc26/raindrop/issues/11)):
 
-- [ ] `./mach build` with `build/raindrop.mozconfig` succeeds.
-- [ ] `./mach package` produces binaries/installers with no Mozilla mark,
-      including the DMG `.DS_Store` and Windows resources.
-- [ ] No Firefox-branded chrome or defaults survive outside this directory
-      (a follow-up patch queue item once a build can be inspected).
+- [x] `./mach build` with `build/raindrop.mozconfig` succeeds (`BUILD_EXIT=0`).
+- [ ] `./mach package` produces binaries/installers with no Mozilla mark. The
+      macOS DMG builds (`PACKAGE_EXIT=0`) and its `.DS_Store` is byte-identical to
+      raindrop's clean artwork, but the bundle still contains upstream-hardcoded
+      marks: `CFBundleIconFile=firefox.icns`, `CFBundleSignature=MOZB` (`PkgInfo`
+      `APPLMOZB`), and `org.mozilla.dmgInstallHelper`/`org.mozilla.updater`
+      code-signing requirements carrying Mozilla's Apple team ID. Windows
+      resources need a Windows build runner.
+- [ ] No Firefox-branded chrome or defaults survive outside this directory.
+      First-run default bookmarks still ship a "Mozilla Firefox" folder with
+      mozilla.org links from `browser/base/content/default-bookmarks.html`.
 - [ ] `docs/TRADEMARKS.md` and `NOTICE` re-checked against Mozilla's current
       guidelines before a first public release.
