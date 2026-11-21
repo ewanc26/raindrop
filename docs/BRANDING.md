@@ -62,7 +62,10 @@ raindrop DMG.
 - `locales/en-US/brand.ftl` and `brand.properties` set every brand string to
   raindrop; `trademarkInfo` carries the non-affiliation disclaimer.
 - `pref/firefox-branding.js` disables update checks and clears Mozilla update
-  URLs, and disables telemetry upload.
+  URLs, disables telemetry upload, and switches off background services that
+  would otherwise transmit to Mozilla without user action (Normandy remote
+  config, Contile sponsored tiles, and MITM-detection priming). An offline test
+  in `tools/raindrop/tests/test_branding_prefs.py` locks these in.
 - `branding.nsi` contains no Mozilla company name, support URL or download
   endpoint. Stub-installer download URLs are blank until raindrop hosts its own
   artifacts.
