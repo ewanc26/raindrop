@@ -20,6 +20,7 @@ constexpr uint8_t kCodecDagCbor = 0x71;
 constexpr uint8_t kMultihashSha256 = 0x12;
 constexpr uint8_t kDigestLength = 32;
 constexpr size_t kCidV1Sha256Size = 4 + kDigestLength;
+constexpr size_t kCidV1Sha256Base32Digits = (kCidV1Sha256Size * 8 + 4) / 5;
 
 int Base32Value(char aChar) {
   if (aChar >= 'a' && aChar <= 'z') {
@@ -33,7 +34,8 @@ int Base32Value(char aChar) {
 
 bool DecodeCid(std::string_view aCid, std::vector<uint8_t>& aOut) {
   aOut.clear();
-  if (aCid.empty() || aCid[0] != 'b') {
+  if (aCid.empty() || aCid[0] != 'b' ||
+      aCid.size() != 1 + kCidV1Sha256Base32Digits) {
     return false;
   }
 
