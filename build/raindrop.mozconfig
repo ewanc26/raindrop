@@ -19,5 +19,13 @@ ac_add_options --with-distribution-id=uk.ewancroft.raindrop
 # Keep the compiled-in crash-report endpoint raindrop-owned as well.
 ac_add_options --with-crashreporter-url=https://crash.raindrop.invalid
 
+# Upstream pins the updater helper's code-signing requirement to Mozilla's
+# Apple team ID (43AQ936H96), which no raindrop binary can satisfy. Drop that
+# team ID so the requirement accepts a Developer ID signature instead. The
+# option is only defined for macOS targets, so guard it like upstream does.
+if test "$(uname -s)" = "Darwin"; then
+  ac_add_options --enable-mac-elevated-updates-with-generic-certs
+fi
+
 # Uncomment for faster local iteration once a full build has been proven:
 # ac_add_options --enable-artifact-builds
