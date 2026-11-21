@@ -1,0 +1,16 @@
+# Windows artifact build for issue #11's packaged-resource inspection.
+#
+# This reuses the compiled C++ binaries from the Firefox release revision in
+# sourcestamp.txt while building raindrop's own resources, preferences and
+# installer naming from source. It is a verification build, not a release
+# configuration: C++ changes in raindrop are not present in an artifact build.
+
+mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-raindrop-win-artifact
+
+# Fetch the pinned Node/toolchain on the hosted runner.
+ac_add_options --enable-bootstrap
+
+ac_add_options --enable-artifact-builds
+ac_add_options --with-branding=browser/branding/raindrop
+ac_add_options --with-distribution-id=uk.ewancroft.raindrop
+ac_add_options --with-crashreporter-url=https://crash.raindrop.invalid
