@@ -75,6 +75,26 @@ add_task(async function at_uri_is_classified_as_a_url_not_a_search() {
   }
 });
 
+add_task(async function at_uri_is_loadable_by_web_content() {
+  // at:// is a navigable content scheme like http/https/data, so web content
+  // must be able to follow at:// links. URI_DANGEROUS_TO_LOAD made
+  // CheckLoadURIWithPrincipal deny every such navigation with
+  // NS_ERROR_DOM_BAD_URI; URI_LOADABLE_BY_ANYONE is the correct class.
+  const PH = Ci.nsIProtocolHandler;
+  const flags = Services.io.getProtocolFlags("at");
+  Assert.ok(flags & PH.URI_LOADABLE_BY_ANYONE, "at: is loadable by anyone");
+  Assert.ok(!(flags & PH.URI_DANGEROUS_TO_LOAD), "at: is not dangerous to load");
+  Assert.ok(!(flags & PH.URI_NON_PERSISTABLE), "at: is persistable (bookmarks/history)");
+
+  const ssm = Services.scriptSecurityManager;
+  const web = ssm.createContentPrincipalFromOrigin("https://example.com");
+  for (const spec of [DID_URI, HANDLE_URI]) {
+    const uri = Services.io.newURI(spec);
+    ssm.checkLoadURIWithPrincipal(web, uri, 0);
+    Assert.ok(true, `web content may load ${spec}`);
+  }
+});
+
 add_task(async function authority_only_uri_is_rejected() {
   Assert.throws(
     () =>
