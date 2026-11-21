@@ -75,6 +75,18 @@ ac_add_options --with-branding=browser/branding/unofficial
 (`browser/config/mozconfig` is sourced by the tree itself and supplies
 `--enable-project=browser`; the fork config does not need to repeat it.)
 
+To build with raindrop's own names, icons and preferences instead of the
+unbranded local defaults:
+
+```sh
+export MOZCONFIG="$PWD/build/raindrop.mozconfig"
+./mach build
+./mach run
+```
+
+See [BRANDING.md](BRANDING.md) for the asset sources and the remaining
+trademark verification work.
+
 To produce a distributable archive rather than the development `.app` bundle:
 
 ```sh
