@@ -58,7 +58,10 @@ used, even if it is small.
 - [x] Bundled views for common lexicons (posts, profiles) rendered natively, with
       escaped, friendly summaries layered above the generic view; unknown lexicons
       fall back to the generic field table. Blob rendering remains a follow-up.
-- [ ] Browser integration polish: `at://` in bookmarks, history, and link handling.
+- [x] Browser integration polish: `at://` in bookmarks, history, and link handling.
+      The scheme is `URI_LOADABLE_BY_ANYONE` (persistable, not dangerous to load),
+      so web content can follow `at://` links and the URI is eligible for
+      bookmarks/history; the address bar classifies it as a URL (ADR 0001).
 - [ ] Fork maintenance automation: scripted rebases onto upstream Firefox releases
       and an upgrade CI job, so the fork never rots.
 - [ ] First tagged release.
