@@ -97,12 +97,13 @@ check against a saved product-details payload. Its logic is covered by
    export MOZCONFIG="$PWD/build/raindrop-unofficial.mozconfig"
    ./mach build
    python3.12 tools/raindrop/verify_atproto_setup.py
-   python3.12 ./mach gtest 'AtURI.*:DidResolver.*:PdsClient.*:HandleResolver.*:RecordView.*:CidVerifier.*:ErrorView.*:PrivacyFlags.*:LexiconView.*:AtRecordResolver.*:RepoView.*:CollectionView.*'
+   python3.12 ./mach gtest 'AtDocumentPolicy.*:AtURI.*:DidResolver.*:PdsClient.*:HandleResolver.*:RecordView.*:CidVerifier.*:ErrorView.*:PrivacyFlags.*:LexiconView.*:AtRecordResolver.*:RepoView.*:CollectionView.*'
    python3.12 ./mach xpcshell-test netwerk/protocol/atproto/tests/test_at_protocol.js
    python3.12 ./mach xpcshell-test browser/components/places/tests/unit/test_browserGlue_prefs.js
    python3.12 ./mach mochitest browser/components/places/tests/browser/browser_bookmark_current_tabs.js --headless
    python3.12 ./mach mochitest browser/components/places/tests/browser/browser_bookmarks_checkDefaultBookmarks.js --headless
    python3.12 ./mach mochitest browser/components/preferences/tests/browser_at_protocol_pane.js --headless
+   python3.12 ./mach mochitest netwerk/protocol/atproto/tests/browser/browser_at_protocol_navigation.js --headless
    python3.12 -m unittest discover -s tools/raindrop/tests
    ```
 

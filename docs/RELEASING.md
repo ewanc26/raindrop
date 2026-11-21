@@ -38,17 +38,18 @@ Run with the tracked release mozconfig exported in the same shell:
 export MOZCONFIG="$PWD/build/raindrop.mozconfig"
 ./mach build
 python3.12 tools/raindrop/verify_atproto_setup.py
-python3.12 ./mach gtest 'AtURI.*:DidResolver.*:PdsClient.*:HandleResolver.*:RecordView.*:CidVerifier.*:ErrorView.*:PrivacyFlags.*:LexiconView.*:AtRecordResolver.*:RepoView.*:CollectionView.*'
+python3.12 ./mach gtest 'AtDocumentPolicy.*:AtURI.*:DidResolver.*:PdsClient.*:HandleResolver.*:RecordView.*:CidVerifier.*:ErrorView.*:PrivacyFlags.*:LexiconView.*:AtRecordResolver.*:RepoView.*:CollectionView.*'
 ./mach xpcshell-test netwerk/protocol/atproto/tests/test_at_protocol.js
 ./mach xpcshell-test browser/components/places/tests/unit/test_browserGlue_prefs.js
 ./mach mochitest browser/components/places/tests/browser/browser_bookmark_current_tabs.js --headless
 ./mach mochitest browser/components/places/tests/browser/browser_bookmarks_checkDefaultBookmarks.js --headless
 ./mach mochitest browser/components/preferences/tests/browser_at_protocol_pane.js --headless
+./mach mochitest netwerk/protocol/atproto/tests/browser/browser_at_protocol_navigation.js --headless
 python3.12 -m unittest discover -s tools/raindrop/tests
 python3.12 ./mach package
 ```
 
-The expected counts are 125 GTests across 12 suites, 45 atproto xpcshell checks,
+The expected counts are 128 GTests across 13 suites, 49 atproto xpcshell checks,
 22 browser-pref xpcshell checks and 71 offline tests. The second xpcshell test
 catches `MOZ_APP_NAME` and `appdir` harness mismatches introduced by rebranding;
 the mochitests catch app-ID gates that stop browser actors from starting, and

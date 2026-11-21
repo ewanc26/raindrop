@@ -4,6 +4,7 @@
 
 #include "RepoView.h"
 
+#include "AtDocumentPolicy.h"
 #include "json/json.h"
 
 namespace mozilla::net::atproto {
@@ -109,6 +110,7 @@ std::string RenderRepoHtml(const RepoViewData& aData,
   html.reserve(2048);
 
   html += "<!DOCTYPE html>\n<html><head><meta charset=\"utf-8\">\n";
+  AppendDocumentSecurityMeta(html);
   html += "<title>Repository — ";
   html += EscapeHtml(aProvenance.mHandle.empty() ? aProvenance.mDid
                                                  : aProvenance.mHandle);

@@ -17,6 +17,7 @@
 #include "mozilla/Logging.h"
 #include "mozilla/OriginAttributes.h"
 #include "mozilla/Preferences.h"
+#include "nsContentUtils.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIChannel.h"
 #include "nsIDNSByTypeRecord.h"
@@ -88,7 +89,9 @@ AtRecordResolver::AtRecordResolver(const AtURI& aUri, nsILoadInfo* aLoadInfo)
 
 RequestOrReason AtRecordResolver::Start(nsIStreamListener* aTarget) {
   mTarget = aTarget;
-  mOuterRequest = do_QueryInterface(aTarget);
+  if (!mOuterRequest) {
+    mOuterRequest = do_QueryInterface(aTarget);
+  }
   if (!mOuterRequest) {
     return Err(NS_ERROR_UNEXPECTED);
   }
@@ -245,14 +248,14 @@ nsresult AtRecordResolver::StartFetch(const std::string& aUrl, Phase aPhase) {
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_NewChannelInternal(getter_AddRefs(channel), uri, mLoadInfo, nullptr,
-                             nullptr, this, nsIRequest::LOAD_NORMAL);
+  rv = NS_NewChannel(getter_AddRefs(channel), uri,
+                     nsContentUtils::GetSystemPrincipal(),
+                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL |
+                         nsILoadInfo::SEC_COOKIES_OMIT,
+                     nsIContentPolicy::TYPE_OTHER);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsLoadFlags flags = nsIRequest::LOAD_NORMAL;
-  rv = channel->GetLoadFlags(&flags);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = channel->SetLoadFlags(ResolutionLoadFlags(flags));
+  rv = PrepareResolutionFetch(channel, mLoadInfo);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(channel);

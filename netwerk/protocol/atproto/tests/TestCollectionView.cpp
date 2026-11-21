@@ -4,6 +4,7 @@
 
 #include <string>
 
+#include "AtDocumentPolicy.h"
 #include "CollectionView.h"
 #include "gtest/gtest.h"
 
@@ -73,6 +74,8 @@ TEST(CollectionView, RendersEscapedLinksBuiltFromProvenance)
             CollectionViewError::None);
 
   std::string html = RenderCollectionHtml(data, kProvenance);
+  EXPECT_NE(html.find(kAtDocumentCsp), std::string::npos);
+  EXPECT_NE(html.find("name=\"referrer\""), std::string::npos);
   EXPECT_NE(html.find("Collection"), std::string::npos);
   EXPECT_NE(html.find("app.bsky.feed.post"), std::string::npos);
   EXPECT_NE(html.find("alice.example"), std::string::npos);

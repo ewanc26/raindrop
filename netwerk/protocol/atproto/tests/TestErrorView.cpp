@@ -4,6 +4,7 @@
 
 #include <string>
 
+#include "AtDocumentPolicy.h"
 #include "ErrorView.h"
 #include "gtest/gtest.h"
 
@@ -44,6 +45,8 @@ TEST(ErrorView, RendersExplanationAndProvenance)
   info.mDetail = "HTTP 404";
 
   std::string html = RenderFailureHtml(info);
+  EXPECT_NE(html.find(kAtDocumentCsp), std::string::npos);
+  EXPECT_NE(html.find("name=\"referrer\""), std::string::npos);
   EXPECT_NE(html.find("Record not found"), std::string::npos);
   EXPECT_NE(html.find("does not exist"), std::string::npos);
   EXPECT_NE(html.find("alice.example"), std::string::npos);

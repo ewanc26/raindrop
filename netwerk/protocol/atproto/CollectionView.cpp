@@ -7,6 +7,7 @@
 #include <memory>
 #include <utility>
 
+#include "AtDocumentPolicy.h"
 #include "AtURI.h"
 #include "PdsClient.h"
 #include "json/json.h"
@@ -128,6 +129,7 @@ std::string RenderCollectionHtml(const CollectionViewData& aData,
   html.reserve(4096);
 
   html += "<!DOCTYPE html>\n<html><head><meta charset=\"utf-8\">\n";
+  AppendDocumentSecurityMeta(html);
   html += "<title>Collection — ";
   html += EscapeHtml(aProvenance.mCollection);
   html += "</title>\n<style>\n";

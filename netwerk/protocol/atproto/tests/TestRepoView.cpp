@@ -2,10 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "RepoView.h"
-
 #include <string>
 
+#include "AtDocumentPolicy.h"
+#include "RepoView.h"
 #include "gtest/gtest.h"
 
 using namespace mozilla::net::atproto;
@@ -18,7 +18,8 @@ constexpr const char* kRepoJson =
 
 }  // namespace
 
-TEST(RepoView, ParsesIdentityAndCollections) {
+TEST(RepoView, ParsesIdentityAndCollections)
+{
   RepoViewData data;
   EXPECT_EQ(ParseRepoResponse(kRepoJson, data), RepoViewError::None);
   EXPECT_EQ(data.mDid, "did:plc:abc");
@@ -28,7 +29,8 @@ TEST(RepoView, ParsesIdentityAndCollections) {
   EXPECT_EQ(data.mCollections[1], "app.bsky.actor.profile");
 }
 
-TEST(RepoView, HandleAndCollectionsAreOptional) {
+TEST(RepoView, HandleAndCollectionsAreOptional)
+{
   RepoViewData data;
   EXPECT_EQ(ParseRepoResponse(R"({"did":"did:web:user.example.com"})", data),
             RepoViewError::None);
@@ -37,25 +39,29 @@ TEST(RepoView, HandleAndCollectionsAreOptional) {
   EXPECT_TRUE(data.mCollections.empty());
 }
 
-TEST(RepoView, RejectsInvalidResponses) {
+TEST(RepoView, RejectsInvalidResponses)
+{
   RepoViewData data;
   EXPECT_EQ(ParseRepoResponse("not json", data), RepoViewError::InvalidJson);
   EXPECT_EQ(ParseRepoResponse("[]", data), RepoViewError::InvalidJson);
   EXPECT_EQ(ParseRepoResponse(R"({"handle":"alice.example"})", data),
             RepoViewError::MissingDid);
-  EXPECT_EQ(ParseRepoResponse(std::string(kMaxRepoResponseLength + 1, 'x'),
-                              data),
-            RepoViewError::TooLong);
+  EXPECT_EQ(
+      ParseRepoResponse(std::string(kMaxRepoResponseLength + 1, 'x'), data),
+      RepoViewError::TooLong);
 }
 
-TEST(RepoView, RendersSummaryAndEscapesUntrustedValues) {
+TEST(RepoView, RendersSummaryAndEscapesUntrustedValues)
+{
   RepoViewData data;
   ASSERT_EQ(ParseRepoResponse(kRepoJson, data), RepoViewError::None);
   data.mHandle = "<script>alert('x')</script>";
 
-  std::string html = RenderRepoHtml(
-      data, RepoViewProvenance{"did:plc:abc", "alice.example",
-                               "https://pds.example.com"});
+  std::string html =
+      RenderRepoHtml(data, RepoViewProvenance{"did:plc:abc", "alice.example",
+                                              "https://pds.example.com"});
+  EXPECT_NE(html.find(kAtDocumentCsp), std::string::npos);
+  EXPECT_NE(html.find("name=\"referrer\""), std::string::npos);
   EXPECT_NE(html.find("Repository summary"), std::string::npos);
   EXPECT_NE(html.find("did:plc:abc"), std::string::npos);
   EXPECT_NE(html.find("https://pds.example.com"), std::string::npos);
@@ -66,7 +72,8 @@ TEST(RepoView, RendersSummaryAndEscapesUntrustedValues) {
   EXPECT_NE(html.find("&#39;"), std::string::npos);
 }
 
-TEST(RepoView, ShowsEmptyCollectionList) {
+TEST(RepoView, ShowsEmptyCollectionList)
+{
   RepoViewData data;
   ASSERT_EQ(ParseRepoResponse(R"({"did":"did:plc:abc"})", data),
             RepoViewError::None);
