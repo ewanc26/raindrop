@@ -80,13 +80,25 @@ deliver `at://`-as-infrastructure.** raindrop wants the second one.
 
 ## Trust and failure model
 
-- **No gateway fallback.** If a DID or PDS is unreachable, raindrop says so. It
-  never silently substitutes a third-party gateway, because that would defeat the
-  point of the fork.
-- **Honest provenance.** The view always shows which DID and PDS served the
-  content and whether verification passed.
-- **Local-only caching.** Resolution caches live on the user's machine, honour
-  private browsing, and expire.
+- **No content gateway fallback.** If a DID or PDS is unreachable, raindrop says
+  so. It never silently substitutes a third-party gateway, because that would
+  defeat the point of the fork. This is a claim about *content* only: resolving
+  a `did:plc` identity requires `plc.directory`, which is hardcoded in
+  `BuildDidDocumentUrl` and accepted as a trusted identity authority by design.
+  If it is unreachable, `did:plc` loads fail with `DidResolutionFailed` rather
+  than falling back to a mirror.
+- **Honest provenance.** The view shows which DID and PDS served the content and
+  the outcome of CID verification. That check re-encodes the returned record as
+  canonical DAG-CBOR and compares its SHA-256 with the CID returned alongside
+  it; it proves *integrity* (the record matches its CID), not *authenticity* (a
+  repository signature or proof of authorship). A hostile PDS controls both, so
+  the view labels this limit explicitly.
+- **Local-only caching.** HTTP identity fetches set
+  `INHIBIT_PERSISTENT_CACHING | LOAD_BYPASS_CACHE`, so they are never written to
+  disk and are re-fetched on each navigation. The DNS TXT leg of handle
+  resolution uses the platform resolver, whose cache is in-memory for the
+  session only; it is likewise never persisted. Handle reassignment is caught by
+  the reverse `alsoKnownAs` check, which fails closed.
 
 ## Resolved design questions
 
@@ -95,7 +107,6 @@ deliver `at://`-as-infrastructure.** raindrop wants the second one.
   [ADR 0003](decisions/0003-handle-authority-semantics.md).
 - `did:web` trust rules and onion PDS endpoints:
   [ADR 0004](decisions/0004-did-web-and-onion-endpoints.md).
-
-## Open questions
-
-- What minimum set of record lexicons gets a dedicated view in Phase 3?
+- Minimum set of record lexicons with a dedicated view: `app.bsky.feed.post`
+  and `app.bsky.actor.profile`, with the generic field table as fallback;
+  blob rendering is deferred.
