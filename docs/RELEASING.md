@@ -19,9 +19,9 @@ A tag is cut only when every gate below is satisfied:
       requests.
 - [x] macOS packaged branding, bundle signature and no-phone-home prefs are
       verified in the shipped app bundle.
-- [ ] The stock-upstream build passes in CI on a registered self-hosted runner
-      (`RAINDROP_BUILD_RUNNER` and `RAINDROP_UPSTREAM_TAG` set). The pristine
-      build is proven locally; CI proof is the outstanding part of issue #10.
+- [x] The stock-upstream build passes in CI on a registered self-hosted runner
+      (`RAINDROP_BUILD_RUNNER` and `RAINDROP_UPSTREAM_TAG` set). Dispatch run
+      `44912582850` succeeded, closing the CI half of issue #10.
 - [ ] Windows packaged-resource branding is inspected on a Windows runner.
       The `Windows package check` workflow builds a raindrop-branded artifact
       package on `windows-latest` and verifies the packaged ZIP, NSIS-staged
@@ -48,7 +48,7 @@ python3.12 ./mach package
 ```
 
 The expected counts are 74 GTests across 10 suites, 29 atproto xpcshell checks,
-22 browser-pref xpcshell checks and 55 offline tests. The second xpcshell test
+22 browser-pref xpcshell checks and 57 offline tests. The second xpcshell test
 catches `MOZ_APP_NAME` and `appdir` harness mismatches introduced by rebranding;
 the mochitests catch app-ID gates that stop browser actors from starting, and
 the preferences mochitest checks the AT Protocol settings pane and its prefs. The
