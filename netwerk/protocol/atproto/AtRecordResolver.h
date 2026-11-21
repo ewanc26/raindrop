@@ -6,11 +6,14 @@
 #define netwerk_protocol_atproto_AtRecordResolver_h
 
 #include "AtURI.h"
+#include "ErrorView.h"
 #include "SimpleChannel.h"
 #include "nsCOMPtr.h"
 #include "nsICancelable.h"
 #include "nsIStreamListener.h"
 #include "nsString.h"
+
+#include <string_view>
 
 class nsIInputStream;
 class nsILoadInfo;
@@ -63,6 +66,7 @@ class AtRecordResolver final : public nsIStreamListener, public nsICancelable {
   nsresult OnDidDocumentStop(nsIRequest* aRequest, nsresult aStatus);
   nsresult OnRecordStop(nsIRequest* aRequest, nsresult aStatus);
 
+  void SetFailure(FailureKind aKind, std::string_view aDetail);
   void DeliverFailure(nsresult aStatus);
   void ForwardStart();
   void ForwardStop(nsresult aStatus);
@@ -74,6 +78,7 @@ class AtRecordResolver final : public nsIStreamListener, public nsICancelable {
   // Non-empty only when the authority is a handle; drives reverse binding.
   std::string mHandle;
   std::string mPds;
+  FailureInfo mFailure;
 
   AtURI mUri;
   nsCOMPtr<nsILoadInfo> mLoadInfo;

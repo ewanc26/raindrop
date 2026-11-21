@@ -187,7 +187,13 @@ AtRecordResolver::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
 
 nsresult AtRecordResolver::CheckResponse(nsIRequest* aRequest,
                                          nsresult aStatus) {
-  NS_ENSURE_SUCCESS(aStatus, aStatus);
+  if (NS_FAILED(aStatus)) {
+    FailureKind kind = mPhase == Phase::Handle    ? FailureKind::HandleResolutionFailed
+                       : mPhase == Phase::Record ? FailureKind::PdsUnreachable
+                                                 : FailureKind::DidResolutionFailed;
+    SetFailure(kind, "network request failed");
+    return aStatus;
+  }
 
   nsCOMPtr<nsIHttpChannel> http = do_QueryInterface(aRequest);
   if (http) {
@@ -195,6 +201,10 @@ nsresult AtRecordResolver::CheckResponse(nsIRequest* aRequest,
     nsresult rv = http->GetResponseStatus(&responseStatus);
     if (NS_SUCCEEDED(rv) && (responseStatus < 200 || responseStatus >= 300)) {
       AT_LOG(("atproto: HTTP status %u\n", responseStatus));
+      FailureKind kind = mPhase == Phase::Record && responseStatus == 404
+                             ? FailureKind::RecordNotFound
+                             : FailureKind::UpstreamRejected;
+      SetFailure(kind, "HTTP " + std::to_string(responseStatus));
       return NS_ERROR_NOT_AVAILABLE;
     }
   }
@@ -208,6 +218,7 @@ nsresult AtRecordResolver::CheckResponse(nsIRequest* aRequest,
       rv = finalUri->GetHost(finalHost);
       if (NS_SUCCEEDED(rv) && !finalHost.Equals(mExpectedHost)) {
         AT_LOG(("atproto: response redirected to another host\n"));
+        SetFailure(FailureKind::RedirectRejected, "upstream changed host");
         return NS_ERROR_NOT_AVAILABLE;
       }
     }
@@ -224,6 +235,7 @@ nsresult AtRecordResolver::OnHandleStop(nsIRequest* aRequest,
       std::string_view(mBody.BeginReading(), mBody.Length()), mDid);
   if (herr != HandleError::None) {
     AT_LOG(("atproto: handle resolution failed (%s)\n", HandleErrorName(herr)));
+    SetFailure(FailureKind::HandleResolutionFailed, HandleErrorName(herr));
     return NS_ERROR_NOT_AVAILABLE;
   }
   return StartDidDocumentFetch();
@@ -240,6 +252,7 @@ nsresult AtRecordResolver::OnDidDocumentStop(nsIRequest* aRequest,
     if (berr != HandleBindingError::None) {
       AT_LOG(("atproto: handle reverse binding failed (%s)\n",
               HandleBindingErrorName(berr)));
+      SetFailure(FailureKind::HandleBindingFailed, HandleBindingErrorName(berr));
       return NS_ERROR_NOT_AVAILABLE;
     }
   }
@@ -249,6 +262,7 @@ nsresult AtRecordResolver::OnDidDocumentStop(nsIRequest* aRequest,
       std::string_view(mBody.BeginReading(), mBody.Length()), mDid, service);
   if (perr != PdsError::None) {
     AT_LOG(("atproto: DID document rejected (%s)\n", PdsErrorName(perr)));
+    SetFailure(FailureKind::DidDocumentRejected, PdsErrorName(perr));
     return perr == PdsError::OnionEndpoint ? NS_ERROR_NOT_AVAILABLE
                                            : NS_ERROR_FAILURE;
   }
@@ -260,6 +274,7 @@ nsresult AtRecordResolver::OnDidDocumentStop(nsIRequest* aRequest,
                                        mUri.mRecordKey, url);
   if (uerr != PdsUrlError::None) {
     AT_LOG(("atproto: getRecord URL failed (%s)\n", PdsUrlErrorName(uerr)));
+    SetFailure(FailureKind::DidDocumentRejected, PdsUrlErrorName(uerr));
     return NS_ERROR_FAILURE;
   }
 
@@ -276,6 +291,7 @@ nsresult AtRecordResolver::OnRecordStop(nsIRequest* aRequest,
       std::string_view(mBody.BeginReading(), mBody.Length()), data);
   if (verr != RecordViewError::None) {
     AT_LOG(("atproto: record view failed (%s)\n", RecordViewErrorName(verr)));
+    SetFailure(FailureKind::RecordInvalid, RecordViewErrorName(verr));
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -313,9 +329,39 @@ void AtRecordResolver::ForwardStop(nsresult aStatus) {
   mTarget->OnStopRequest(mOuterRequest, aStatus);
 }
 
+void AtRecordResolver::SetFailure(FailureKind aKind, std::string_view aDetail) {
+  mFailure.mKind = aKind;
+  mFailure.mAuthority = mUri.mAuthority;
+  mFailure.mDid = mDid;
+  mFailure.mPds = mPds;
+  mFailure.mDetail.assign(aDetail.data(), aDetail.size());
+}
+
 void AtRecordResolver::DeliverFailure(nsresult aStatus) {
   mPhase = Phase::None;
-  ForwardStop(aStatus);
+  if (mCanceled) {
+    ForwardStop(aStatus);
+    return;
+  }
+
+  if (mFailure.mAuthority.empty()) {
+    mFailure.mAuthority = mUri.mAuthority;
+    mFailure.mDid = mDid;
+    mFailure.mPds = mPds;
+  }
+  std::string html = RenderFailureHtml(mFailure);
+  nsCOMPtr<nsIInputStream> stream;
+  nsresult rv = NS_NewCStringInputStream(getter_AddRefs(stream),
+                                         nsCString(html.data(), html.size()));
+  if (NS_SUCCEEDED(rv)) {
+    ForwardStart();
+    if (mTarget && !mDeliveredStop) {
+      rv = mTarget->OnDataAvailable(mOuterRequest, stream, 0, html.size());
+    }
+  }
+  // Deliver the explanation as content rather than a bare status code so the
+  // browser shows an honest, step-specific page instead of a generic error.
+  ForwardStop(NS_OK);
 }
 
 NS_IMETHODIMP
