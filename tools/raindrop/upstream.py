@@ -175,7 +175,7 @@ def import_plan(version: str, sha256: str) -> list[str]:
         "curl -fsSL https://packages.mozilla.org/rpm/firefox/signing-key.gpg -o mozilla-signing-key.gpg",
         "# Verify the imported key fingerprints against Mozilla's published values before proceeding.",
         "gpg --dearmor < mozilla-signing-key.gpg > mozilla-keyring.gpg",
-        f"gpgv --keyring mozilla-keyring.gpg firefox-{version}.source.tar.xz.asc firefox-{version}.source.tar.xz",
+        f"gpgv --keyring ./mozilla-keyring.gpg firefox-{version}.source.tar.xz.asc firefox-{version}.source.tar.xz",
         f"shasum -a 256 firefox-{version}.source.tar.xz  # expect {sha256}",
         f"git switch upstream && git rm -rf . && tar -xJf firefox-{version}.source.tar.xz --strip-components=1 && git add -A",
         f'git commit -m "Import Firefox {version} release source"',

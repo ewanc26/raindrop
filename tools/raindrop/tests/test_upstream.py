@@ -121,6 +121,11 @@ class ImportPlanTests(unittest.TestCase):
         self.assertIn("SHA-256: abc123", joined)
         self.assertLess(joined.index("gpgv --keyring"), joined.index("git switch upstream"))
 
+    def test_plan_keyring_path_is_explicit(self):
+        plan = "\n".join(upstream.import_plan("160.0.1", "abc123"))
+        self.assertIn("gpgv --keyring ./mozilla-keyring.gpg", plan)
+        self.assertNotIn("gpgv --keyring mozilla-keyring.gpg", plan)
+
 
 class CliTests(unittest.TestCase):
     def test_cli_checks_fixture_and_exits_zero(self):
