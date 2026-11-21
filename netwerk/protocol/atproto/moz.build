@@ -16,6 +16,7 @@ SOURCES += [
     "ErrorView.cpp",
     "HandleResolver.cpp",
     "PdsClient.cpp",
+    "PrivacyFlags.cpp",
     "RecordView.cpp",
 ]
 

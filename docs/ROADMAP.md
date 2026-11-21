@@ -47,8 +47,11 @@ used, even if it is small.
       end to end; honest failure states (unknown DID, PDS down, record deleted).
       The success view shows DID/PDS/CID and verification outcome; failures render
       a step-specific HTML page distinguishing handle, DID, PDS and record errors.
-- [ ] Privacy defaults: no fallback gateway, no third-party fetch to "fix" a lookup;
-      caching stays local and respects private-browsing mode.
+- [x] Privacy defaults: no fallback gateway, no third-party fetch to "fix" a lookup;
+      caching stays local and respects private-browsing mode. Resolution fetches
+      set INHIBIT_PERSISTENT_CACHING | LOAD_BYPASS_CACHE, so identity lookups are
+      never written to disk and are re-resolved on every navigation; private
+      browsing is inherited from the loadInfo's origin attributes.
 
 ## Phase 3 - grown (M3)
 
