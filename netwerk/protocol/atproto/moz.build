@@ -13,6 +13,7 @@ SOURCES += [
     "AtURI.cpp",
     "CidVerifier.cpp",
     "DidResolver.cpp",
+    "ErrorView.cpp",
     "HandleResolver.cpp",
     "PdsClient.cpp",
     "RecordView.cpp",
