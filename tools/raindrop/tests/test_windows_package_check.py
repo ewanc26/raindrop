@@ -4,6 +4,7 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 """Offline tests for the Windows packaged-resource checker and workflow."""
 
+import io
 import json
 import tempfile
 import unittest
@@ -80,7 +81,7 @@ class WindowsPackageCheckTests(unittest.TestCase):
         root = Path(temp.name)
         objdir = root / "obj-raindrop-win-artifact"
         dist = objdir / "dist"
-        instgen = objdir / "instgen"
+        instgen = objdir / "browser/installer/windows/instgen"
         dist.mkdir(parents=True)
         instgen.mkdir(parents=True)
 
@@ -88,7 +89,6 @@ class WindowsPackageCheckTests(unittest.TestCase):
             "application.ini": APPLICATION_INI.format(
                 vendor=app_name, name=app_name, remoting=app_name, app_id=APP_ID
             ).encode(),
-            "defaults/preferences/firefox-branding.js": BRANDING_PREFS.encode(),
             "browser/VisualElements/VisualElements_150.png": (
                 BRANDING / "VisualElements_150.png"
             ).read_bytes(),
@@ -115,6 +115,11 @@ class WindowsPackageCheckTests(unittest.TestCase):
             package_members["private_browsing.VisualElementsManifest.xml"] = (
                 BRANDING / "private_browsing.VisualElementsManifest.xml"
             ).read_bytes()
+
+        omni = io.BytesIO()
+        with zipfile.ZipFile(omni, "w") as archive:
+            archive.writestr("defaults/preferences/firefox-branding.js", BRANDING_PREFS)
+        package_members["browser/omni.ja"] = omni.getvalue()
 
         with zipfile.ZipFile(dist / package_name, "w") as archive:
             for name, data in package_members.items():
@@ -212,7 +217,16 @@ class WindowsWorkflowWiringTests(unittest.TestCase):
     def test_workflow_invokes_checker(self):
         text = WORKFLOW.read_text()
         self.assertIn("python tools/raindrop/check_windows_package.py", text)
+        self.assertIn("--artifact-build", text)
         self.assertTrue(CHECKER.is_file())
+
+    def test_workflow_checks_raindrop_installer_metadata(self):
+        text = WORKFLOW.read_text()
+        self.assertIn("browser\\installer\\windows\\instgen\\setup.exe", text)
+        self.assertIn(
+            "obj-raindrop-win-artifact/browser/installer/windows/instgen/defines.nsi",
+            text,
+        )
 
     def test_artifact_mozconfig_selects_raindrop_branding(self):
         text = MOZCONFIG.read_text()

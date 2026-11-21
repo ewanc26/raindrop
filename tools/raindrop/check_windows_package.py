@@ -12,6 +12,7 @@ installer/uninstaller.
 """
 
 import argparse
+import io
 import json
 import re
 import sys
@@ -24,9 +25,12 @@ BRANDING_DIR = Path("browser/branding/raindrop")
 # Package paths are matched by suffix because the ZIP has a top-level
 # app-named directory. Some filenames are fixed by the upstream build system;
 # their contents must still be raindrop's.
+OMNI_JA = "browser/omni.ja"
+BRANDING_PREFS_MEMBER = "defaults/preferences/firefox-branding.js"
+NSIS_STAGE_DIR = Path("browser/installer/windows/instgen")
+
 PACKAGE_MEMBERS = {
     "application": "application.ini",
-    "branding_prefs": "defaults/preferences/firefox-branding.js",
     "manifest": "firefox.VisualElementsManifest.xml",
     "private_manifest": "private_browsing.VisualElementsManifest.xml",
     "tile_150": "browser/VisualElements/VisualElements_150.png",
@@ -159,6 +163,19 @@ def check_package(objdir, version_info_path, source_root, artifact_build=False):
                 if normalized.endswith(allowed_mark_paths):
                     continue
                 errors.append(f"packaged path contains a Mozilla/Firefox mark: {name}")
+
+            omni = _find_member(names, OMNI_JA)
+            if omni is None:
+                errors.append(f"packaged ZIP has no unique {OMNI_JA} entry")
+            else:
+                with zipfile.ZipFile(io.BytesIO(archive.read(omni))) as omni_archive:
+                    prefs = _find_member(omni_archive.namelist(), BRANDING_PREFS_MEMBER)
+                    if prefs is None:
+                        errors.append(
+                            f"{OMNI_JA} has no unique {BRANDING_PREFS_MEMBER} entry"
+                        )
+                    else:
+                        members["branding_prefs"] = omni_archive.read(prefs)
     except zipfile.BadZipFile as exc:
         return errors + [f"cannot read packaged ZIP: {exc}"]
 
@@ -199,7 +216,7 @@ def check_package(objdir, version_info_path, source_root, artifact_build=False):
                 f"packaged {source_name} does not match raindrop's source asset"
             )
 
-    instgen = objdir / "instgen"
+    instgen = objdir / NSIS_STAGE_DIR
     for name in STAGED_BRANDING_FILES:
         staged = instgen / name
         source = source_root / BRANDING_DIR / name

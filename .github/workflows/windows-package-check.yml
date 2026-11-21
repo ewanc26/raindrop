@@ -190,8 +190,8 @@ jobs:
         run: |
           $ErrorActionPreference = "Stop"
           $dist = Join-Path $env:GITHUB_WORKSPACE "obj-raindrop-win-artifact\dist"
-          $installer = Get-ChildItem -Path $dist -Filter "*.installer.exe" | Select-Object -First 1
-          if (-not $installer) {
+          $installer = Join-Path $env:GITHUB_WORKSPACE "obj-raindrop-win-artifact\browser\installer\windows\instgen\setup.exe"
+          if (-not (Test-Path $installer)) {
             throw "No Windows installer executable was produced"
           }
           $helper = Join-Path $dist "bin\uninstall\helper.exe"
@@ -210,7 +210,7 @@ jobs:
             }
           }
           $result = [ordered]@{
-            installer = Get-VersionInfo $installer.FullName
+            installer = Get-VersionInfo $installer
             helper    = Get-VersionInfo $helper
           }
           $result | ConvertTo-Json -Depth 4 | Set-Content `
@@ -234,5 +234,5 @@ jobs:
             obj-raindrop-win-artifact/dist/*.zip
             obj-raindrop-win-artifact/dist/*.installer.exe
             obj-raindrop-win-artifact/dist/installer-version-info.json
-            obj-raindrop-win-artifact/instgen/defines.nsi
+            obj-raindrop-win-artifact/browser/installer/windows/instgen/defines.nsi
           if-no-files-found: ignore
