@@ -7,9 +7,9 @@
 
 mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-raindrop-win-artifact
 
-# Use the NSIS package installed by the workflow. Raindrop's local commits do
-# not have Taskcluster toolchain tasks, so configure must not try to fetch one.
-ac_add_options --enable-bootstrap=no-update
+# Raindrop's local commits have no Taskcluster toolchain tasks, so the workflow
+# installs every required tool and configure must not try to fetch any.
+ac_add_options --disable-bootstrap
 
 ac_add_options --enable-artifact-builds
 ac_add_options --with-branding=browser/branding/raindrop

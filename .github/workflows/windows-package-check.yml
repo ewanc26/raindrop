@@ -107,6 +107,32 @@ jobs:
             throw "Pinned Node.js package did not provide node.exe"
           }
 
+      - name: Install pinned mozmake
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $ProgressPreference = "SilentlyContinue"
+          $url = "https://firefox-ci-tc.services.mozilla.com/api/queue/v1/task/R-T5euokQVyqBQMApzKOUA/artifacts/public/build/mozmake.tar.zst"
+          $archive = Join-Path $env:RUNNER_TEMP "mozmake.tar.zst"
+          Invoke-WebRequest -Uri $url -OutFile $archive
+          $hash = (Get-FileHash -Algorithm SHA256 -Path $archive).Hash.ToLowerInvariant()
+          $expected = "8a7dbefcfdb35cc7e96acc8c10fc91064ad1cadb9a808e9df8b1a708e9aeafe0"
+          if ($hash -ne $expected) {
+            throw "mozmake SHA-256 mismatch: $hash"
+          }
+          $extract = Join-Path $env:RUNNER_TEMP "mozmake-extract"
+          if (Test-Path $extract) {
+            Remove-Item -Recurse -Force $extract
+          }
+          New-Item -ItemType Directory -Force -Path $extract | Out-Null
+          tar -xf $archive -C $extract
+          $destination = Join-Path $env:USERPROFILE ".mozbuild\mozmake"
+          New-Item -ItemType Directory -Force -Path $destination | Out-Null
+          Copy-Item -Path (Join-Path $extract "mozmake\*") -Destination $destination -Recurse -Force
+          if (-not (Test-Path (Join-Path $destination "mozmake.exe"))) {
+            throw "Pinned mozmake package did not provide mozmake.exe"
+          }
+
       - name: Derive pinned artifact revision
         shell: pwsh
         run: |
@@ -125,8 +151,10 @@ jobs:
           MOZCONFIG: ${{ github.workspace }}/build/raindrop-windows-artifact.mozconfig
         run: |
           $ErrorActionPreference = "Stop"
-          # MozillaBuild supplies sh/awk/NSIS; use the setup-python interpreter.
           $env:PATH = "C:\mozilla-build\bin;$env:PATH"
+          $env:GMAKE = Join-Path $env:USERPROFILE ".mozbuild\mozmake\mozmake.exe"
+          $env:NODEJS = Join-Path $env:USERPROFILE ".mozbuild\node\node.exe"
+          $env:MAKENSISU = Join-Path $env:USERPROFILE ".mozbuild\nsis\bin\makensis.exe"
           python .\mach build
           python .\mach package
 

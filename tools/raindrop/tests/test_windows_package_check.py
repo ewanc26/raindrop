@@ -196,7 +196,22 @@ class WindowsWorkflowWiringTests(unittest.TestCase):
         text = MOZCONFIG.read_text()
         self.assertIn("--with-branding=browser/branding/raindrop", text)
         self.assertIn("--enable-artifact-builds", text)
-        self.assertIn("--enable-bootstrap=no-update", text)
+        self.assertIn("--disable-bootstrap", text)
+
+    def test_workflow_installs_pinned_mozmake(self):
+        text = WORKFLOW.read_text()
+        self.assertIn("mozmake.tar.zst", text)
+        self.assertIn(
+            "8a7dbefcfdb35cc7e96acc8c10fc91064ad1cadb9a808e9df8b1a708e9aeafe0",
+            text,
+        )
+        self.assertIn(".mozbuild\\mozmake", text)
+
+    def test_workflow_points_configure_at_pinned_tools(self):
+        text = WORKFLOW.read_text()
+        self.assertIn("$env:GMAKE", text)
+        self.assertIn("$env:NODEJS", text)
+        self.assertIn("$env:MAKENSISU", text)
 
     def test_workflow_installs_mozilla_signed_nsis(self):
         text = WORKFLOW.read_text()
