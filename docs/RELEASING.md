@@ -48,7 +48,7 @@ python3.12 ./mach package
 ```
 
 The expected counts are 74 GTests across 10 suites, 29 atproto xpcshell checks,
-22 browser-pref xpcshell checks and 57 offline tests. The second xpcshell test
+22 browser-pref xpcshell checks and 59 offline tests. The second xpcshell test
 catches `MOZ_APP_NAME` and `appdir` harness mismatches introduced by rebranding;
 the mochitests catch app-ID gates that stop browser actors from starting, and
 the preferences mochitest checks the AT Protocol settings pane and its prefs. The
