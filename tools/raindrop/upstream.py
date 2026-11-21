@@ -179,7 +179,12 @@ def import_plan(version: str, sha256: str) -> list[str]:
         f"shasum -a 256 firefox-{version}.source.tar.xz  # expect {sha256}",
         f"git switch upstream && git rm -rf . && tar -xJf firefox-{version}.source.tar.xz --strip-components=1 && git add -A",
         f'git commit -m "Import Firefox {version} release source"',
-        f'git tag -a firefox-{version} -m "Firefox {version} signed release source\\n\\nTarball: {tarball}\\nSHA-256: {sha256}"',
+        (
+            f'git tag -a firefox-{version}'
+            f' -m "Firefox {version} signed release source"'
+            f' -m "Tarball: {tarball}"'
+            f' -m "SHA-256: {sha256}"'
+        ),
         "git switch main && git rebase firefox-" + version,
         "# Resolve any conflicts, rebuild, then run atproto GTests and xpcshell before pushing.",
     ]
