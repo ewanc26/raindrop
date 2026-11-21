@@ -83,8 +83,14 @@ add_task(async function at_uri_is_loadable_by_web_content() {
   const PH = Ci.nsIProtocolHandler;
   const flags = Services.io.getProtocolFlags("at");
   Assert.ok(flags & PH.URI_LOADABLE_BY_ANYONE, "at: is loadable by anyone");
-  Assert.ok(!(flags & PH.URI_DANGEROUS_TO_LOAD), "at: is not dangerous to load");
-  Assert.ok(!(flags & PH.URI_NON_PERSISTABLE), "at: is persistable (bookmarks/history)");
+  Assert.ok(
+    !(flags & PH.URI_DANGEROUS_TO_LOAD),
+    "at: is not dangerous to load"
+  );
+  Assert.ok(
+    !(flags & PH.URI_NON_PERSISTABLE),
+    "at: is persistable (bookmarks/history)"
+  );
 
   const ssm = Services.scriptSecurityManager;
   const web = ssm.createContentPrincipalFromOrigin("https://example.com");
@@ -104,4 +110,34 @@ add_task(async function authority_only_uri_is_rejected() {
       }),
     /NS_ERROR_MALFORMED_URI|component returned failure code|0x80570009/
   );
+});
+
+add_task(async function enabled_pref_controls_channel_creation() {
+  const pref = "network.atprotocol.enabled";
+  const original = Services.prefs.getBoolPref(pref);
+  const hadUserValue = Services.prefs.prefHasUserValue(pref);
+  try {
+    Services.prefs.setBoolPref(pref, false);
+    Assert.throws(
+      () =>
+        NetUtil.newChannel({
+          uri: DID_URI,
+          loadUsingSystemPrincipal: true,
+        }),
+      /NS_ERROR_NOT_AVAILABLE|0x80040111/
+    );
+
+    Services.prefs.setBoolPref(pref, true);
+    const chan = NetUtil.newChannel({
+      uri: DID_URI,
+      loadUsingSystemPrincipal: true,
+    });
+    Assert.equal(chan.URI.spec, DID_URI);
+  } finally {
+    if (hadUserValue) {
+      Services.prefs.setBoolPref(pref, original);
+    } else {
+      Services.prefs.clearUserPref(pref);
+    }
+  }
 });

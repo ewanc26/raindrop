@@ -71,6 +71,10 @@ used, even if it is small.
       The scheme is `URI_LOADABLE_BY_ANYONE` (persistable, not dangerous to load),
       so web content can follow `at://` links and the URI is eligible for
       bookmarks/history; the address bar classifies it as a URL (ADR 0001).
+- [x] Dedicated AT Protocol settings pane: `about:preferences#atProtocol` exposes
+      controls for `at://` loading, record provenance and raw JSON. Navigation
+      and rendering prefs are enforced by the protocol handler and record view;
+      a browser-chrome test verifies the pane and each control.
 - [x] Fork maintenance automation: scripted rebases onto upstream Firefox releases
       and an upgrade CI job, so the fork never rots. `tools/raindrop/upstream.py`
       detects a due upgrade against Mozilla's release channel (44 offline tests),

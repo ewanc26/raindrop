@@ -3259,6 +3259,10 @@ pref("network.trr.builtin-excluded-domains", "localhost,local");
 // Used for progressive rollout of LNA for ETP strict users
 pref("network.lna.etp.enabled", true);
 
+pref("network.atprotocol.enabled", true);
+pref("network.atprotocol.record.showProvenance", true);
+pref("network.atprotocol.record.showRawJson", true);
+
 // The canonical endpoint answers with an empty 204 when there is no captive
 // portal, so no content is expected. These two prefs must always be changed
 // together: pointing canonicalURL at an endpoint that answers with a body

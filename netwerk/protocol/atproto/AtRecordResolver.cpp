@@ -9,11 +9,12 @@
 
 #include "DidResolver.h"
 #include "HandleResolver.h"
-#include "PrivacyFlags.h"
 #include "PdsClient.h"
+#include "PrivacyFlags.h"
 #include "RecordView.h"
 #include "mozilla/Logging.h"
 #include "mozilla/OriginAttributes.h"
+#include "mozilla/Preferences.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIChannel.h"
 #include "nsIDNSByTypeRecord.h"
@@ -292,7 +293,7 @@ AtRecordResolver::OnDataAvailable(nsIRequest* aRequest,
   nsresult rv = NS_ConsumeStream(aInputStream, aCount, chunk);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  size_t cap = mPhase == Phase::Handle    ? kMaxHandleResponseLength
+  size_t cap = mPhase == Phase::Handle   ? kMaxHandleResponseLength
                : mPhase == Phase::Record ? kMaxRecordResponseLength
                                          : kMaxDidDocumentLength;
   // Keep one byte past the cap: the parsers reject bodies larger than the cap,
@@ -352,9 +353,10 @@ nsresult AtRecordResolver::CheckResponse(nsIRequest* aRequest,
   }
 
   if (NS_FAILED(aStatus)) {
-    FailureKind kind = mPhase == Phase::Handle    ? FailureKind::HandleResolutionFailed
-                       : mPhase == Phase::Record ? FailureKind::PdsUnreachable
-                                                 : FailureKind::DidResolutionFailed;
+    FailureKind kind =
+        mPhase == Phase::Handle   ? FailureKind::HandleResolutionFailed
+        : mPhase == Phase::Record ? FailureKind::PdsUnreachable
+                                  : FailureKind::DidResolutionFailed;
     SetFailure(kind, "network request failed");
     return aStatus;
   }
@@ -426,7 +428,8 @@ nsresult AtRecordResolver::OnDidDocumentStop(nsIRequest* aRequest,
     if (berr != HandleBindingError::None) {
       AT_LOG(("atproto: handle reverse binding failed (%s)\n",
               HandleBindingErrorName(berr)));
-      SetFailure(FailureKind::HandleBindingFailed, HandleBindingErrorName(berr));
+      SetFailure(FailureKind::HandleBindingFailed,
+                 HandleBindingErrorName(berr));
       return NS_ERROR_NOT_AVAILABLE;
     }
   }
@@ -448,8 +451,8 @@ nsresult AtRecordResolver::OnDidDocumentStop(nsIRequest* aRequest,
   mPds = service.mEndpoint;
 
   std::string url;
-  PdsUrlError uerr = BuildGetRecordUrl(service.mEndpoint, mDid, mUri.mCollection,
-                                       mUri.mRecordKey, url);
+  PdsUrlError uerr = BuildGetRecordUrl(service.mEndpoint, mDid,
+                                       mUri.mCollection, mUri.mRecordKey, url);
   if (uerr != PdsUrlError::None) {
     AT_LOG(("atproto: getRecord URL failed (%s)\n", PdsUrlErrorName(uerr)));
     SetFailure(FailureKind::DidDocumentRejected, PdsUrlErrorName(uerr));
@@ -475,11 +478,14 @@ nsresult AtRecordResolver::OnRecordStop(nsIRequest* aRequest,
 
   RecordViewProvenance provenance{mDid, mHandle, mPds, mUri.mCollection,
                                   mUri.mRecordKey};
-  std::string html = RenderRecordHtml(data, provenance);
+  RecordViewOptions options{
+      Preferences::GetBool("network.atprotocol.record.showProvenance", true),
+      Preferences::GetBool("network.atprotocol.record.showRawJson", true)};
+  std::string html = RenderRecordHtml(data, provenance, options);
 
   nsCOMPtr<nsIInputStream> stream;
   rv = NS_NewCStringInputStream(getter_AddRefs(stream),
-                               nsCString(html.data(), html.size()));
+                                nsCString(html.data(), html.size()));
   NS_ENSURE_SUCCESS(rv, rv);
 
   ForwardStart();
@@ -581,9 +587,8 @@ AtRecordResolver::AsyncOnChannelRedirect(
     if (NS_SUCCEEDED(rv)) {
       rv = newUri->GetPort(&port);
     }
-    if (NS_SUCCEEDED(rv) &&
-        !IsSameOrigin(mExpectedScheme, mExpectedHost, mExpectedPort, scheme,
-                      host, port)) {
+    if (NS_SUCCEEDED(rv) && !IsSameOrigin(mExpectedScheme, mExpectedHost,
+                                          mExpectedPort, scheme, host, port)) {
       AT_LOG(("atproto: rejected cross-origin redirect hop\n"));
       mRedirectRejected = true;
       SetFailure(FailureKind::RedirectRejected, "upstream changed origin");

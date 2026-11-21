@@ -274,6 +274,12 @@ const CONFIG_PANES = Object.freeze({
     iconSrc: "chrome://browser/skin/preferences/category-accessibility.svg",
     visible: () => srdSectionPrefs.all,
   },
+  atProtocol: {
+    l10nId: "preferences-at-protocol-header",
+    iconSrc: "chrome://global/skin/icons/link.svg",
+    groupIds: ["atProtocol"],
+    module: "chrome://browser/content/preferences/config/at-protocol.mjs",
+  },
   appearance: {
     l10nId: "preferences-appearance-header",
     groupIds: [
