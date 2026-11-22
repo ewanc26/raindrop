@@ -4,7 +4,11 @@
 
 #include "LexiconView.h"
 
+#include <algorithm>
+#include <cstdint>
 #include <memory>
+#include <utility>
+#include <vector>
 
 #include "AtURI.h"
 #include "PdsClient.h"
@@ -39,6 +43,235 @@ std::string EscapeHtml(std::string_view aText) {
     }
   }
   return out;
+}
+
+constexpr size_t kMaxFacetUriLength = 2048;
+constexpr size_t kMaxFacetTagLength = 100;
+
+bool IsUtf8Continuation(unsigned char aByte) { return (aByte & 0xc0) == 0x80; }
+
+size_t ClampToUtf8Boundary(std::string_view aText, uint64_t aOffset,
+                           bool aForward) {
+  size_t offset = static_cast<size_t>(
+      std::min<uint64_t>(aOffset, static_cast<uint64_t>(aText.size())));
+  if (aForward) {
+    while (offset < aText.size() &&
+           IsUtf8Continuation(static_cast<unsigned char>(aText[offset]))) {
+      ++offset;
+    }
+    return offset;
+  }
+  while (offset < aText.size() &&
+         IsUtf8Continuation(static_cast<unsigned char>(aText[offset]))) {
+    --offset;
+  }
+  return offset;
+}
+
+bool StartsWithAsciiIgnoreCase(std::string_view aText,
+                               std::string_view aLowerPrefix) {
+  if (aText.size() < aLowerPrefix.size()) {
+    return false;
+  }
+  for (size_t i = 0; i < aLowerPrefix.size(); ++i) {
+    char c = aText[i];
+    if (c >= 'A' && c <= 'Z') {
+      c = static_cast<char>(c - 'A' + 'a');
+    }
+    if (c != aLowerPrefix[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool HasUnsafeUrlByte(char aChar) {
+  auto c = static_cast<unsigned char>(aChar);
+  return c <= 0x20 || c == 0x7f || aChar == '"' || aChar == '\'' ||
+         aChar == '<' || aChar == '>' || aChar == '\\' || aChar == '`';
+}
+
+bool IsSafeExternalLink(std::string_view aUrl) {
+  if (aUrl.empty() || aUrl.size() > kMaxFacetUriLength) {
+    return false;
+  }
+  for (char c : aUrl) {
+    if (HasUnsafeUrlByte(c)) {
+      return false;
+    }
+  }
+
+  std::string_view scheme;
+  if (StartsWithAsciiIgnoreCase(aUrl, "https://")) {
+    scheme = "https://";
+  } else if (StartsWithAsciiIgnoreCase(aUrl, "http://")) {
+    scheme = "http://";
+  } else {
+    return false;
+  }
+
+  std::string_view rest = aUrl.substr(scheme.size());
+  if (rest.empty()) {
+    return false;
+  }
+  std::string_view authority = rest.substr(0, rest.find_first_of("/?#"));
+  if (authority.empty() || authority.front() == '.' ||
+      authority.back() == '.') {
+    return false;
+  }
+  if (authority.find('@') != std::string_view::npos) {
+    return false;
+  }
+  auto colon = authority.find(':');
+  if (colon != std::string_view::npos) {
+    if (authority.front() == '[') {
+      if (authority.find(']') == std::string_view::npos) {
+        return false;
+      }
+    } else {
+      std::string_view port = authority.substr(colon + 1);
+      if (port.empty() || port.find(':') != std::string_view::npos) {
+        return false;
+      }
+      for (char c : port) {
+        if (c < '0' || c > '9') {
+          return false;
+        }
+      }
+    }
+  }
+  return true;
+}
+
+bool IsSafeTag(std::string_view aTag) {
+  if (aTag.empty() || aTag.size() > kMaxFacetTagLength) {
+    return false;
+  }
+  for (unsigned char c : aTag) {
+    if (c < 0x20 || c == 0x7f) {
+      return false;
+    }
+  }
+  return true;
+}
+
+std::string RenderFacet(std::string_view aText, const Json::Value& aFeature) {
+  if (!aFeature.isObject()) {
+    return {};
+  }
+  const Json::Value& type = aFeature["$type"];
+  if (!type.isString()) {
+    return {};
+  }
+  const std::string typeName = type.asString();
+
+  if (typeName == "app.bsky.richtext.facet#link") {
+    const Json::Value& uri = aFeature["uri"];
+    if (!uri.isString() || !IsSafeExternalLink(uri.asString())) {
+      return {};
+    }
+    return std::string("<a href=\"") + EscapeHtml(uri.asString()) +
+           "\" rel=\"noopener noreferrer\">" + EscapeHtml(aText) + "</a>";
+  }
+
+  if (typeName == "app.bsky.richtext.facet#mention") {
+    const Json::Value& did = aFeature["did"];
+    if (!did.isString() || !IsValidDid(did.asString())) {
+      return {};
+    }
+    AtURIError error;
+    std::string uri = NormalizeAtURI("at://" + did.asString(), error);
+    if (error != AtURIError::None) {
+      return {};
+    }
+    return std::string("<a href=\"") + EscapeHtml(uri) + "\">" +
+           EscapeHtml(aText) + "</a>";
+  }
+
+  if (typeName == "app.bsky.richtext.facet#tag") {
+    const Json::Value& tag = aFeature["tag"];
+    if (!tag.isString() || !IsSafeTag(tag.asString())) {
+      return {};
+    }
+    return "<span class=\"hint\">" + EscapeHtml(aText) + "</span>";
+  }
+
+  return {};
+}
+
+struct FacetSegment {
+  size_t mStart;
+  size_t mEnd;
+  std::string mHtml;
+};
+
+std::string RenderTextWithFacets(std::string_view aText,
+                                 const Json::Value& aFacets) {
+  std::vector<FacetSegment> segments;
+  if (aFacets.isArray()) {
+    for (const Json::Value& facet : aFacets) {
+      if (!facet.isObject()) {
+        continue;
+      }
+      const Json::Value& index = facet["index"];
+      if (!index.isObject()) {
+        continue;
+      }
+      const Json::Value& start = index["byteStart"];
+      const Json::Value& end = index["byteEnd"];
+      if (!start.isUInt64() || !end.isUInt64()) {
+        continue;
+      }
+      uint64_t rawStart = start.asUInt64();
+      uint64_t rawEnd = end.asUInt64();
+      if (rawStart >= aText.size() || rawEnd > aText.size() ||
+          rawStart >= rawEnd) {
+        continue;
+      }
+      size_t byteStart = ClampToUtf8Boundary(aText, rawStart, true);
+      size_t byteEnd = ClampToUtf8Boundary(aText, rawEnd, false);
+      if (byteStart >= byteEnd) {
+        continue;
+      }
+      std::string html = RenderFacet(
+          aText.substr(byteStart, byteEnd - byteStart), facet["feature"]);
+      if (!html.empty()) {
+        segments.push_back({byteStart, byteEnd, std::move(html)});
+      }
+    }
+  }
+
+  std::sort(segments.begin(), segments.end(),
+            [](const FacetSegment& aLeft, const FacetSegment& aRight) {
+              if (aLeft.mStart != aRight.mStart) {
+                return aLeft.mStart < aRight.mStart;
+              }
+              return aLeft.mEnd < aRight.mEnd;
+            });
+
+  std::string out;
+  size_t cursor = 0;
+  for (const FacetSegment& segment : segments) {
+    if (segment.mStart < cursor) {
+      continue;
+    }
+    out += EscapeHtml(aText.substr(cursor, segment.mStart - cursor));
+    out += segment.mHtml;
+    cursor = segment.mEnd;
+  }
+  out += EscapeHtml(aText.substr(cursor));
+  return out;
+}
+
+void AppendPostText(std::string& aHtml, const Json::Value& aValue) {
+  const Json::Value& field = aValue["text"];
+  if (!field.isString() || field.asString().empty()) {
+    return;
+  }
+  const std::string text = field.asString();
+  aHtml += "<tr><th>Text</th><td>";
+  aHtml += RenderTextWithFacets(text, aValue["facets"]);
+  aHtml += "</td></tr>\n";
 }
 
 void AppendString(std::string& aHtml, const Json::Value& aValue,
@@ -218,7 +451,7 @@ std::string RenderPost(const Json::Value& aValue,
                        const LexiconViewProvenance& aProvenance) {
   std::string html;
   html += "<section class=\"lexicon\">\n<table>\n";
-  AppendString(html, aValue, "text", "Text");
+  AppendPostText(html, aValue);
   AppendString(html, aValue, "createdAt", "Posted");
   html += "</table>\n";
   const Json::Value& langs = aValue["langs"];

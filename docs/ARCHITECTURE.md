@@ -37,7 +37,9 @@ at://did:plc:abc.../app.bsky.feed.post/3lz...
      and quoted records are validated with `ParseAtURI` and rendered as
      normalized `at://` links. Like and repost subjects get the same treatment;
      follow subjects are validated with `IsValidDid` and rendered as
-     authority-only `at://` links.
+     authority-only `at://` links. Post facets are rendered as local escaped
+     markup: strict HTTP(S) links and valid DID mentions become anchors, while
+     tags stay local text with no invented search URL.
    - Everything else gets the generic record view (Phase 1) with the option to
    inspect raw JSON.
 6. **Verification (Phase 2).** The fetched bytes can be checked against the
@@ -118,6 +120,8 @@ For these reasons, the scheme, parser and fetch path live in the browser.
   [ADR 0007](decisions/0007-blob-and-authenticity-policy.md).
 - Customizing generated `at://` pages:
   [ADR 0008](decisions/0008-at-document-customization.md).
+- Rendering untrusted post facets without new network paths:
+  [ADR 0009](decisions/0009-richtext-facet-policy.md).
 - When handles resolve, caching and change detection:
   [ADR 0003](decisions/0003-handle-authority-semantics.md).
 - Design sign-off on `plc.directory` as identity authority and the shipped
