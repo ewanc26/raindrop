@@ -9,6 +9,7 @@
 #include <string_view>
 #include <vector>
 
+#include "AtDocumentPolicy.h"
 #include "CidVerifier.h"
 
 namespace mozilla::net::atproto {
@@ -58,7 +59,8 @@ struct RecordViewOptions {
 
 std::string RenderRecordHtml(const RecordViewData& aData,
                              const RecordViewProvenance& aProvenance,
-                             const RecordViewOptions& aOptions = {});
+                             const RecordViewOptions& aOptions = {},
+                             const ViewStyleOptions& aStyle = {});
 
 }  // namespace mozilla::net::atproto
 

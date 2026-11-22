@@ -105,7 +105,8 @@ void AppendMeta(std::string& aHtml, const char* aLabel,
 }  // namespace
 
 std::string RenderRepoHtml(const RepoViewData& aData,
-                           const RepoViewProvenance& aProvenance) {
+                           const RepoViewProvenance& aProvenance,
+                           const ViewStyleOptions& aStyle) {
   std::string html;
   html.reserve(2048);
 
@@ -114,16 +115,9 @@ std::string RenderRepoHtml(const RepoViewData& aData,
   html += "<title>Repository — ";
   html += EscapeHtml(aProvenance.mHandle.empty() ? aProvenance.mDid
                                                  : aProvenance.mHandle);
-  html += "</title>\n<style>\n";
-  html += "body{font:14px system-ui,sans-serif;margin:2em;max-width:60em}\n";
-  html += "table{border-collapse:collapse;margin-bottom:1em}\n";
-  html +=
-      "th,td{border:1px solid #ccc;padding:.3em .6em;text-align:left;"
-      "vertical-align:top}\n";
-  html += "th{background:#f4f4f4;white-space:nowrap}\n";
-  html += "code{word-break:break-all}\n";
-  html += ".hint{color:#555;font-size:.9em}\n";
-  html += "</style></head><body>\n";
+  html += "</title>\n";
+  AppendDocumentStyle(html, aStyle);
+  html += "</head><body>\n";
 
   html += "<h1>Repository summary</h1>\n<table>\n";
   AppendMeta(html, "Handle",

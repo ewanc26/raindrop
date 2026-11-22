@@ -81,3 +81,20 @@ TEST(RepoView, ShowsEmptyCollectionList)
       RenderRepoHtml(data, RepoViewProvenance{"did:plc:abc", "", ""});
   EXPECT_NE(html.find("(none advertised)"), std::string::npos);
 }
+
+TEST(RepoView, AppliesSuppliedStyle)
+{
+  RepoViewData data;
+  ASSERT_EQ(ParseRepoResponse(R"({"did":"did:plc:abc"})", data),
+            RepoViewError::None);
+  ViewStyleOptions style;
+  style.mTheme = ViewTheme::HighContrast;
+  style.mTextSize = ViewTextSize::Large;
+  std::string html =
+      RenderRepoHtml(data, RepoViewProvenance{"did:plc:abc", "", ""}, style);
+
+  EXPECT_NE(html.find("--rd-bg:#000000"), std::string::npos);
+  EXPECT_NE(html.find("--rd-font-size:17px"), std::string::npos);
+  EXPECT_NE(html.find("Repository summary"), std::string::npos);
+  EXPECT_EQ(html.find("<style>"), html.rfind("<style>"));
+}

@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <vector>
 
+#include "AtDocumentPolicy.h"
 #include "CollectionView.h"
 #include "DidResolver.h"
 #include "HandleResolver.h"
@@ -29,6 +30,7 @@
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsStreamUtils.h"
+#include "nsString.h"
 #include "nsStringStream.h"
 
 namespace mozilla {
@@ -40,6 +42,24 @@ LazyLogModule gAtResolverLog("atproto-resolver");
 #define AT_LOG(args) MOZ_LOG(gAtResolverLog, LogLevel::Debug, args)
 
 namespace {
+
+uint32_t LoadCollectionPageSize() {
+  nsAutoCString value;
+  if (NS_FAILED(Preferences::GetCString(
+          "network.atprotocol.collection.pageSize", value))) {
+    return 50;
+  }
+  if (value == "10") {
+    return 10;
+  }
+  if (value == "25") {
+    return 25;
+  }
+  if (value == "100") {
+    return 100;
+  }
+  return 50;
+}
 
 bool EqualsIgnoreCase(std::string_view aLeft, std::string_view aRight) {
   if (aLeft.size() != aRight.size()) {
@@ -485,8 +505,9 @@ nsresult AtRecordResolver::OnDidDocumentStop(nsIRequest* aRequest,
 
   if (!mUri.mHasRecordKey) {
     std::string url;
-    PdsUrlError uerr = BuildListRecordsUrl(service.mEndpoint, mDid,
-                                           mUri.mCollection, mUri.mCursor, url);
+    PdsUrlError uerr =
+        BuildListRecordsUrl(service.mEndpoint, mDid, mUri.mCollection,
+                            mUri.mCursor, url, LoadCollectionPageSize());
     if (uerr != PdsUrlError::None) {
       AT_LOG(("atproto: listRecords URL failed (%s)\n", PdsUrlErrorName(uerr)));
       SetFailure(FailureKind::DidDocumentRejected, PdsUrlErrorName(uerr));
@@ -527,7 +548,8 @@ nsresult AtRecordResolver::OnRecordStop(nsIRequest* aRequest,
       Preferences::GetBool("network.atprotocol.record.showProvenance", true),
       Preferences::GetBool("network.atprotocol.record.showRawJson", true),
       Preferences::GetBool("network.atprotocol.record.showImages", false)};
-  return DeliverHtml(RenderRecordHtml(data, provenance, options));
+  return DeliverHtml(
+      RenderRecordHtml(data, provenance, options, LoadViewStyleOptions()));
 }
 
 nsresult AtRecordResolver::OnRepoStop(nsIRequest* aRequest, nsresult aStatus) {
@@ -543,8 +565,8 @@ nsresult AtRecordResolver::OnRepoStop(nsIRequest* aRequest, nsresult aStatus) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  return DeliverHtml(
-      RenderRepoHtml(data, RepoViewProvenance{mDid, mHandle, mPds}));
+  return DeliverHtml(RenderRepoHtml(
+      data, RepoViewProvenance{mDid, mHandle, mPds}, LoadViewStyleOptions()));
 }
 
 nsresult AtRecordResolver::OnCollectionStop(nsIRequest* aRequest,
@@ -563,8 +585,10 @@ nsresult AtRecordResolver::OnCollectionStop(nsIRequest* aRequest,
   }
 
   return DeliverHtml(RenderCollectionHtml(
-      data, CollectionViewProvenance{mDid, mHandle, mPds, mUri.mCollection,
-                                     mUri.mCursor}));
+      data,
+      CollectionViewProvenance{mDid, mHandle, mPds, mUri.mCollection,
+                               mUri.mCursor},
+      LoadViewStyleOptions()));
 }
 
 nsresult AtRecordResolver::DeliverHtml(std::string_view aHtml) {
@@ -618,7 +642,7 @@ void AtRecordResolver::DeliverFailure(nsresult aStatus) {
     mFailure.mDid = mDid;
     mFailure.mPds = mPds;
   }
-  DeliverHtml(RenderFailureHtml(mFailure));
+  DeliverHtml(RenderFailureHtml(mFailure, LoadViewStyleOptions()));
   // Deliver the explanation as content rather than a bare status code so the
   // browser shows an honest, step-specific page instead of a generic error.
   ForwardStop(NS_OK);

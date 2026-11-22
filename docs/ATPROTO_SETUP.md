@@ -45,7 +45,7 @@ python3.12 ./mach mochitest netwerk/protocol/atproto/tests/browser/browser_at_pr
 python3.12 -m unittest discover -s tools/raindrop/tests
 ```
 
-The expected baseline is 129 GTests, 50 atproto xpcshell subtests, 21
+The expected baseline is 136 GTests, 56 atproto xpcshell subtests, 21
 browser-pref xpcshell subtests and four mochitests. Exact counts are recorded in
 [RELEASING.md](RELEASING.md).
 
@@ -70,6 +70,12 @@ browser-pref xpcshell subtests and four mochitests. Exact counts are recorded in
 7. Open a post with an image. With `network.atprotocol.record.showImages` off,
    no image request is made; the CID and a PDS `getBlob` link are shown. Turn
    the pref on and reload to see the image load inline.
+ 8. In `about:preferences#atProtocol`, change **Page colour theme** to `Dark` or
+    `High contrast` and reload an `at://` page. Text size, page width, link
+    colour and spacing each apply to record, repository, collection and error
+    pages. These five settings are local and make no network request. **Records
+    per collection page** changes the `limit` sent to the PDS for collection
+    listings.
 
 No load should contact an HTTP gateway for content. `plc.directory` and DNS are
 identity-resolution authorities, not content gateways.
@@ -88,6 +94,9 @@ identity-resolution authorities, not content gateways.
   images directly from that PDS without checking the bytes against the CID.
 - Generated documents carry hardening headers and matching meta tags, and
   internal DID/PDS fetches omit cookies and referrers.
+- Appearance settings choose from fixed values; unrecognized values fall back to
+  the shipped default instead of entering the generated CSS. Style blocks contain
+  no scripts, remote URLs or `url()` references.
 
 ## Troubleshooting
 

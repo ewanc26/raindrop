@@ -9,6 +9,8 @@
 #include <string_view>
 #include <vector>
 
+#include "AtDocumentPolicy.h"
+
 namespace mozilla::net::atproto {
 
 enum class CollectionViewError {
@@ -45,7 +47,8 @@ CollectionViewError ParseCollectionResponse(std::string_view aJson,
                                             CollectionViewData& aOut);
 
 std::string RenderCollectionHtml(const CollectionViewData& aData,
-                                 const CollectionViewProvenance& aProvenance);
+                                 const CollectionViewProvenance& aProvenance,
+                                 const ViewStyleOptions& aStyle = {});
 
 }  // namespace mozilla::net::atproto
 

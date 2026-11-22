@@ -125,7 +125,8 @@ PdsUrlError BuildDescribeRepoUrl(std::string_view aEndpoint,
 PdsUrlError BuildListRecordsUrl(std::string_view aEndpoint,
                                 std::string_view aRepo,
                                 std::string_view aCollection,
-                                std::string_view aCursor, std::string& aUrl) {
+                                std::string_view aCursor, std::string& aUrl,
+                                uint32_t aLimit) {
   aUrl.clear();
   if (!IsValidPdsEndpoint(aEndpoint)) {
     return PdsUrlError::InvalidEndpoint;
@@ -140,9 +141,17 @@ PdsUrlError BuildListRecordsUrl(std::string_view aEndpoint,
     return PdsUrlError::InvalidCursor;
   }
 
+  uint32_t limit = aLimit;
+  if (limit < 10) {
+    limit = 10;
+  } else if (limit > 100) {
+    limit = 100;
+  }
+
   aUrl = std::string(TrimTrailingSlashes(aEndpoint)) +
          "/xrpc/com.atproto.repo.listRecords?repo=" + EncodeQueryValue(aRepo) +
-         "&collection=" + EncodeQueryValue(aCollection) + "&limit=50";
+         "&collection=" + EncodeQueryValue(aCollection) +
+         "&limit=" + std::to_string(limit);
   if (!aCursor.empty()) {
     aUrl += "&cursor=";
     aUrl += aCursor;
