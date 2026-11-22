@@ -101,6 +101,17 @@ CHECKS = (
         ),
     ),
     FileCheck(
+        "netwerk/protocol/atproto/LexiconView.cpp",
+        (
+            "app.bsky.richtext.facet#link",
+            "app.bsky.richtext.facet#mention",
+            "app.bsky.richtext.facet#tag",
+            "IsSafeExternalLink",
+            "ClampToUtf8Boundary",
+            "noopener noreferrer",
+        ),
+    ),
+    FileCheck(
         "netwerk/protocol/atproto/AtProtocolHandler.cpp",
         ("X-Content-Type-Options", "Referrer-Policy", "X-Frame-Options"),
     ),
@@ -110,6 +121,10 @@ CHECKS = (
     ),
     FileCheck(
         "netwerk/protocol/atproto/tests/TestAtURI.cpp", ("OfficialAtUriSyntaxVectors",)
+    ),
+    FileCheck(
+        "netwerk/protocol/atproto/tests/TestLexiconView.cpp",
+        ("RejectsUnsafeLinkFacets", "ClampsFacetsToUtf8Boundaries"),
     ),
     FileCheck(
         "netwerk/protocol/atproto/tests/test_at_protocol.js",
