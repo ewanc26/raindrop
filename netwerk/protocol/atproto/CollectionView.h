@@ -28,6 +28,9 @@ constexpr size_t kMaxCollectionResponseLength = 4 * 1024 * 1024;
 struct CollectionViewRecord {
   std::string mRecordKey;
   std::string mCid;
+  std::string mSummaryType;
+  std::string mSummaryText;
+  std::string mSummaryWhen;
 };
 
 struct CollectionViewData {

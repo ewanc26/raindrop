@@ -4,6 +4,7 @@
 
 #include "CollectionView.h"
 
+#include <algorithm>
 #include <memory>
 #include <utility>
 
@@ -29,6 +30,74 @@ const char* CollectionViewErrorName(CollectionViewError aError) {
   }
   return "Unknown";
 }
+
+namespace {
+
+constexpr size_t kMaxSummaryBytes = 160;
+constexpr size_t kMaxWhenBytes = 40;
+
+bool IsControlByte(unsigned char aByte) {
+  return aByte < 0x20 || aByte == 0x7f;
+}
+
+bool IsUtf8Continuation(unsigned char aByte) { return (aByte & 0xc0) == 0x80; }
+
+std::string SanitizeSummary(std::string_view aText, size_t aMaxBytes) {
+  if (aText.empty()) {
+    return {};
+  }
+  std::string clean;
+  clean.reserve(std::min(aText.size(), aMaxBytes + 3));
+  for (unsigned char c : aText) {
+    clean += IsControlByte(c) ? ' ' : static_cast<char>(c);
+  }
+  auto begin = clean.find_first_not_of(' ');
+  if (begin == std::string::npos) {
+    return {};
+  }
+  auto end = clean.find_last_not_of(' ');
+  std::string_view value(clean.data() + begin, end - begin + 1);
+  if (value.size() <= aMaxBytes) {
+    return std::string(value);
+  }
+  size_t cut = aMaxBytes;
+  while (cut > 0 && cut < value.size() &&
+         IsUtf8Continuation(static_cast<unsigned char>(value[cut]))) {
+    --cut;
+  }
+  return std::string(value.substr(0, cut)) + "\xe2\x80\xa6";
+}
+
+void SetRecordSummary(const Json::Value& aValue,
+                      CollectionViewRecord& aRecord) {
+  if (!aValue.isObject()) {
+    return;
+  }
+  const Json::Value& type = aValue["$type"];
+  if (type.isString() && IsValidNsid(type.asString())) {
+    aRecord.mSummaryType = type.asString();
+  }
+
+  constexpr const char* kSummaryKeys[] = {"text", "displayName", "description",
+                                          "name", "title"};
+  for (const char* key : kSummaryKeys) {
+    const Json::Value& field = aValue[key];
+    if (!field.isString()) {
+      continue;
+    }
+    aRecord.mSummaryText = SanitizeSummary(field.asString(), kMaxSummaryBytes);
+    if (!aRecord.mSummaryText.empty()) {
+      break;
+    }
+  }
+
+  const Json::Value& created = aValue["createdAt"];
+  if (created.isString()) {
+    aRecord.mSummaryWhen = SanitizeSummary(created.asString(), kMaxWhenBytes);
+  }
+}
+
+}  // namespace
 
 CollectionViewError ParseCollectionResponse(std::string_view aJson,
                                             CollectionViewData& aOut) {
@@ -70,6 +139,7 @@ CollectionViewError ParseCollectionResponse(std::string_view aJson,
     if (cid.isString()) {
       record.mCid = cid.asString();
     }
+    SetRecordSummary(entry["value"], record);
     aOut.mRecords.push_back(std::move(record));
   }
 
@@ -107,6 +177,33 @@ std::string EscapeHtml(std::string_view aText) {
     }
   }
   return out;
+}
+
+void AppendRecordSummary(std::string& aHtml,
+                         const CollectionViewRecord& aRecord) {
+  if (aRecord.mSummaryType.empty() && aRecord.mSummaryText.empty() &&
+      aRecord.mSummaryWhen.empty()) {
+    return;
+  }
+  aHtml += "<div class=\"hint\">";
+  if (!aRecord.mSummaryType.empty()) {
+    aHtml += EscapeHtml(aRecord.mSummaryType);
+    if (!aRecord.mSummaryText.empty() || !aRecord.mSummaryWhen.empty()) {
+      aHtml += " — ";
+    }
+  }
+  if (!aRecord.mSummaryText.empty()) {
+    aHtml += EscapeHtml(aRecord.mSummaryText);
+  }
+  if (!aRecord.mSummaryWhen.empty()) {
+    if (!aRecord.mSummaryText.empty()) {
+      aHtml += " ";
+    }
+    aHtml += "(";
+    aHtml += EscapeHtml(aRecord.mSummaryWhen);
+    aHtml += ")";
+  }
+  aHtml += "</div>\n";
 }
 
 void AppendMeta(std::string& aHtml, const char* aLabel,
@@ -164,6 +261,7 @@ std::string RenderCollectionHtml(const CollectionViewData& aData,
         html += EscapeHtml(record.mCid);
         html += "</code>";
       }
+      AppendRecordSummary(html, record);
       html += "</li>\n";
     }
     html += "</ol>\n";

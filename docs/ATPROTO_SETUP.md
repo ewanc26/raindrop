@@ -45,7 +45,7 @@ python3.12 ./mach mochitest netwerk/protocol/atproto/tests/browser/browser_at_pr
 python3.12 -m unittest discover -s tools/raindrop/tests
 ```
 
-The expected baseline is 142 GTests, 56 atproto xpcshell subtests, 21
+The expected baseline is 145 GTests, 56 atproto xpcshell subtests, 21
 browser-pref xpcshell subtests and four mochitests. Exact counts are recorded in
 [RELEASING.md](RELEASING.md).
 
@@ -58,9 +58,10 @@ browser-pref xpcshell subtests and four mochitests. Exact counts are recorded in
 3. Open a collection from that summary, then a record. Provenance must show the
    DID, PDS and CID result. Failures render a step-specific HTML page rather
    than a blank tab.
-4. Follow a cursor link from a collection listing and confirm the next page
-   loads. The cursor path is Raindrop's navigation extension, not a canonical
-   AT URI.
+4. Confirm each record in a collection listing shows a short escaped summary
+   when the record value has a recognizable text field. Follow a cursor link
+   and confirm the next page loads. The cursor path is Raindrop's navigation
+   extension, not a canonical AT URI.
 5. Open `about:preferences#atProtocol`, or use the **AT Protocol** default
    bookmark. Toggle `network.atprotocol.enabled` off and repeat the navigation;
    it must fail cleanly. Toggle it back on.
@@ -104,6 +105,9 @@ identity-resolution authorities, not content gateways.
   mentions become anchors; unsafe links, invalid DIDs and unknown facet types
   degrade to escaped text. Byte ranges are clamped to UTF-8 boundaries and
   overlapping ranges are skipped.
+- Collection summaries come from a fixed set of record value fields. They are
+  escaped, capped at UTF-8 boundaries and never used to build navigation.
+  Record links always use the resolved DID and collection.
 
 ## Troubleshooting
 

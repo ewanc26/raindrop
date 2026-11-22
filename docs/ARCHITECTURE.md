@@ -32,7 +32,8 @@ at://did:plc:abc.../app.bsky.feed.post/3lz...
 5. **Rendering.** A repository description renders a summary whose advertised
    collections link to collection listings. A collection listing renders
    escaped record links built from the resolved DID, never from the URI the
-   PDS returned. Record responses dispatch on lexicon:
+   PDS returned, plus a bounded escaped summary from a fixed set of record
+   value fields. Record responses dispatch on lexicon:
    - Known lexicons (Phase 3) get a bundled native view. Reply parents, roots
      and quoted records are validated with `ParseAtURI` and rendered as
      normalized `at://` links. Like and repost subjects get the same treatment;
@@ -122,6 +123,8 @@ For these reasons, the scheme, parser and fetch path live in the browser.
   [ADR 0008](decisions/0008-at-document-customization.md).
 - Rendering untrusted post facets without new network paths:
   [ADR 0009](decisions/0009-richtext-facet-policy.md).
+- Bounded escaped summaries in collection listings:
+  [ADR 0010](decisions/0010-collection-summary-policy.md).
 - When handles resolve, caching and change detection:
   [ADR 0003](decisions/0003-handle-authority-semantics.md).
 - Design sign-off on `plc.directory` as identity authority and the shipped
