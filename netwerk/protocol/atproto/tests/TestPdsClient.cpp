@@ -57,6 +57,29 @@ TEST(PdsClient, BuildListRecordsUrl)
             "&collection=app.bsky.feed.post&limit=50&cursor=3n2tjsaiwrs24");
 }
 
+TEST(PdsClient, ListRecordsUrlUsesConfiguredLimit)
+{
+  std::string url;
+  constexpr const char* kRepo = "did:plc:vwzwgnygau7ed7b7wt5ux7y2";
+  constexpr const char* kCollection = "app.bsky.feed.post";
+
+  ASSERT_EQ(BuildListRecordsUrl("https://pds.example.com", kRepo, kCollection,
+                                "", url, 25),
+            PdsUrlError::None);
+  EXPECT_NE(url.find("&limit=25"), std::string::npos);
+
+  ASSERT_EQ(BuildListRecordsUrl("https://pds.example.com", kRepo, kCollection,
+                                "", url, 1),
+            PdsUrlError::None);
+  EXPECT_NE(url.find("&limit=10"), std::string::npos);
+
+  ASSERT_EQ(BuildListRecordsUrl("https://pds.example.com", kRepo, kCollection,
+                                "", url, 1000),
+            PdsUrlError::None);
+  EXPECT_NE(url.find("&limit=100"), std::string::npos);
+  EXPECT_EQ(url.find("&limit=1000"), std::string::npos);
+}
+
 TEST(PdsClient, ListRecordsUrlRejectsInvalidInputs)
 {
   std::string url;

@@ -9,6 +9,8 @@
 #include <string_view>
 #include <vector>
 
+#include "AtDocumentPolicy.h"
+
 namespace mozilla::net::atproto {
 
 enum class RepoViewError {
@@ -37,7 +39,8 @@ struct RepoViewProvenance {
 RepoViewError ParseRepoResponse(std::string_view aJson, RepoViewData& aOut);
 
 std::string RenderRepoHtml(const RepoViewData& aData,
-                           const RepoViewProvenance& aProvenance);
+                           const RepoViewProvenance& aProvenance,
+                           const ViewStyleOptions& aStyle = {});
 
 }  // namespace mozilla::net::atproto
 

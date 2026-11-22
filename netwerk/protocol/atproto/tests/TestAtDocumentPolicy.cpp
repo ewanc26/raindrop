@@ -30,3 +30,79 @@ TEST(AtDocumentPolicy, PolicyBlocksScriptingAndFraming)
   EXPECT_NE(std::string(kAtDocumentCsp).find("frame-ancestors 'none'"),
             std::string::npos);
 }
+
+TEST(AtDocumentPolicy, StyleDefaultsFollowSystem)
+{
+  std::string css;
+  AppendDocumentStyle(css);
+
+  EXPECT_NE(css.find("<style>\n"), std::string::npos);
+  EXPECT_NE(css.find("color-scheme:light dark"), std::string::npos);
+  EXPECT_NE(css.find("@media(prefers-color-scheme:dark)"), std::string::npos);
+  EXPECT_NE(css.find("--rd-font-size:14px"), std::string::npos);
+  EXPECT_NE(css.find("--rd-max-width:60em"), std::string::npos);
+  EXPECT_NE(css.find("--rd-margin:2em"), std::string::npos);
+  EXPECT_EQ(css.find("</style>\n"), css.rfind("</style>\n"));
+}
+
+TEST(AtDocumentPolicy, ExplicitThemesOverrideSystemPreference)
+{
+  ViewStyleOptions dark;
+  dark.mTheme = ViewTheme::Dark;
+  std::string css;
+  AppendDocumentStyle(css, dark);
+
+  EXPECT_NE(css.find(":root{color-scheme:dark;"), std::string::npos);
+  EXPECT_NE(css.find("--rd-bg:#181a1b"), std::string::npos);
+  EXPECT_NE(css.find("--rd-fg:#eeeeee"), std::string::npos);
+
+  ViewStyleOptions light;
+  light.mTheme = ViewTheme::Light;
+  css.clear();
+  AppendDocumentStyle(css, light);
+  EXPECT_NE(css.find(":root{color-scheme:light;"), std::string::npos);
+  EXPECT_NE(css.find("--rd-bg:#ffffff"), std::string::npos);
+}
+
+TEST(AtDocumentPolicy, HighContrastUsesStrongColours)
+{
+  ViewStyleOptions options;
+  options.mTheme = ViewTheme::HighContrast;
+  std::string css;
+  AppendDocumentStyle(css, options);
+
+  EXPECT_NE(css.find("--rd-bg:#000000"), std::string::npos);
+  EXPECT_NE(css.find("--rd-fg:#ffffff"), std::string::npos);
+  EXPECT_NE(css.find("--rd-link:#ffff00"), std::string::npos);
+  EXPECT_NE(css.find("a{text-decoration:underline}"), std::string::npos);
+}
+
+TEST(AtDocumentPolicy, SizeWidthDensityAndAccentAreIndependent)
+{
+  ViewStyleOptions options;
+  options.mTextSize = ViewTextSize::ExtraLarge;
+  options.mWidth = ViewWidth::Full;
+  options.mCompact = true;
+  options.mAccent = ViewAccent::Amber;
+  std::string css;
+  AppendDocumentStyle(css, options);
+
+  EXPECT_NE(css.find("--rd-font-size:20px"), std::string::npos);
+  EXPECT_NE(css.find("--rd-max-width:none"), std::string::npos);
+  EXPECT_NE(css.find("--rd-margin:1em"), std::string::npos);
+  EXPECT_NE(css.find("--rd-cell-padding:.2em .4em"), std::string::npos);
+  EXPECT_NE(css.find("--rd-link:#a1651d"), std::string::npos);
+  EXPECT_NE(css.find("--rd-link:#fdd663"), std::string::npos);
+  EXPECT_EQ(css.find("--rd-font-size:14px"), std::string::npos);
+}
+
+TEST(AtDocumentPolicy, StyleContainsNoScriptingOrRemoteResources)
+{
+  std::string css;
+  AppendDocumentStyle(css);
+
+  EXPECT_EQ(css.find("<script"), std::string::npos);
+  EXPECT_EQ(css.find("url("), std::string::npos);
+  EXPECT_EQ(css.find("http://"), std::string::npos);
+  EXPECT_EQ(css.find("https://"), std::string::npos);
+}

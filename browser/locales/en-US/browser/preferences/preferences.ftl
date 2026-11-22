@@ -276,6 +276,83 @@ at-protocol-show-images =
   .description = Off by default. When enabled, image blobs load directly from the record's PDS and the CID is not checked against the downloaded bytes. The CID and a link stay available either way.
   .accesskey = I
 
+at-protocol-view-theme =
+  .label = Page colour theme
+  .description = Applies to pages generated for at:// addresses. This setting stays on this device.
+  .accesskey = T
+
+at-protocol-view-text-size =
+  .label = Page text size
+  .description = Base text size for at:// repository, collection, record and error pages.
+  .accesskey = X
+
+at-protocol-view-width =
+  .label = Page width
+  .description = Maximum content width for generated at:// pages.
+  .accesskey = W
+
+at-protocol-view-accent =
+  .label = Link and accent colour
+  .description = Colour used for links and the lexicon highlight on generated at:// pages.
+  .accesskey = A
+
+at-protocol-view-density =
+  .label = Page spacing
+  .description = Comfortable spacing or tighter spacing for at:// pages.
+  .accesskey = S
+
+at-protocol-page-size =
+  .label = Records per collection page
+  .description = How many records to request from the PDS for a collection listing. Larger pages return more data per request.
+  .accesskey = C
+
+at-protocol-option-system =
+  .label = Follow system
+at-protocol-option-light =
+  .label = Light
+at-protocol-option-dark =
+  .label = Dark
+at-protocol-option-high-contrast =
+  .label = High contrast
+at-protocol-option-small =
+  .label = Small
+at-protocol-option-medium =
+  .label = Medium
+at-protocol-option-large =
+  .label = Large
+at-protocol-option-extra-large =
+  .label = Extra large
+at-protocol-option-narrow =
+  .label = Narrow
+at-protocol-option-standard =
+  .label = Standard
+at-protocol-option-wide =
+  .label = Wide
+at-protocol-option-full =
+  .label = Full width
+at-protocol-option-blue =
+  .label = Blue
+at-protocol-option-green =
+  .label = Green
+at-protocol-option-purple =
+  .label = Purple
+at-protocol-option-amber =
+  .label = Amber
+at-protocol-option-slate =
+  .label = Slate
+at-protocol-option-comfortable =
+  .label = Comfortable
+at-protocol-option-compact =
+  .label = Compact
+at-protocol-option-10 =
+  .label = 10
+at-protocol-option-25 =
+  .label = 25
+at-protocol-option-50 =
+  .label = 50
+at-protocol-option-100 =
+  .label = 100
+
 tabs-group-header2 =
   .label = Tabs
 
