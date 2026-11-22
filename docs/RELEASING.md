@@ -239,3 +239,20 @@ four mochitests with 35 passes, 71 offline tests OK, `./mach package` exit 0,
 `stock-build` was skipped because `RAINDROP_BUILD_RUNNER` is unset, and
 `submit-gradle` failed with the known non-blocking infrastructure issue. Both
 deviations are recorded in the tag annotation and release notes.
+
+### v0.9.0-fx160.0.1
+
+Released 2026-11-22 from `main` at `ef59deb8e6`. The GitHub release
+(`https://github.com/ewanc26/raindrop/releases/tag/v0.9.0-fx160.0.1`) carries
+`raindrop-160.0.1.en-US.mac.dmg` and its `.sha256` sidecar. DMG SHA-256:
+`3e3fef29c919ac0c3f406cbf9d4b1389a4da57d90347e4ba92ef82411acd01cc`.
+
+Pre-tag verification: build exit 0 with 0 compiler warnings, setup verifier OK,
+136 GTests across 13 suites, 56 atproto and 21 browser-pref xpcshell subtests,
+four mochitests with 82 passes and 2 todo, 71 offline tests OK, `./mach package`
+exit 0, `./mach format` 0 problems and `git diff --check` clean. The packaged
+`greprefs.js` and the six new preference descriptions were inspected. Hosted
+`Offline suite` and `Windows package check` were green on the merged PR.
+`stock-build` was skipped because `RAINDROP_BUILD_RUNNER` is unset, and
+`submit-gradle` failed with the known non-blocking infrastructure issue. Both
+deviations are recorded in the tag annotation and release notes.
