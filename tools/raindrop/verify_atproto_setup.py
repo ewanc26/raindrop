@@ -127,6 +127,20 @@ CHECKS = (
         ("RejectsUnsafeLinkFacets", "ClampsFacetsToUtf8Boundaries"),
     ),
     FileCheck(
+        "netwerk/protocol/atproto/CollectionView.cpp",
+        (
+            "kMaxSummaryBytes",
+            "SanitizeSummary",
+            "SetRecordSummary",
+            "AppendRecordSummary",
+            "IsValidNsid",
+        ),
+    ),
+    FileCheck(
+        "netwerk/protocol/atproto/tests/TestCollectionView.cpp",
+        ("EscapesAndCapsSummaries", "KeepsProvenanceLinksWhenPdsReturnsOtherDid"),
+    ),
+    FileCheck(
         "netwerk/protocol/atproto/tests/test_at_protocol.js",
         ("checkLoadURIWithPrincipal",),
     ),
