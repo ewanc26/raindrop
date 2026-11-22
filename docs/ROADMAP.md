@@ -83,3 +83,25 @@ used, even if it is small.
 - [x] First tagged release: `v0.1.0-fx160.0.1`, built from signed Firefox
       160.0.1 sources with all release gates green; see
       [RELEASING.md](RELEASING.md).
+
+## Phase 4 - recognisably raindrop (planned)
+
+The fork should be identifiable from its own chrome, not only its name. The
+boundary for how far the UI diverges from Firefox will be recorded in ADR 0011
+(issue #99), so these changes stay rebase-friendly and concentrate on the
+places where `at://` becomes visible.
+
+- [ ] Define the visual-identity boundary and theme mechanism
+      ([#99](https://github.com/ewanc26/raindrop/issues/99)).
+- [ ] Ship a raindrop theme for light and dark as the default for new profiles
+      ([#100](https://github.com/ewanc26/raindrop/issues/100)).
+- [ ] Give `at://` its own address-bar identity and trust panel
+      ([#101](https://github.com/ewanc26/raindrop/issues/101)).
+- [ ] Add a shared raindrop provenance header to generated `at://` pages
+      ([#102](https://github.com/ewanc26/raindrop/issues/102)).
+- [ ] Use the raindrop glyph for `at://` tabs, history and bookmarks
+      ([#103](https://github.com/ewanc26/raindrop/issues/103)).
+- [ ] Turn the new tab page into an `at://` entry point
+      ([#104](https://github.com/ewanc26/raindrop/issues/104)).
+- [ ] Ship a local first-run welcome page
+      ([#105](https://github.com/ewanc26/raindrop/issues/105)).
