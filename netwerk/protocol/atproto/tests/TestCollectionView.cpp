@@ -15,8 +15,11 @@ namespace {
 constexpr const char* kCollectionJson =
     R"({"records":[)"
     R"({"uri":"at://did:plc:abc/app.bsky.feed.post/3k5nobkf2w72g",)"
-    R"("cid":"bafyreiexample","value":{"text":"hello"}},)"
-    R"({"uri":"at://did:plc:abc/app.bsky.feed.post/second","cid":"bafyreisecond"}],)"
+    R"("cid":"bafyreiexample","value":{"$type":"app.bsky.feed.post",)"
+    R"("text":"hello","createdAt":"2026-01-01T00:00:00Z"}},)"
+    R"({"uri":"at://did:plc:abc/app.bsky.feed.post/second",)"
+    R"("cid":"bafyreisecond","value":{"$type":"app.bsky.actor.profile",)"
+    R"("displayName":"Bob"}}],)"
     R"("cursor":"next-page"})";
 
 const CollectionViewProvenance kProvenance{"did:plc:abc", "alice.example",
@@ -33,7 +36,13 @@ TEST(CollectionView, ParsesRecordsAndCursor)
   ASSERT_EQ(data.mRecords.size(), size_t(2));
   EXPECT_EQ(data.mRecords[0].mRecordKey, "3k5nobkf2w72g");
   EXPECT_EQ(data.mRecords[0].mCid, "bafyreiexample");
+  EXPECT_EQ(data.mRecords[0].mSummaryType, "app.bsky.feed.post");
+  EXPECT_EQ(data.mRecords[0].mSummaryText, "hello");
+  EXPECT_EQ(data.mRecords[0].mSummaryWhen, "2026-01-01T00:00:00Z");
   EXPECT_EQ(data.mRecords[1].mRecordKey, "second");
+  EXPECT_EQ(data.mRecords[1].mSummaryType, "app.bsky.actor.profile");
+  EXPECT_EQ(data.mRecords[1].mSummaryText, "Bob");
+  EXPECT_TRUE(data.mRecords[1].mSummaryWhen.empty());
   EXPECT_EQ(data.mCursor, "next-page");
 }
 
@@ -84,6 +93,10 @@ TEST(CollectionView, RendersEscapedLinksBuiltFromProvenance)
                       "3k5nobkf2w72g\""),
             std::string::npos);
   EXPECT_NE(html.find("bafyreiexample"), std::string::npos);
+  EXPECT_NE(html.find("app.bsky.feed.post — hello "
+                      "(2026-01-01T00:00:00Z)"),
+            std::string::npos);
+  EXPECT_NE(html.find("app.bsky.actor.profile — Bob"), std::string::npos);
   EXPECT_NE(html.find("No gateway was contacted"), std::string::npos);
   EXPECT_NE(html.find("href=\"at://did:plc:abc/app.bsky.feed.post/cursor/"
                       "next-page\""),
@@ -140,4 +153,83 @@ TEST(CollectionView, EncodesCursorInNextLink)
   std::string html = RenderCollectionHtml(data, kProvenance);
   EXPECT_NE(html.find("/cursor/a%3Db%26c\""), std::string::npos);
   EXPECT_EQ(html.find("cursor/a=b&c"), std::string::npos);
+}
+
+TEST(CollectionView, EscapesAndCapsSummaries)
+{
+  const std::string json =
+      R"({"records":[{"uri":"at://did:plc:abc/app.bsky.feed.post/k",)"
+      R"("value":{"$type":"app.bsky.feed.post",)"
+      R"("text":"<script>alert('x')</script> & \"quoted\"",)"
+      R"("createdAt":"2026-01-01T00:00:00Z"}}]})";
+  CollectionViewData data;
+  ASSERT_EQ(ParseCollectionResponse(json, data), CollectionViewError::None);
+  std::string html = RenderCollectionHtml(data, kProvenance);
+  EXPECT_EQ(html.find("<script>"), std::string::npos);
+  EXPECT_NE(html.find("&lt;script&gt;alert(&#39;x&#39;)&lt;/script&gt;"),
+            std::string::npos);
+  EXPECT_NE(html.find("&amp; &quot;quoted&quot;"), std::string::npos);
+
+  const std::string longJson =
+      R"({"records":[{"uri":"at://did:plc:abc/app.bsky.feed.post/long",)"
+      R"("value":{"text":")" +
+      std::string(200, 'x') + R"("}}]})";
+  ASSERT_EQ(ParseCollectionResponse(longJson, data), CollectionViewError::None);
+  ASSERT_EQ(data.mRecords.size(), size_t(1));
+  EXPECT_EQ(data.mRecords[0].mSummaryText.size(), size_t(163));
+  html = RenderCollectionHtml(data, kProvenance);
+  EXPECT_NE(html.find(std::string(160, 'x') + "\xe2\x80\xa6"),
+            std::string::npos);
+  EXPECT_EQ(html.find(std::string(200, 'x')), std::string::npos);
+
+  std::string emoji;
+  for (int i = 0; i < 80; ++i) {
+    emoji += "\xf0\x9f\x98\x80";
+  }
+  const std::string emojiJson =
+      R"({"records":[{"uri":"at://did:plc:abc/app.bsky.feed.post/emoji",)"
+      R"("value":{"text":")" +
+      emoji + R"("}}]})";
+  ASSERT_EQ(ParseCollectionResponse(emojiJson, data),
+            CollectionViewError::None);
+  EXPECT_EQ(data.mRecords[0].mSummaryText.size(), size_t(163));
+  EXPECT_EQ(data.mRecords[0].mSummaryText.substr(160), "\xe2\x80\xa6");
+  EXPECT_EQ(data.mRecords[0].mSummaryText.find("\xef\xbf\xbd"),
+            std::string::npos);
+}
+
+TEST(CollectionView, KeepsProvenanceLinksWhenPdsReturnsOtherDid)
+{
+  const std::string json =
+      R"({"records":[{"uri":"at://did:plc:evil/app.bsky.feed.post/k",)"
+      R"("cid":"cexample","value":{"$type":"app.bsky.feed.post",)"
+      R"("text":"summary"}}]})";
+  CollectionViewData data;
+  ASSERT_EQ(ParseCollectionResponse(json, data), CollectionViewError::None);
+  std::string html = RenderCollectionHtml(data, kProvenance);
+  EXPECT_NE(html.find("href=\"at://did:plc:abc/app.bsky.feed.post/k\""),
+            std::string::npos);
+  EXPECT_EQ(html.find("did:plc:evil"), std::string::npos);
+  EXPECT_NE(html.find("app.bsky.feed.post — summary"), std::string::npos);
+}
+
+TEST(CollectionView, IgnoresUnhelpfulRecordValues)
+{
+  const std::string json =
+      R"({"records":[)"
+      R"({"uri":"at://did:plc:abc/app.bsky.feed.post/n1","value":42},)"
+      R"({"uri":"at://did:plc:abc/app.bsky.feed.post/n2","value":[]},)"
+      R"({"uri":"at://did:plc:abc/app.bsky.feed.post/n3","value":{}},)"
+      R"({"uri":"at://did:plc:abc/app.bsky.feed.post/n4",)"
+      R"("value":{"$type":"not-a-nsid"}}]})";
+  CollectionViewData data;
+  ASSERT_EQ(ParseCollectionResponse(json, data), CollectionViewError::None);
+  ASSERT_EQ(data.mRecords.size(), size_t(4));
+  for (const CollectionViewRecord& record : data.mRecords) {
+    EXPECT_TRUE(record.mSummaryType.empty());
+    EXPECT_TRUE(record.mSummaryText.empty());
+    EXPECT_TRUE(record.mSummaryWhen.empty());
+  }
+  std::string html = RenderCollectionHtml(data, kProvenance);
+  EXPECT_EQ(html.find("<div class=\"hint\">"), std::string::npos);
 }
