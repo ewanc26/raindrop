@@ -274,3 +274,21 @@ upstream tarball and release key were verified. Hosted `Offline suite`,
 `submit-gradle` failed with the known non-blocking `config.status.json not
 found` infrastructure issue. Both deviations are recorded in the tag annotation
 and release notes.
+
+### v0.11.0-fx160.0.1
+
+Released 2026-11-22 from `main` at `a8017dde21`. The GitHub release
+(`https://github.com/ewanc26/raindrop/releases/tag/v0.11.0-fx160.0.1`) carries
+`raindrop-160.0.1.en-US.mac.dmg` and its `.sha256` sidecar. DMG SHA-256:
+`deef998b0080b7da9127fedaf85fe4e52da775312d4e24e5cd54870ad47fe49a`.
+
+Pre-tag verification: build exit 0 with 0 compiler warnings, setup verifier OK,
+145 GTests across 13 suites, 56 atproto and 21 browser-pref xpcshell subtests,
+four mochitests with 82 passes and 2 todo, 71 offline tests OK, `./mach package`
+exit 0, `./mach format` 0 problems and `git diff --check` clean. The signed
+upstream tarball and release key were verified. Hosted `Offline suite`,
+`package` and `Windows package check` were green on the merged PR.
+`stock-build` was skipped because `RAINDROP_BUILD_RUNNER` is unset, and
+`submit-gradle` failed with the known non-blocking `config.status.json not
+found` infrastructure issue. Both deviations are recorded in the tag annotation
+and release notes.
