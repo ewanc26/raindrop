@@ -7,6 +7,8 @@
 
 #include <string>
 
+#include "AtDocumentPolicy.h"
+
 namespace mozilla::net::atproto {
 
 enum class FailureKind {
@@ -37,7 +39,8 @@ struct FailureInfo {
 
 const char* FailureTitle(FailureKind aKind);
 const char* FailureExplanation(FailureKind aKind);
-std::string RenderFailureHtml(const FailureInfo& aInfo);
+std::string RenderFailureHtml(const FailureInfo& aInfo,
+                              const ViewStyleOptions& aStyle = {});
 
 }  // namespace mozilla::net::atproto
 

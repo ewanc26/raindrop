@@ -118,7 +118,8 @@ void AppendMeta(std::string& aHtml, const char* aLabel,
 
 std::string RenderRecordHtml(const RecordViewData& aData,
                              const RecordViewProvenance& aProvenance,
-                             const RecordViewOptions& aOptions) {
+                             const RecordViewOptions& aOptions,
+                             const ViewStyleOptions& aStyle) {
   std::string html;
   html.reserve(aData.mValueJson.size() + 2048);
 
@@ -127,21 +128,9 @@ std::string RenderRecordHtml(const RecordViewData& aData,
   html += "<title>";
   html += EscapeHtml(aData.mLexicon.empty() ? aProvenance.mCollection
                                             : aData.mLexicon);
-  html += "</title>\n<style>\n";
-  html += "body{font:14px system-ui,sans-serif;margin:2em;max-width:60em}\n";
-  html += "table{border-collapse:collapse;margin-bottom:1em}\n";
-  html +=
-      "th,td{border:1px solid #ccc;padding:.3em .6em;text-align:left;"
-      "vertical-align:top}\n";
-  html += "th{background:#f4f4f4;white-space:nowrap}\n";
-  html += "pre{white-space:pre-wrap;word-break:break-word}\n";
-  html += ".hint{color:#555;font-size:.9em}\n";
-  html +=
-      ".lexicon{margin:1em 0;padding:.5em "
-      "1em;background:#fafafa;border-left:3px solid #999}\n";
-  html += ".langs{color:#555;font-size:.9em}\n";
-  html += ".blob{max-width:100%;max-height:32em;display:block;margin:.4em 0}\n";
-  html += "</style></head><body>\n";
+  html += "</title>\n";
+  AppendDocumentStyle(html, aStyle);
+  html += "</head><body>\n";
 
   html += "<h1>";
   html += EscapeHtml(aData.mLexicon.empty() ? aProvenance.mCollection

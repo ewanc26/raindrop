@@ -116,6 +116,8 @@ For these reasons, the scheme, parser and fetch path live in the browser.
   [ADR 0006](decisions/0006-strict-lexicon-at-uri-conformance.md).
 - Blob rendering and the limits of CID verification:
   [ADR 0007](decisions/0007-blob-and-authenticity-policy.md).
+- Customizing generated `at://` pages:
+  [ADR 0008](decisions/0008-at-document-customization.md).
 - When handles resolve, caching and change detection:
   [ADR 0003](decisions/0003-handle-authority-semantics.md).
 - Design sign-off on `plc.directory` as identity authority and the shipped
@@ -132,3 +134,10 @@ For these reasons, the scheme, parser and fetch path live in the browser.
   same endpoint and the CID is not checked against the downloaded bytes. The
   CID and link are shown in either mode. See
   [ADR 0007](decisions/0007-blob-and-authenticity-policy.md).
+- Generated page appearance: `AppendDocumentStyle` produces one shared style
+  block for record, repository, collection and error views. Five local string
+  preferences choose the colour theme, text size, content width, accent colour
+  and spacing. Choices are fixed sets, so a preference value is never copied
+  into CSS as raw text. A separate pref sets the `listRecords` page size from a
+  fixed set and the URL builder clamps it again. See
+  [ADR 0008](decisions/0008-at-document-customization.md).

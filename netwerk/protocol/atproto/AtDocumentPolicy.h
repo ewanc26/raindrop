@@ -11,7 +11,24 @@ namespace mozilla::net::atproto {
 
 extern const char kAtDocumentCsp[];
 
+enum class ViewTheme { System, Light, Dark, HighContrast };
+enum class ViewTextSize { Small, Medium, Large, ExtraLarge };
+enum class ViewWidth { Narrow, Standard, Wide, Full };
+enum class ViewAccent { Blue, Green, Purple, Amber, Slate };
+
+struct ViewStyleOptions {
+  ViewTheme mTheme = ViewTheme::System;
+  ViewTextSize mTextSize = ViewTextSize::Medium;
+  ViewWidth mWidth = ViewWidth::Standard;
+  ViewAccent mAccent = ViewAccent::Blue;
+  bool mCompact = false;
+};
+
+ViewStyleOptions LoadViewStyleOptions();
+
 void AppendDocumentSecurityMeta(std::string& aHtml);
+void AppendDocumentStyle(std::string& aHtml,
+                         const ViewStyleOptions& aOptions = {});
 
 }  // namespace mozilla::net::atproto
 

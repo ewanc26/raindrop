@@ -3260,6 +3260,12 @@ pref("network.atprotocol.enabled", true);
 pref("network.atprotocol.record.showProvenance", true);
 pref("network.atprotocol.record.showRawJson", true);
 pref("network.atprotocol.record.showImages", false);
+pref("network.atprotocol.view.theme", "system");
+pref("network.atprotocol.view.textSize", "medium");
+pref("network.atprotocol.view.width", "standard");
+pref("network.atprotocol.view.accent", "blue");
+pref("network.atprotocol.view.density", "comfortable");
+pref("network.atprotocol.collection.pageSize", "50");
 
 // The canonical endpoint answers with an empty 204 when there is no captive
 // portal, so no content is expected. These two prefs must always be changed

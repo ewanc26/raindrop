@@ -124,7 +124,8 @@ void AppendMeta(std::string& aHtml, const char* aLabel,
 }  // namespace
 
 std::string RenderCollectionHtml(const CollectionViewData& aData,
-                                 const CollectionViewProvenance& aProvenance) {
+                                 const CollectionViewProvenance& aProvenance,
+                                 const ViewStyleOptions& aStyle) {
   std::string html;
   html.reserve(4096);
 
@@ -132,17 +133,9 @@ std::string RenderCollectionHtml(const CollectionViewData& aData,
   AppendDocumentSecurityMeta(html);
   html += "<title>Collection — ";
   html += EscapeHtml(aProvenance.mCollection);
-  html += "</title>\n<style>\n";
-  html += "body{font:14px system-ui,sans-serif;margin:2em;max-width:60em}\n";
-  html += "table{border-collapse:collapse;margin-bottom:1em}\n";
-  html +=
-      "th,td{border:1px solid #ccc;padding:.3em .6em;text-align:left;"
-      "vertical-align:top}\n";
-  html += "th{background:#f4f4f4;white-space:nowrap}\n";
-  html += "code{word-break:break-all}\n";
-  html += "li{margin-bottom:.4em}\n";
-  html += ".hint{color:#555;font-size:.9em}\n";
-  html += "</style></head><body>\n";
+  html += "</title>\n";
+  AppendDocumentStyle(html, aStyle);
+  html += "</head><body>\n";
 
   html += "<h1>Collection</h1>\n<table>\n";
   AppendMeta(html, "Collection", aProvenance.mCollection);

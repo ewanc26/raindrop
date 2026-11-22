@@ -139,22 +139,17 @@ const char* FailureExplanation(FailureKind aKind) {
   return "The record could not be loaded.";
 }
 
-std::string RenderFailureHtml(const FailureInfo& aInfo) {
+std::string RenderFailureHtml(const FailureInfo& aInfo,
+                              const ViewStyleOptions& aStyle) {
   std::string html;
   html.reserve(1024);
   html += "<!doctype html><html><head><meta charset=\"utf-8\">\n";
   AppendDocumentSecurityMeta(html);
   html += "<title>Raindrop — ";
   html += EscapeHtml(FailureTitle(aInfo.mKind));
-  html += "</title>\n<style>\n";
-  html +=
-      "body{font:16px/1.5 system-ui,sans-serif;max-width:46em;margin:3em "
-      "auto;padding:0 1em;color:#222}\n";
-  html += "h1{font-size:1.5em}table{border-collapse:collapse;margin:1em 0}\n";
-  html += "th,td{text-align:left;padding:.25em .75em;border:1px solid #ddd}\n";
-  html += "th{color:#555}code{word-break:break-all}\n";
-  html += ".hint{color:#555;font-size:.9em;margin-top:2em}\n";
-  html += "</style></head><body>\n";
+  html += "</title>\n";
+  AppendDocumentStyle(html, aStyle);
+  html += "</head><body>\n";
   html += "<h1>";
   html += EscapeHtml(FailureTitle(aInfo.mKind));
   html += "</h1>\n<p>";

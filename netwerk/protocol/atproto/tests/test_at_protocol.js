@@ -216,3 +216,32 @@ add_task(async function inline_images_default_to_off() {
     }
   }
 });
+
+add_task(async function view_style_defaults_are_safe() {
+  const defaults = {
+    "network.atprotocol.view.theme": "system",
+    "network.atprotocol.view.textSize": "medium",
+    "network.atprotocol.view.width": "standard",
+    "network.atprotocol.view.accent": "blue",
+    "network.atprotocol.view.density": "comfortable",
+    "network.atprotocol.collection.pageSize": "50",
+  };
+  for (let [pref, expected] of Object.entries(defaults)) {
+    let original = Services.prefs.getCharPref(pref);
+    let hadUserValue = Services.prefs.prefHasUserValue(pref);
+    try {
+      Services.prefs.clearUserPref(pref);
+      Assert.equal(
+        Services.prefs.getCharPref(pref),
+        expected,
+        `${pref} has a safe default`
+      );
+    } finally {
+      if (hadUserValue) {
+        Services.prefs.setCharPref(pref, original);
+      } else {
+        Services.prefs.clearUserPref(pref);
+      }
+    }
+  }
+});
