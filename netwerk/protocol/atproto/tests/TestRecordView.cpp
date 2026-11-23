@@ -136,6 +136,8 @@ TEST(RecordView, RendersProvenanceAndFields)
   EXPECT_NE(html.find("rd-header"), std::string::npos);
   EXPECT_NE(html.find("direct at:// fetch"), std::string::npos);
   EXPECT_NE(html.find("name=\"referrer\""), std::string::npos);
+  EXPECT_NE(html.find("rel=\"icon\""), std::string::npos);
+  EXPECT_NE(html.find("data:image/svg+xml;base64,"), std::string::npos);
   EXPECT_NE(html.find("app.bsky.feed.post"), std::string::npos);
   EXPECT_NE(html.find("did:plc:abc"), std::string::npos);
   EXPECT_NE(html.find("alice.example"), std::string::npos);
@@ -161,6 +163,7 @@ TEST(RecordView, HonorsDisplayOptions)
   EXPECT_EQ(html.find("Provenance limit"), std::string::npos);
   EXPECT_EQ(html.find("alice.example"), std::string::npos);
   EXPECT_EQ(html.find("Raw JSON"), std::string::npos);
+  EXPECT_NE(html.find("rel=\"icon\""), std::string::npos);
   EXPECT_NE(html.find("<h2>Fields</h2>"), std::string::npos);
 }
 

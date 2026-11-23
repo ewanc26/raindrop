@@ -85,6 +85,8 @@ TEST(CollectionView, RendersEscapedLinksBuiltFromProvenance)
   std::string html = RenderCollectionHtml(data, kProvenance);
   EXPECT_NE(html.find(kAtDocumentCsp), std::string::npos);
   EXPECT_NE(html.find("name=\"referrer\""), std::string::npos);
+  EXPECT_NE(html.find("rel=\"icon\""), std::string::npos);
+  EXPECT_NE(html.find("data:image/svg+xml;base64,"), std::string::npos);
   EXPECT_NE(html.find("rd-header"), std::string::npos);
   EXPECT_NE(html.find("direct at:// fetch"), std::string::npos);
   EXPECT_NE(html.find("Collection"), std::string::npos);

@@ -100,7 +100,7 @@ places where `at://` becomes visible.
       ([#101](https://github.com/ewanc26/raindrop/issues/101)).
 - [x] Add a shared raindrop provenance header to generated `at://` pages
       ([#102](https://github.com/ewanc26/raindrop/issues/102)).
-- [ ] Use the raindrop glyph for `at://` tabs, history and bookmarks
+- [x] Use the raindrop glyph for `at://` tabs, history and bookmarks
       ([#103](https://github.com/ewanc26/raindrop/issues/103)).
 - [ ] Turn the new tab page into an `at://` entry point
       ([#104](https://github.com/ewanc26/raindrop/issues/104)).

@@ -29,6 +29,22 @@ TEST(AtDocumentPolicy, PolicyBlocksScriptingAndFraming)
             std::string::npos);
   EXPECT_NE(std::string(kAtDocumentCsp).find("frame-ancestors 'none'"),
             std::string::npos);
+  EXPECT_NE(std::string(kAtDocumentCsp).find("img-src https: data:"),
+            std::string::npos);
+}
+
+TEST(AtDocumentPolicy, IconIsLocalSelfContainedDataUri)
+{
+  std::string html;
+  AppendDocumentIcon(html);
+
+  EXPECT_EQ(std::string(kAtDocumentIcon).rfind("data:image/svg+xml;base64,", 0),
+            0u);
+  EXPECT_NE(html.find("<link rel=\"icon\" type=\"image/svg+xml\" href=\""),
+            std::string::npos);
+  EXPECT_NE(html.find("data:image/svg+xml;base64,"), std::string::npos);
+  EXPECT_EQ(html.find("href=\"http"), std::string::npos);
+  EXPECT_EQ(html.find("href=\"//"), std::string::npos);
 }
 
 TEST(AtDocumentPolicy, StyleDefaultsFollowSystem)
