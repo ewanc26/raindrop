@@ -83,7 +83,7 @@ branch and tagged `firefox-160.0.1`; raindrop's work is the patch queue on `main
 The `at://` scheme handler, DID and handle resolution, PDS record fetch, record
 views and honest failure pages are implemented in `netwerk/protocol/atproto/`.
 The tree builds locally, the module's GTests and xpcshell tests pass, and
-v0.5.0 has been released on Firefox 160.0.1. The design and trademark sign-offs
+v0.11.0 has been released on Firefox 160.0.1. The design and trademark sign-offs
 are recorded. See the [roadmap](docs/ROADMAP.md) and
 [releasing](docs/RELEASING.md) for current gates.
 

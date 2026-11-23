@@ -1,0 +1,13 @@
+<!-- raindrop theme icon. Original artwork. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <linearGradient id="water" x1="0.15" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#a5f3fc"/>
+      <stop offset="0.45" stop-color="#38bdf8"/>
+      <stop offset="1" stop-color="#0d9488"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="7" fill="#12294a"/>
+  <path d="M16 5c0 0-8 8.8-8 14.5a8 8 0 0 0 16 0C24 13.8 16 5 16 5Z" fill="url(#water)"/>
+  <ellipse cx="12.9" cy="20.8" rx="1.5" ry="2.9" transform="rotate(-27 12.9 20.8)" fill="#ffffff" fill-opacity="0.42"/>
+</svg>

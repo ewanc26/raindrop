@@ -62,6 +62,8 @@ TEST(RepoView, RendersSummaryAndEscapesUntrustedValues)
                                               "https://pds.example.com"});
   EXPECT_NE(html.find(kAtDocumentCsp), std::string::npos);
   EXPECT_NE(html.find("name=\"referrer\""), std::string::npos);
+  EXPECT_NE(html.find("rd-header"), std::string::npos);
+  EXPECT_NE(html.find("direct at:// fetch"), std::string::npos);
   EXPECT_NE(html.find("Repository summary"), std::string::npos);
   EXPECT_NE(html.find("did:plc:abc"), std::string::npos);
   EXPECT_NE(html.find("https://pds.example.com"), std::string::npos);

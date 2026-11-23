@@ -70,6 +70,50 @@ void AppendAccent(std::string& aHtml, const char* aColor) {
   aHtml += "}\n";
 }
 
+std::string EscapeHtml(std::string_view aText) {
+  std::string out;
+  out.reserve(aText.size());
+  for (char c : aText) {
+    switch (c) {
+      case '&':
+        out += "&amp;";
+        break;
+      case '<':
+        out += "&lt;";
+        break;
+      case '>':
+        out += "&gt;";
+        break;
+      case '"':
+        out += "&quot;";
+        break;
+      case '\'':
+        out += "&#39;";
+        break;
+      default:
+        out += c;
+    }
+  }
+  return out;
+}
+
+void AppendHeaderStep(std::string& aHtml, bool& aHasStep, const char* aLabel,
+                      std::string_view aValue, std::string& aLastValue) {
+  if (aValue.empty() || aValue == aLastValue) {
+    return;
+  }
+  if (aHasStep) {
+    aHtml += "<span class=\"rd-arrow\" aria-hidden=\"true\">&rarr;</span>";
+  }
+  aHtml += "<span class=\"rd-step\"><span class=\"rd-label\">";
+  aHtml += aLabel;
+  aHtml += "</span><code>";
+  aHtml += EscapeHtml(aValue);
+  aHtml += "</code></span>";
+  aHasStep = true;
+  aLastValue.assign(aValue.data(), aValue.size());
+}
+
 }  // namespace
 
 ViewStyleOptions LoadViewStyleOptions() {
@@ -225,7 +269,63 @@ void AppendDocumentStyle(std::string& aHtml, const ViewStyleOptions& aOptions) {
       "border-left:3px solid var(--rd-accent)}\n";
   aHtml +=
       ".blob{max-width:100%;max-height:32em;display:block;margin:.4em 0}\n";
+  aHtml +=
+      ".rd-header{margin:0 0 1.5em;padding:0 0 1em;"
+      "border-bottom:1px solid var(--rd-border)}\n";
+  aHtml +=
+      ".rd-brand{display:flex;align-items:center;gap:.5em;"
+      "margin-bottom:.6em;font-weight:600}\n";
+  aHtml += ".rd-mark{width:1.6em;height:1.6em;flex:none}\n";
+  aHtml +=
+      ".rd-tagline{font-weight:400;color:var(--rd-muted);font-size:.85em;"
+      "margin-left:.25em}\n";
+  aHtml +=
+      ".rd-path{display:flex;flex-wrap:wrap;align-items:baseline;"
+      "gap:.25em .5em;margin:0;font-size:.85em;color:var(--rd-muted)}\n";
+  aHtml += ".rd-step{display:inline-flex;gap:.25em;align-items:baseline}\n";
+  aHtml += ".rd-step code{color:var(--rd-fg)}\n";
+  aHtml += ".rd-arrow{color:var(--rd-muted)}\n";
   aHtml += "</style>\n";
+}
+
+void AppendDocumentHeader(std::string& aHtml, const DocumentHeader& aHeader) {
+  aHtml += "<header class=\"rd-header\">\n<div class=\"rd-brand\">";
+  aHtml +=
+      "<svg class=\"rd-mark\" viewBox=\"0 0 32 32\" aria-hidden=\"true\" "
+      "focusable=\"false\">";
+  aHtml +=
+      "<path d=\"M16 3c0 0-10 11-10 18a10 10 0 0 0 20 0C26 14 16 3 16 3Z\" "
+      "fill=\"#38bdf8\"/>\n";
+  aHtml +=
+      "<path d=\"M16 3c0 0-10 11-10 18a10 10 0 0 0 20 0C26 14 16 3 16 3Z\" "
+      "fill=\"none\" stroke=\"#0d9488\" stroke-width=\"2\"/>\n";
+  aHtml +=
+      "<ellipse cx=\"12\" cy=\"20\" rx=\"1.8\" ry=\"3.6\" "
+      "transform=\"rotate(-27 12 20)\" fill=\"#ffffff\" "
+      "fill-opacity=\"0.5\"/>\n";
+  aHtml +=
+      "</svg><span class=\"rd-wordmark\">raindrop</span>"
+      "<span class=\"rd-tagline\">direct at:// fetch</span></div>\n";
+  aHtml += "<p class=\"rd-path\">";
+
+  bool hasStep = false;
+  std::string lastValue;
+  AppendHeaderStep(aHtml, hasStep, "Requested", aHeader.mRequested, lastValue);
+  AppendHeaderStep(aHtml, hasStep, "DID", aHeader.mDid, lastValue);
+  AppendHeaderStep(aHtml, hasStep, "PDS", aHeader.mPds, lastValue);
+  AppendHeaderStep(aHtml, hasStep, "Collection", aHeader.mCollection,
+                   lastValue);
+  AppendHeaderStep(aHtml, hasStep, "Record", aHeader.mRecordKey, lastValue);
+  AppendHeaderStep(aHtml, hasStep, "CID", aHeader.mCid, lastValue);
+  AppendHeaderStep(aHtml, hasStep, "Verification", aHeader.mCidStatus,
+                   lastValue);
+
+  if (!hasStep) {
+    aHtml +=
+        "<span class=\"rd-step\"><span class=\"rd-label\">Mode</span>"
+        "<code>direct</code></span>";
+  }
+  aHtml += "</p>\n</header>\n";
 }
 
 }  // namespace mozilla::net::atproto

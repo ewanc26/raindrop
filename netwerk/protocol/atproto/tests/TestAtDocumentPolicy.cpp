@@ -105,4 +105,57 @@ TEST(AtDocumentPolicy, StyleContainsNoScriptingOrRemoteResources)
   EXPECT_EQ(css.find("url("), std::string::npos);
   EXPECT_EQ(css.find("http://"), std::string::npos);
   EXPECT_EQ(css.find("https://"), std::string::npos);
+  EXPECT_NE(css.find(".rd-header"), std::string::npos);
+  EXPECT_NE(css.find(".rd-mark"), std::string::npos);
+}
+
+TEST(AtDocumentPolicy, HeaderCarriesIdentityAndEscapedProvenance)
+{
+  DocumentHeader header;
+  header.mRequested = "alice.example";
+  header.mDid = "did:plc:abc";
+  header.mPds = "https://pds.example";
+  header.mCollection = "app.bsky.feed.post";
+  header.mRecordKey = "3l<script>";
+  header.mCid = "bafyreitest";
+  header.mCidStatus = "Verified";
+
+  std::string html;
+  AppendDocumentHeader(html, header);
+
+  EXPECT_NE(html.find("raindrop"), std::string::npos);
+  EXPECT_NE(html.find("direct at:// fetch"), std::string::npos);
+  EXPECT_NE(html.find("alice.example"), std::string::npos);
+  EXPECT_NE(html.find("did:plc:abc"), std::string::npos);
+  EXPECT_NE(html.find("https://pds.example"), std::string::npos);
+  EXPECT_NE(html.find("app.bsky.feed.post"), std::string::npos);
+  EXPECT_NE(html.find("3l&lt;script&gt;"), std::string::npos);
+  EXPECT_NE(html.find("bafyreitest"), std::string::npos);
+  EXPECT_NE(html.find("Verified"), std::string::npos);
+  EXPECT_EQ(html.find("3l<script>"), std::string::npos);
+  EXPECT_EQ(html.find("<script"), std::string::npos);
+  EXPECT_EQ(html.find("<img"), std::string::npos);
+  EXPECT_EQ(html.find("href="), std::string::npos);
+}
+
+TEST(AtDocumentPolicy, HeaderSkipsRepeatedProvenanceSteps)
+{
+  DocumentHeader header;
+  header.mRequested = "did:plc:abc";
+  header.mDid = "did:plc:abc";
+  std::string html;
+  AppendDocumentHeader(html, header);
+
+  size_t first = html.find("did:plc:abc");
+  EXPECT_NE(first, std::string::npos);
+  EXPECT_EQ(html.find("did:plc:abc", first + 1), std::string::npos);
+}
+
+TEST(AtDocumentPolicy, HeaderFallsBackToDirectMode)
+{
+  std::string html;
+  AppendDocumentHeader(html, {});
+
+  EXPECT_NE(html.find("Mode"), std::string::npos);
+  EXPECT_NE(html.find("direct"), std::string::npos);
 }
