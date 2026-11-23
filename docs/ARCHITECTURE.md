@@ -125,6 +125,8 @@ For these reasons, the scheme, parser and fetch path live in the browser.
   [ADR 0009](decisions/0009-richtext-facet-policy.md).
 - Bounded escaped summaries in collection listings:
   [ADR 0010](decisions/0010-collection-summary-policy.md).
+- Visual divergence and the default theme:
+  [ADR 0011](decisions/0011-visual-identity-boundary.md).
 - When handles resolve, caching and change detection:
   [ADR 0003](decisions/0003-handle-authority-semantics.md).
 - Design sign-off on `plc.directory` as identity authority and the shipped
@@ -142,9 +144,10 @@ For these reasons, the scheme, parser and fetch path live in the browser.
   CID and link are shown in either mode. See
   [ADR 0007](decisions/0007-blob-and-authenticity-policy.md).
 - Generated page appearance: `AppendDocumentStyle` produces one shared style
-  block for record, repository, collection and error views. Five local string
-  preferences choose the colour theme, text size, content width, accent colour
-  and spacing. Choices are fixed sets, so a preference value is never copied
+  block for record, repository, collection and error views, and
+  `AppendDocumentHeader` produces one escaped identity and provenance header
+  for the same four views. Five local string preferences choose the colour
+  theme, text size, content width, accent colour and spacing. Choices are fixed sets, so a preference value is never copied
   into CSS as raw text. A separate pref sets the `listRecords` page size from a
   fixed set and the URL builder clamps it again. See
   [ADR 0008](decisions/0008-at-document-customization.md).

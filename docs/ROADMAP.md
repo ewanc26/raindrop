@@ -87,17 +87,18 @@ used, even if it is small.
 ## Phase 4 - recognisably raindrop (planned)
 
 The fork should be identifiable from its own chrome, not only its name. The
-boundary for how far the UI diverges from Firefox will be recorded in ADR 0011
+boundary for how far the UI diverges from Firefox is recorded in ADR 0011
 (issue #99), so these changes stay rebase-friendly and concentrate on the
 places where `at://` becomes visible.
 
-- [ ] Define the visual-identity boundary and theme mechanism
-      ([#99](https://github.com/ewanc26/raindrop/issues/99)).
-- [ ] Ship a raindrop theme for light and dark as the default for new profiles
+- [x] Define the visual-identity boundary and theme mechanism
+      ([ADR 0011](decisions/0011-visual-identity-boundary.md),
+      [#99](https://github.com/ewanc26/raindrop/issues/99)).
+- [x] Ship a raindrop theme for light and dark as the default for new profiles
       ([#100](https://github.com/ewanc26/raindrop/issues/100)).
 - [ ] Give `at://` its own address-bar identity and trust panel
       ([#101](https://github.com/ewanc26/raindrop/issues/101)).
-- [ ] Add a shared raindrop provenance header to generated `at://` pages
+- [x] Add a shared raindrop provenance header to generated `at://` pages
       ([#102](https://github.com/ewanc26/raindrop/issues/102)).
 - [ ] Use the raindrop glyph for `at://` tabs, history and bookmarks
       ([#103](https://github.com/ewanc26/raindrop/issues/103)).

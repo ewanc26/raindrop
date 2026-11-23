@@ -234,6 +234,13 @@ std::string RenderCollectionHtml(const CollectionViewData& aData,
   AppendDocumentStyle(html, aStyle);
   html += "</head><body>\n";
 
+  DocumentHeader header;
+  header.mRequested = aProvenance.mHandle;
+  header.mDid = aProvenance.mDid;
+  header.mPds = aProvenance.mPds;
+  header.mCollection = aProvenance.mCollection;
+  AppendDocumentHeader(html, header);
+
   html += "<h1>Collection</h1>\n<table>\n";
   AppendMeta(html, "Collection", aProvenance.mCollection);
   AppendMeta(html, "Handle", aProvenance.mHandle);

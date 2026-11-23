@@ -91,10 +91,20 @@ raindrop DMG.
 - `build/raindrop.mozconfig` passes `--with-distribution-id=uk.ewancroft.raindrop`
   so the macOS bundle identifier does not inherit `org.mozilla`.
 
+## Browser appearance
+
+The default chrome appearance is a built-in static theme in
+`browser/themes/addons/raindrop/`, with light and dark variants. It uses the
+same original palette as the app icon and is selected by a branding default for
+`extensions.activeThemeID`; an explicit user theme choice takes precedence.
+How far raindrop's UI may diverge from Firefox is recorded in
+[ADR 0011](decisions/0011-visual-identity-boundary.md).
+
 ## Status
 
 Done at source level: branding directory, original artwork, generated assets,
-brand strings, update/telemetry prefs, mozconfig wiring, branded bundle id.
+brand strings, default theme, update/telemetry prefs, mozconfig wiring, branded
+bundle id.
 
 Verified before the first release (tracked in
 [issue #11](https://github.com/ewanc26/raindrop/issues/11), now closed):

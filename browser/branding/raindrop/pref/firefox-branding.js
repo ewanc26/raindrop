@@ -4,6 +4,10 @@
 
 // Blank endpoints and disabled updates keep raindrop from calling home as Firefox.
 
+// raindrop's theme is the default for new profiles. An explicit theme choice is
+// stored as a user value and takes precedence.
+pref("extensions.activeThemeID", "raindrop@ewancroft.uk");
+
 pref("startup.homepage_override_url", "");
 pref("startup.homepage_welcome_url", "");
 pref("startup.homepage_welcome_url.additional", "");
