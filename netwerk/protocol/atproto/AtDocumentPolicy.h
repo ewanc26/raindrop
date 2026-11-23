@@ -11,6 +11,7 @@
 namespace mozilla::net::atproto {
 
 extern const char kAtDocumentCsp[];
+extern const char kAtDocumentIcon[];
 
 enum class ViewTheme { System, Light, Dark, HighContrast };
 enum class ViewTextSize { Small, Medium, Large, ExtraLarge };
@@ -38,6 +39,7 @@ struct DocumentHeader {
 ViewStyleOptions LoadViewStyleOptions();
 
 void AppendDocumentSecurityMeta(std::string& aHtml);
+void AppendDocumentIcon(std::string& aHtml);
 void AppendDocumentStyle(std::string& aHtml,
                          const ViewStyleOptions& aOptions = {});
 void AppendDocumentHeader(std::string& aHtml, const DocumentHeader& aHeader);

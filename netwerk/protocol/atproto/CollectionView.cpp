@@ -228,6 +228,7 @@ std::string RenderCollectionHtml(const CollectionViewData& aData,
 
   html += "<!DOCTYPE html>\n<html><head><meta charset=\"utf-8\">\n";
   AppendDocumentSecurityMeta(html);
+  AppendDocumentIcon(html);
   html += "<title>Collection — ";
   html += EscapeHtml(aProvenance.mCollection);
   html += "</title>\n";

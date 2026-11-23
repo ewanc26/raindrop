@@ -11,8 +11,24 @@ namespace mozilla::net::atproto {
 
 const char kAtDocumentCsp[] =
     "default-src 'none'; script-src 'none'; style-src 'unsafe-inline'; "
-    "img-src https:; object-src 'none'; base-uri 'none'; form-action 'none'; "
-    "frame-ancestors 'none'";
+    "img-src https: data:; object-src 'none'; base-uri 'none'; "
+    "form-action 'none'; frame-ancestors 'none'";
+
+const char kAtDocumentIcon[] =
+    "data:image/svg+xml;base64,"
+    "PCEtLSByYWluZHJvcCB0aGVtZSBpY29uLiBPcmlnaW5hbCBhcnR3b3JrLiAtLT4KPHN2ZyB4"
+    "bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiIg"
+    "d2lkdGg9IjMyIiBoZWlnaHQ9IjMyIj4KICA8ZGVmcz4KICAgIDxsaW5lYXJHcmFkaWVudCBp"
+    "ZD0id2F0ZXIiIHgxPSIwLjE1IiB5MT0iMCIgeDI9IjAuOCIgeTI9IjEiPgogICAgICA8c3Rv"
+    "cCBvZmZzZXQ9IjAiIHN0b3AtY29sb3I9IiNhNWYzZmMiLz4KICAgICAgPHN0b3Agb2Zmc2V0"
+    "PSIwLjQ1IiBzdG9wLWNvbG9yPSIjMzhiZGY4Ii8+CiAgICAgIDxzdG9wIG9mZnNldD0iMSIg"
+    "c3RvcC1jb2xvcj0iIzBkOTQ4OCIvPgogICAgPC9saW5lYXJHcmFkaWVudD4KICA8L2RlZnM+"
+    "CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNyIgZmlsbD0iIzEyMjk0YSIv"
+    "PgogIDxwYXRoIGQ9Ik0xNiA1YzAgMC04IDguOC04IDE0LjVhOCA4IDAgMCAwIDE2IDBDMjQg"
+    "MTMuOCAxNiA1IDE2IDVaIiBmaWxsPSJ1cmwoI3dhdGVyKSIvPgogIDxlbGxpcHNlIGN4PSIx"
+    "Mi45IiBjeT0iMjAuOCIgcng9IjEuNSIgcnk9IjIuOSIgdHJhbnNmb3JtPSJyb3RhdGUoLTI3"
+    "IDEyLjkgMjAuOCkiIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC40MiIvPgo8L3N2"
+    "Zz4K";
 
 namespace {
 
@@ -166,6 +182,12 @@ void AppendDocumentSecurityMeta(std::string& aHtml) {
   aHtml += "<meta http-equiv=\"Content-Security-Policy\" content=\"";
   aHtml += kAtDocumentCsp;
   aHtml += "\">\n<meta name=\"referrer\" content=\"no-referrer\">\n";
+}
+
+void AppendDocumentIcon(std::string& aHtml) {
+  aHtml += "<link rel=\"icon\" type=\"image/svg+xml\" href=\"";
+  aHtml += kAtDocumentIcon;
+  aHtml += "\">\n";
 }
 
 void AppendDocumentStyle(std::string& aHtml, const ViewStyleOptions& aOptions) {

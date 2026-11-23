@@ -112,6 +112,7 @@ std::string RenderRepoHtml(const RepoViewData& aData,
 
   html += "<!DOCTYPE html>\n<html><head><meta charset=\"utf-8\">\n";
   AppendDocumentSecurityMeta(html);
+  AppendDocumentIcon(html);
   html += "<title>Repository — ";
   html += EscapeHtml(aProvenance.mHandle.empty() ? aProvenance.mDid
                                                  : aProvenance.mHandle);

@@ -146,7 +146,9 @@ For these reasons, the scheme, parser and fetch path live in the browser.
 - Generated page appearance: `AppendDocumentStyle` produces one shared style
   block for record, repository, collection and error views, and
   `AppendDocumentHeader` produces one escaped identity and provenance header
-  for the same four views. Five local string preferences choose the colour
+  for the same four views. `AppendDocumentIcon` adds the same mark as a local
+  data-URI favicon, so tabs, history and bookmarks get it without an external
+  request. Five local string preferences choose the colour
   theme, text size, content width, accent colour and spacing. Choices are fixed sets, so a preference value is never copied
   into CSS as raw text. A separate pref sets the `listRecords` page size from a
   fixed set and the URL builder clamps it again. See

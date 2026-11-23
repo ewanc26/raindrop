@@ -19,8 +19,8 @@ const CURSOR_URI =
 const INVALID_URI = "at://foo.com/";
 const AT_CSP =
   "default-src 'none'; script-src 'none'; style-src 'unsafe-inline'; " +
-  "img-src https:; object-src 'none'; base-uri 'none'; form-action 'none'; " +
-  "frame-ancestors 'none'";
+  "img-src https: data:; object-src 'none'; base-uri 'none'; " +
+  "form-action 'none'; frame-ancestors 'none'";
 
 add_task(async function protocol_handler_is_registered() {
   const handler = Services.io.getProtocolHandler("at");

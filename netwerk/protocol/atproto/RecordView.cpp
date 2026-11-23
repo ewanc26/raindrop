@@ -125,6 +125,7 @@ std::string RenderRecordHtml(const RecordViewData& aData,
 
   html += "<!DOCTYPE html>\n<html><head><meta charset=\"utf-8\">\n";
   AppendDocumentSecurityMeta(html);
+  AppendDocumentIcon(html);
   html += "<title>";
   html += EscapeHtml(aData.mLexicon.empty() ? aProvenance.mCollection
                                             : aData.mLexicon);

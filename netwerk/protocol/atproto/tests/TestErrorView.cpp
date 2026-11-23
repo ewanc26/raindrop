@@ -47,6 +47,8 @@ TEST(ErrorView, RendersExplanationAndProvenance)
   std::string html = RenderFailureHtml(info);
   EXPECT_NE(html.find(kAtDocumentCsp), std::string::npos);
   EXPECT_NE(html.find("name=\"referrer\""), std::string::npos);
+  EXPECT_NE(html.find("rel=\"icon\""), std::string::npos);
+  EXPECT_NE(html.find("data:image/svg+xml;base64,"), std::string::npos);
   EXPECT_NE(html.find("rd-header"), std::string::npos);
   EXPECT_NE(html.find("direct at:// fetch"), std::string::npos);
   EXPECT_NE(html.find("Record not found"), std::string::npos);
