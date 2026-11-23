@@ -132,6 +132,20 @@ std::string RenderRecordHtml(const RecordViewData& aData,
   AppendDocumentStyle(html, aStyle);
   html += "</head><body>\n";
 
+  DocumentHeader header;
+  if (aOptions.mShowProvenance) {
+    header.mRequested = aProvenance.mHandle;
+    header.mDid = aProvenance.mDid;
+    header.mPds = aProvenance.mPds;
+    header.mCollection = aProvenance.mCollection;
+    header.mRecordKey = aProvenance.mRecordKey;
+    header.mCid = aData.mCid;
+    if (aData.mCidStatus != CidStatus::Absent) {
+      header.mCidStatus = CidStatusName(aData.mCidStatus);
+    }
+  }
+  AppendDocumentHeader(html, header);
+
   html += "<h1>";
   html += EscapeHtml(aData.mLexicon.empty() ? aProvenance.mCollection
                                             : aData.mLexicon);

@@ -23,3 +23,7 @@ browser.jar:
   content/builtin-themes/aiwindow-nova/aiwindow-theme-nova.css  (aiwindow-nova/aiwindow-theme-nova.css)
 
   content/builtin-themes/privatewindow/manifest.json            (privatewindow/manifest.json)
+
+  content/builtin-themes/raindrop/icon.svg             (raindrop/icon.svg)
+  content/builtin-themes/raindrop/preview.svg          (raindrop/preview.svg)
+  content/builtin-themes/raindrop/manifest.json        (raindrop/manifest.json)

@@ -119,6 +119,12 @@ std::string RenderRepoHtml(const RepoViewData& aData,
   AppendDocumentStyle(html, aStyle);
   html += "</head><body>\n";
 
+  DocumentHeader header;
+  header.mRequested = aProvenance.mHandle;
+  header.mDid = aProvenance.mDid;
+  header.mPds = aProvenance.mPds;
+  AppendDocumentHeader(html, header);
+
   html += "<h1>Repository summary</h1>\n<table>\n";
   AppendMeta(html, "Handle",
              aData.mHandle.empty() ? aProvenance.mHandle : aData.mHandle);

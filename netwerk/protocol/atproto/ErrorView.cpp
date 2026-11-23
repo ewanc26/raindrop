@@ -150,6 +150,13 @@ std::string RenderFailureHtml(const FailureInfo& aInfo,
   html += "</title>\n";
   AppendDocumentStyle(html, aStyle);
   html += "</head><body>\n";
+
+  DocumentHeader header;
+  header.mRequested = aInfo.mAuthority;
+  header.mDid = aInfo.mDid;
+  header.mPds = aInfo.mPds;
+  AppendDocumentHeader(html, header);
+
   html += "<h1>";
   html += EscapeHtml(FailureTitle(aInfo.mKind));
   html += "</h1>\n<p>";

@@ -1,0 +1,25 @@
+<!-- raindrop theme preview. Original artwork. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="680" height="92" viewBox="0 0 680 92" preserveAspectRatio="none" fill="none">
+  <defs>
+    <linearGradient id="water" x1="0.15" y1="0" x2="0.8" y2="1">
+      <stop offset="0" stop-color="#a5f3fc"/>
+      <stop offset="0.45" stop-color="#38bdf8"/>
+      <stop offset="1" stop-color="#0d9488"/>
+    </linearGradient>
+  </defs>
+  <rect width="680" height="92" fill="#d9effa"/>
+  <rect x="28" y="5" width="166" height="34" rx="4" fill="#ffffff"/>
+  <rect x="28" y="5" width="166" height="3" rx="1.5" fill="#0d9488"/>
+  <rect x="51" y="20" width="121" height="4" rx="2" fill="#12294a"/>
+  <rect x="221" y="20" width="121" height="4" rx="2" fill="#12294a"/>
+  <rect y="44" width="680" height="48" fill="#ffffff"/>
+  <rect y="44" width="680" height="1" fill="#cfe4ee"/>
+  <circle cx="24" cy="68" r="6.25" stroke="#5c7a8a" stroke-width="1.5"/>
+  <circle cx="60" cy="68" r="6.25" stroke="#5c7a8a" stroke-width="1.5"/>
+  <rect x="114" y="52" width="488" height="32" rx="4" fill="#f7fcff" stroke="#7aa7bd"/>
+  <path d="M130 57c0 0-4.5 5-4.5 8.2a4.5 4.5 0 0 0 9 0C134.5 62 130 57 130 57Z" fill="url(#water)"/>
+  <rect x="146" y="66" width="308" height="4" rx="2" fill="#5c7a8a"/>
+  <line x1="663" y1="61.75" x2="649" y2="61.75" stroke="#5c7a8a" stroke-width="1.5"/>
+  <line x1="663" y1="67.75" x2="649" y2="67.75" stroke="#5c7a8a" stroke-width="1.5"/>
+  <line x1="663" y1="73.75" x2="649" y2="73.75" stroke="#5c7a8a" stroke-width="1.5"/>
+</svg>

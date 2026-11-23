@@ -6,6 +6,7 @@
 #define netwerk_protocol_atproto_AtDocumentPolicy_h
 
 #include <string>
+#include <string_view>
 
 namespace mozilla::net::atproto {
 
@@ -24,11 +25,22 @@ struct ViewStyleOptions {
   bool mCompact = false;
 };
 
+struct DocumentHeader {
+  std::string_view mRequested;
+  std::string_view mDid;
+  std::string_view mPds;
+  std::string_view mCollection;
+  std::string_view mRecordKey;
+  std::string_view mCid;
+  std::string_view mCidStatus;
+};
+
 ViewStyleOptions LoadViewStyleOptions();
 
 void AppendDocumentSecurityMeta(std::string& aHtml);
 void AppendDocumentStyle(std::string& aHtml,
                          const ViewStyleOptions& aOptions = {});
+void AppendDocumentHeader(std::string& aHtml, const DocumentHeader& aHeader);
 
 }  // namespace mozilla::net::atproto
 
