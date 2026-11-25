@@ -4,6 +4,7 @@
 
 #include "AtProtocolChannel.h"
 
+#include <memory>
 #include <utility>
 
 #include "AtRecordResolver.h"
@@ -313,7 +314,7 @@ already_AddRefed<nsIChannel> NewAtProtocolChannel(
     return Err(NS_ERROR_NOT_IMPLEMENTED);
   };
 
-  auto callbacks = MakeUnique<
+  auto callbacks = std::make_unique<
       SimpleChannelCallbacksImpl<decltype(startAsyncRead),
                                  decltype(openContentStream), AtRecordResolver>>(
       std::move(startAsyncRead), std::move(openContentStream), aResolver);
