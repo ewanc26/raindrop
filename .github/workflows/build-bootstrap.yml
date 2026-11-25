@@ -45,7 +45,7 @@ jobs:
         with:
           # ADR 0002: CI builds the imported, signed release tag, not a
           # floating branch. Override when the pin moves to a new release.
-          ref: ${{ vars.RAINDROP_UPSTREAM_TAG || 'firefox-160.0.1' }}
+          ref: ${{ vars.RAINDROP_UPSTREAM_TAG || 'firefox-161.0' }}
           path: src
           fetch-depth: 1
 

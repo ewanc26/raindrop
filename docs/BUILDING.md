@@ -6,12 +6,12 @@ raindrop tracks signed Firefox release source. The current import is:
 
 | Item | Value |
 | --- | --- |
-| Upstream version | Firefox 160.0.1 |
-| Tarball | https://archive.mozilla.org/pub/firefox/releases/160.0.1/source/firefox-160.0.1.source.tar.xz |
-| SHA-256 | `7b9d95ddf24f7bbf5d0d05698bc02a66dac1eca438f80e093c5c76af7648b06d` |
+| Upstream version | Firefox 161.0 |
+| Tarball | https://archive.mozilla.org/pub/firefox/releases/161.0/source/firefox-161.0.source.tar.xz |
+| SHA-256 | `c649de11e4dc6266bc905ce4b33eb8672a1947c2e210ec53dce285cb86296a5a` |
 | Signature | Good signature from Mozilla Software Releases `<release@mozilla.com>` |
 | Signing subkey | `827E 6586 0867 9618 CD34 9F93 678E 455D 7676 7AA3` |
-| Git import | `upstream` branch, tag `firefox-160.0.1` |
+| Git import | `upstream` branch, tag `firefox-161.0` |
 
 `upstream` contains only pristine imports; raindrop changes are the patch queue
 on `main`. To verify a tarball yourself:
@@ -19,9 +19,9 @@ on `main`. To verify a tarball yourself:
 ```sh
 curl -fsSL https://packages.mozilla.org/rpm/firefox/signing-key.gpg -o mozilla-signing-key.gpg
 gpg --dearmor < mozilla-signing-key.gpg > mozilla-keyring.gpg
-curl -fsSLO https://archive.mozilla.org/pub/firefox/releases/160.0.1/source/firefox-160.0.1.source.tar.xz{,.asc}
-gpgv --keyring ./mozilla-keyring.gpg firefox-160.0.1.source.tar.xz.asc firefox-160.0.1.source.tar.xz
-shasum -a 256 firefox-160.0.1.source.tar.xz
+curl -fsSLO https://archive.mozilla.org/pub/firefox/releases/161.0/source/firefox-161.0.source.tar.xz{,.asc}
+gpgv --keyring ./mozilla-keyring.gpg firefox-161.0.source.tar.xz.asc firefox-161.0.source.tar.xz
+shasum -a 256 firefox-161.0.source.tar.xz
 ```
 
 Check the key fingerprints against Mozilla's published values before trusting
@@ -140,7 +140,7 @@ the check reads.
 
 The tracked mozconfig's options were verified with a fresh `mach configure` in
 an empty object directory. The `upstream` branch is the pristine signed Firefox
-160.0.1 import, and that is the source the CI job compiles. `main` is the raindrop
+161.0 import, and that is the source the CI job compiles. `main` is the raindrop
 patch queue on top of it: the `netwerk/protocol/atproto/` module and its browser
 integration, plus branding, build tooling, docs and repository metadata. A local
 `./mach build` on `main` therefore builds the patched tree, not pristine Firefox.
@@ -151,5 +151,5 @@ request, but a full Firefox build needs 30 GB+ of disk, so the job is gated on
 a self-hosted runner selected by the `RAINDROP_BUILD_RUNNER` repository
 variable. Without that variable the job is skipped rather than failing on a
 hosted runner that cannot fit the build. The source revision itself comes from
-the signed `firefox-160.0.1` tag (overridable with `RAINDROP_UPSTREAM_TAG`), as
+the signed `firefox-161.0` tag (overridable with `RAINDROP_UPSTREAM_TAG`), as
 required by [ADR 0002](decisions/0002-upstream-tracking.md).
